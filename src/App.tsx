@@ -3,7 +3,14 @@ import { RotateCcw, Search, Swords, Target, X, History, Trophy, Plus, Trash2, Bo
 import { HEROES, Hero, TYPES, CLASSES, HeroType, HeroClass, TYPE_GRADIENT, TYPE_TEXT, CLASS_TEXT, heroRole, ROLE_TEXT, formatStat } from "./heroes";
 import { coverageReport, recommendTeam, balancedTeam } from "./counter";
 import type { Combat } from "./storage";
-import { loadCombats, addCombat, removeCombat } from "./storage";
+import {
+  loadCombats,
+  addCombat,
+  removeCombat,
+  signIn,
+  signOut,
+  getCurrentUser,
+} from "./storage";
 
 const MAX_PICKS = 5;
 
@@ -135,6 +142,12 @@ function HeroSlots({ picks, onRemove, onReorder, label, color }: { picks: string
 export default function App() {
   const [picks, setPicks] = useState<string[]>([]);
   const [query, setQuery] = useState("");
+const [user, setUser] = useState<any>(null);
+const [loginEmail, setLoginEmail] = useState("");
+const [loginPassword, setLoginPassword] = useState("");
+const [loginError, setLoginError] = useState("");
+const [showLogin, setShowLogin] = useState(false);
+const [loggingIn, setLoggingIn] = useState(false);
   const [activeType, setActiveType] = useState<HeroType | "All">("All");
   const [activeClass, setActiveClass] = useState<HeroClass | "All">("All");
   const [showResult, setShowResult] = useState(false);
@@ -156,14 +169,24 @@ export default function App() {
   const [savingManual, setSavingManual] = useState(false);
 
 useEffect(() => {
+  getCurrentUser().then(setUser);
+}, []);
+
+useEffect(() => {
   async function loadHistory() {
+    if (!user) {
+      setCombats([]);
+      setLoadingHistory(false);
+      return;
+    }
+
     const loaded = await loadCombats();
     setCombats(Array.isArray(loaded) ? loaded : []);
     setLoadingHistory(false);
   }
 
   loadHistory();
-}, []);
+}, [user]);
 
   const pickSet = useMemo(() => new Set(picks), [picks]);
   const full = picks.length === MAX_PICKS;
@@ -236,6 +259,45 @@ useEffect(() => {
     return { rate: Math.round((wins / enemyMatched.length) * 100), count: enemyMatched.length };
   }, [combats, picks, full, showResult, editedTeam, team]);
 
+
+
+async function handleLogin() {
+  if (!loginEmail || !loginPassword) {
+    setLoginError("Veuillez saisir votre email et votre mot de passe.");
+    return;
+  }
+
+  setLoggingIn(true);
+  setLoginError("");
+
+  const { data, error } = await signIn(loginEmail, loginPassword);
+
+  if (error) {
+    setLoginError("Email ou mot de passe incorrect.");
+    setLoggingIn(false);
+    return;
+  }
+
+  setUser(data.user);
+  setLoginEmail("");
+  setLoginPassword("");
+  setShowLogin(false);
+  setLoggingIn(false);
+}
+
+async function handleLogout() {
+  await signOut();
+  setUser(null);
+  setCombats([]);
+}
+
+
+
+
+
+
+
+
   function toggle(id: string) {
     setShowResult(false);
     setPicks((prev) => prev.includes(id) ? prev.filter((p) => p !== id) : prev.length >= MAX_PICKS ? prev : [...prev, id]);
@@ -267,8 +329,10 @@ useEffect(() => {
     setSwapIndex(null);
   }
 
+
+
 async function recordCombat(won: boolean) {
-  if (!full || editedTeam.length !== 5) return;
+  if (!user || !full || editedTeam.length !== 5 || recording) return;
 
   setRecording(true);
 
@@ -297,13 +361,27 @@ async function deleteCombat(id: string) {
   }
 }
 
-  function toggleManual(arr: string[], setArr: (v: string[]) => void, id: string) {
-    if (arr.includes(id)) setArr(arr.filter((p) => p !== id));
-    else if (arr.length < MAX_PICKS) setArr([...arr, id]);
+function toggleManual(
+  arr: string[],
+  setArr: (v: string[]) => void,
+  id: string
+) {
+  if (arr.includes(id)) {
+    setArr(arr.filter((p) => p !== id));
+  } else if (arr.length < MAX_PICKS) {
+    setArr([...arr, id]);
   }
+}
 
 async function saveManual() {
-  if (mEnemies.length !== 5 || mMine.length !== 5 || mWon === null) return;
+  if (
+    !user ||
+    mEnemies.length !== 5 ||
+    mMine.length !== 5 ||
+    mWon === null
+  ) {
+    return;
+  }
 
   setSavingManual(true);
 
@@ -322,17 +400,103 @@ async function saveManual() {
       setShowManual(false);
     }
   } catch (error) {
-    console.error("Erreur lors de l'enregistrement manuel :", error);
+    console.error(
+      "Erreur lors de l'enregistrement manuel du combat :",
+      error
+    );
   } finally {
     setSavingManual(false);
   }
 }
+
+
 
   const winCount = combats.filter((c) => c.won).length;
   const mReady = mEnemies.length === 5 && mMine.length === 5 && mWon !== null;
 
   return (
     <div className="min-h-screen bg-[#0a0a14] text-white relative overflow-hidden">
+
+{showLogin && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+    <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#11111d] shadow-2xl p-6">
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="text-xl font-bold text-white">
+            🔐 Administration
+          </h2>
+          <p className="text-xs text-white/40 mt-1">
+            Connexion réservée à l'administrateur
+          </p>
+        </div>
+
+        <button
+          onClick={() => {
+            setShowLogin(false);
+            setLoginError("");
+          }}
+          className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleLogin();
+        }}
+        className="space-y-4"
+      >
+        <div>
+          <label className="block text-xs text-white/50 mb-1.5">
+            Adresse e-mail
+          </label>
+
+          <input
+            type="email"
+            value={loginEmail}
+            onChange={(e) => setLoginEmail(e.target.value)}
+            placeholder="Votre adresse e-mail"
+            autoComplete="email"
+            className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-amber-400/50"
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs text-white/50 mb-1.5">
+            Mot de passe
+          </label>
+
+          <input
+            type="password"
+            value={loginPassword}
+            onChange={(e) => setLoginPassword(e.target.value)}
+            placeholder="Votre mot de passe"
+            autoComplete="current-password"
+            className="w-full px-3 py-2.5 rounded-lg bg-white/5 border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-amber-400/50"
+          />
+        </div>
+
+        {loginError && (
+          <div className="rounded-lg border border-rose-400/20 bg-rose-400/10 px-3 py-2 text-xs text-rose-300">
+            {loginError}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loggingIn}
+          className="w-full py-2.5 rounded-lg bg-amber-400 text-black font-semibold text-sm hover:bg-amber-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {loggingIn ? "Connexion..." : "Se connecter"}
+        </button>
+      </form>
+    </div>
+  </div>
+)}
+
+
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-amber-500/10 blur-3xl" />
         <div className="absolute top-1/3 -right-40 h-96 w-96 rounded-full bg-rose-500/10 blur-3xl" />
@@ -355,6 +519,35 @@ async function saveManual() {
               </p>
             </div>
             <div className="flex flex-col items-center lg:items-end gap-3">
+
+<div className="flex items-center gap-2">
+  {user ? (
+    <>
+      <span className="text-xs text-emerald-300">
+        👑 Admin
+      </span>
+
+      <button
+        onClick={handleLogout}
+        className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white/70 hover:bg-white/10 transition-colors"
+      >
+        Déconnexion
+      </button>
+    </>
+  ) : (
+    <button
+      onClick={() => {
+        setLoginError("");
+        setShowLogin(true);
+      }}
+      className="px-3 py-1.5 rounded-lg bg-amber-400/10 border border-amber-400/30 text-xs text-amber-300 hover:bg-amber-400/20 transition-colors"
+    >
+      🔐 Admin
+    </button>
+  )}
+</div>
+
+
               <div className="flex flex-wrap justify-center lg:justify-end gap-3 text-[11px] text-white/50">
                 <span className="px-2 py-1 rounded-md bg-white/5 border border-white/10">
                   <span className="text-red-300">Infantry</span> &gt; <span className="text-amber-300">Cavalry</span> &gt; <span className="text-cyan-300">Ranged</span> &gt; <span className="text-red-300">Infantry</span>
@@ -363,26 +556,47 @@ async function saveManual() {
                   <span className="text-emerald-300">AGI</span> &gt; <span className="text-sky-300">INT</span> &gt; <span className="text-rose-300">STR</span> &gt; <span className="text-emerald-300">AGI</span>
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-sm flex-wrap justify-center lg:justify-end">
-                <button onClick={() => setShowHistory((v) => !v)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 transition-colors">
-                  <History className="h-4 w-4" />
-                  {combats.length} combat{combats.length > 1 ? "s" : ""}
-                  <span className="text-white/30">·</span>
-                  <Trophy className="h-3.5 w-3.5 text-amber-400" />
-                  {winCount} victoires
-                </button>
-                <button onClick={() => setShowManual(true)} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-colors">
-                  <BookOpen className="h-4 w-4" />
-                  Enregistrer un combat passé
-                </button>
-              </div>
+
+
+<div className="flex items-center gap-3 text-sm flex-wrap justify-center lg:justify-end">
+  {user ? (
+    <>
+      <button
+        onClick={() => setShowHistory((v) => !v)}
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 hover:bg-white/10 transition-colors"
+      >
+        <History className="h-4 w-4" />
+        {combats.length} combat{combats.length > 1 ? "s" : ""}
+        <span className="text-white/30">·</span>
+        <Trophy className="h-3.5 w-3.5 text-amber-400" />
+        {winCount} victoires
+      </button>
+
+      <button
+        onClick={() => setShowManual(true)}
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-colors"
+      >
+        <BookOpen className="h-4 w-4" />
+        Enregistrer un combat passé
+      </button>
+    </>
+  ) : (
+    <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40">
+      🔒 Historique et enregistrement réservés à l'Admin
+    </span>
+  )}
+</div>
+
+
+
             </div>
           </div>
 
         </header>
 
         {/* History panel */}
-        {showHistory && (
+        {user && showHistory && (
+
           <div className="mb-8 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-white/80">Historique des combats</h3>
