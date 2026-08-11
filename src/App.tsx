@@ -548,14 +548,8 @@ async function saveManual() {
 </div>
 
 
-              <div className="flex flex-wrap justify-center lg:justify-end gap-3 text-[11px] text-white/50">
-                <span className="px-2 py-1 rounded-md bg-white/5 border border-white/10">
-                  <span className="text-red-300">Infantry</span> &gt; <span className="text-amber-300">Cavalry</span> &gt; <span className="text-cyan-300">Ranged</span> &gt; <span className="text-red-300">Infantry</span>
-                </span>
-                <span className="px-2 py-1 rounded-md bg-white/5 border border-white/10">
-                  <span className="text-emerald-300">AGI</span> &gt; <span className="text-sky-300">INT</span> &gt; <span className="text-rose-300">STR</span> &gt; <span className="text-emerald-300">AGI</span>
-                </span>
-              </div>
+            <div className="flex flex-wrap justify-center lg:justify-end gap-3 text-[11px] text-white/50">
+</div>
 
 
 <div className="flex items-center gap-3 text-sm flex-wrap justify-center lg:justify-end">
