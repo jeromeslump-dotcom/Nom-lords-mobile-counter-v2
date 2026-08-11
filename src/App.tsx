@@ -155,10 +155,15 @@ export default function App() {
   const [mWon, setMWon] = useState<boolean | null>(null);
   const [savingManual, setSavingManual] = useState(false);
 
-  useEffect(() => {
-    setCombats(loadCombats());
+useEffect(() => {
+  async function loadHistory() {
+    const loaded = await loadCombats();
+    setCombats(Array.isArray(loaded) ? loaded : []);
     setLoadingHistory(false);
-  }, []);
+  }
+
+  loadHistory();
+}, []);
 
   const pickSet = useMemo(() => new Set(picks), [picks]);
   const full = picks.length === MAX_PICKS;
@@ -262,35 +267,66 @@ export default function App() {
     setSwapIndex(null);
   }
 
-  function recordCombat(won: boolean) {
-    if (!full || editedTeam.length !== 5) return;
-    setRecording(true);
-    const combat = addCombat({ enemy_heroes: picks, my_heroes: editedTeam, won });
-    setCombats((prev) => [combat, ...prev]);
+async function recordCombat(won: boolean) {
+  if (!full || editedTeam.length !== 5) return;
+
+  setRecording(true);
+
+  try {
+    const combat = await addCombat({
+      enemy_heroes: picks,
+      my_heroes: editedTeam,
+      won,
+    });
+
+    if (combat) {
+      setCombats((prev) => [combat, ...prev]);
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'enregistrement du combat :", error);
+  } finally {
     setRecording(false);
   }
+}
 
-  function deleteCombat(id: string) {
-    removeCombat(id);
+async function deleteCombat(id: string) {
+  const success = await removeCombat(id);
+
+  if (success) {
     setCombats((prev) => prev.filter((c) => c.id !== id));
   }
+}
 
   function toggleManual(arr: string[], setArr: (v: string[]) => void, id: string) {
     if (arr.includes(id)) setArr(arr.filter((p) => p !== id));
     else if (arr.length < MAX_PICKS) setArr([...arr, id]);
   }
 
-  function saveManual() {
-    if (mEnemies.length !== 5 || mMine.length !== 5 || mWon === null) return;
-    setSavingManual(true);
-    const combat = addCombat({ enemy_heroes: mEnemies, my_heroes: mMine, won: mWon });
-    setCombats((prev) => [combat, ...prev]);
+async function saveManual() {
+  if (mEnemies.length !== 5 || mMine.length !== 5 || mWon === null) return;
+
+  setSavingManual(true);
+
+  try {
+    const combat = await addCombat({
+      enemy_heroes: mEnemies,
+      my_heroes: mMine,
+      won: mWon,
+    });
+
+    if (combat) {
+      setCombats((prev) => [combat, ...prev]);
+      setMEnemies([]);
+      setMMine([]);
+      setMWon(null);
+      setShowManual(false);
+    }
+  } catch (error) {
+    console.error("Erreur lors de l'enregistrement manuel :", error);
+  } finally {
     setSavingManual(false);
-    setMEnemies([]);
-    setMMine([]);
-    setMWon(null);
-    setShowManual(false);
   }
+}
 
   const winCount = combats.filter((c) => c.won).length;
   const mReady = mEnemies.length === 5 && mMine.length === 5 && mWon !== null;

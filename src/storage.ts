@@ -1,3 +1,5 @@
+import { createClient } from "@supabase/supabase-js";
+
 export interface Combat {
   id: string;
   enemy_heroes: string[];
@@ -6,37 +8,62 @@ export interface Combat {
   created_at: string;
 }
 
-const KEY = "lords-mobile-counter-v2-combats";
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-function read(): Combat[] {
-  try {
-    const raw = localStorage.getItem(KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    "Variables Supabase manquantes : VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY"
+  );
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+export async function loadCombats(): Promise<Combat[]> {
+  const { data, error } = await supabase
+    .from("combats")
+    .select("id, enemy_heroes, my_heroes, won, created_at")
+    .order("created_at", { ascending: false });
+
+if (error) {
+console.error("Erreur chargement combats Supabase :", error);
+return [];
+}
+
+  return (data ?? []) as Combat[];
+}
+
+export async function addCombat(
+  input: Omit<Combat, "id" | "created_at">
+): Promise<Combat | null> {
+  const { data, error } = await supabase
+    .from("combats")
+    .insert({
+      enemy_heroes: input.enemy_heroes,
+      my_heroes: input.my_heroes,
+      won: input.won,
+    })
+    .select("id, enemy_heroes, my_heroes, won, created_at")
+    .single();
+
+  if (error) {
+    console.error("Erreur lors de l'enregistrement du combat :", error);
+    return null;
   }
+
+  return data as Combat;
 }
 
-export function loadCombats(): Combat[] {
-  return read().sort((a, b) => b.created_at.localeCompare(a.created_at));
-}
+export async function removeCombat(id: string): Promise<boolean> {
+  const { error } = await supabase
+    .from("combats")
+    .delete()
+    .eq("id", id);
 
-export function saveCombats(combats: Combat[]) {
-  localStorage.setItem(KEY, JSON.stringify(combats));
-}
+  if (error) {
+    console.error("Erreur lors de la suppression du combat :", error);
+    return false;
+  }
 
-export function addCombat(input: Omit<Combat, "id" | "created_at">): Combat {
-  const combat: Combat = {
-    ...input,
-    id: crypto.randomUUID(),
-    created_at: new Date().toISOString(),
-  };
-  saveCombats([combat, ...read()]);
-  return combat;
-}
-
-export function removeCombat(id: string) {
-  saveCombats(read().filter((c) => c.id !== id));
+  return true;
 }
