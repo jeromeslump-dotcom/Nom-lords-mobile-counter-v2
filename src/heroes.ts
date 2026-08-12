@@ -95,12 +95,7 @@ export const ROLE_TEXT: Record<HeroRole, string> = {
 export const TYPES: HeroType[] = ["Infantry", "Cavalry", "Ranged", "Siege Engine"];
 export const CLASSES: HeroClass[] = ["STR", "AGI", "INT"];
 
-export const TYPE_BEATS: Record<HeroType, HeroType> = {
-  Infantry: "Cavalry",
-  Cavalry: "Ranged",
-  Ranged: "Infantry",
-  "Siege Engine": "Infantry",
-};
+
 
 export const CLASS_BEATS: Record<HeroClass, HeroClass> = {
   AGI: "INT",
