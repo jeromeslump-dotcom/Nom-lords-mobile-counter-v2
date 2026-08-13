@@ -54,6 +54,33 @@ import {
 const MAX_PICKS = 5;
 
 const HERO_SETTINGS_KEY = "lords-mobile-counter-v2-enabled-heroes";
+type StatRankingKey =
+  | "hp"
+  | "atk"
+  | "def"
+  | "matk"
+  | "mdef";
+
+const STAT_RANKINGS: {
+  key: StatRankingKey;
+  label: string;
+}[] = [
+  { key: "hp", label: "PV" },
+  { key: "atk", label: "ATK" },
+  { key: "def", label: "DEF" },
+  { key: "matk", label: "ATQ MAG" },
+  { key: "mdef", label: "MDEF" },
+];
+const getHeroRanking = (
+  heroes: typeof HEROES,
+  key: StatRankingKey
+) => {
+  return [...heroes].sort(
+    (a, b) =>
+      b.stats[key] - a.stats[key] ||
+      a.name.localeCompare(b.name)
+  );
+};
 
 type HeroRoleFilter = "All" | "Tank" | "Dégâts" | "Soutien";
 
@@ -75,7 +102,7 @@ function HeroGridPicker({
   enabledIds: Set<string>;
 }) {
   const [q, setQ] = useState("");
-  const [role, setRole] = useState<HeroRoleFilter>("All");
+  const [role, setRole] = useState<"All" | HeroClass>("All");
 
   const pickSet = useMemo(() => new Set(picks), [picks]);
 
@@ -83,7 +110,7 @@ function HeroGridPicker({
     if (!enabledIds.has(h.id)) return false;
     if (excludeIds.has(h.id)) return false;
 
-    if (role !== "All" && heroRole(h) !== role) return false;
+    if (role !== "All" && h.cls !== role) return false;
 
     if (
       q &&
@@ -115,7 +142,7 @@ function HeroGridPicker({
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto pb-1">
-          {(["All", "Tank", "Dégâts", "Soutien"] as const).map((r) => (
+          {(["All", ...CLASSES] as const).map((r) => (
             <button
               key={r}
               onClick={() => setRole(r)}
@@ -125,7 +152,7 @@ function HeroGridPicker({
                   : "bg-white/5 text-white/60 hover:bg-white/10"
               }`}
             >
-              {r === "All" ? "Tous" : r}
+              {r === "All" ? "Toutes classes" : r}
             </button>
           ))}
         </div>
@@ -884,12 +911,7 @@ export default function App() {
           return false;
         }
 
-        if (
-          activeRole !== "All" &&
-          heroRole(h) !== activeRole
-        ) {
-          return false;
-        }
+
 
         if (
           activeClass !== "All" &&
@@ -923,13 +945,12 @@ export default function App() {
             b.name
           )
       );
-    }, [
-      query,
-      activeRole,
-      activeClass,
-      usage,
-      enabledHeroIds,
-    ]);
+}, [
+  query,
+  activeClass,
+  usage,
+  enabledHeroIds,
+]);
 
   const team =
     useMemo(
@@ -3895,99 +3916,135 @@ export default function App() {
         </div>
       )}
 
-      {/* =================================================
-          FILTERS
-          ================================================= */}
-  
-  
-  
+  {/* =================================================
+    FILTERS
+    ================================================= */}
 
-        <div className="flex flex-col sm:flex-row gap-3 mb-5">
+<div className="flex flex-col sm:flex-row gap-3 mb-5">
 
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+  {/* RECHERCHE */}
+  <div className="relative flex-1">
+    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
 
-            <input
-              value={
-                query
-              }
-              onChange={(e) =>
-                setQuery(
-                  e.target.value
-                )
-              }
-              placeholder="Rechercher par nom ou alias..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/30"
-            />
+    <input
+      value={query}
+      onChange={(e) => setQuery(e.target.value)}
+      placeholder="Rechercher par nom ou alias..."
+      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/30"
+    />
+  </div>
+
+  {/* CLASSES */}
+  <div className="flex gap-1.5 overflow-x-auto pb-1">
+    {(["All", ...CLASSES] as const).map((c) => (
+      <button
+        key={c}
+        onClick={() => setActiveClass(c)}
+        className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
+          activeClass === c
+            ? "bg-white text-black"
+            : "bg-white/5 text-white/60 hover:bg-white/10"
+        } ${
+          activeClass !== "All"
+            ? CLASS_TEXT[c]
+            : ""
+        }`}
+      >
+        {c === "All" ? "Toutes classes" : c}
+      </button>
+    ))}
+  </div>
+
+</div>
+
+
+{/* =================================================
+    STATISTIQUES — CLASSEMENTS
+    ================================================= */}
+
+<div className="mb-6 rounded-2xl border border-white/10 bg-black/20 p-4">
+
+  <div className="flex items-center gap-2 mb-4">
+    <Trophy className="h-4 w-4 text-amber-400" />
+
+    <span className="text-sm font-bold text-white/80">
+      Classements des héros
+    </span>
+
+    <span className="text-[10px] text-white/35">
+      Valeurs individuelles
+    </span>
+  </div>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
+
+    {STAT_RANKINGS.map((ranking) => {
+      const rankedHeroes = getHeroRanking(
+        HEROES.filter((hero) =>
+          enabledHeroIds.has(hero.id)
+        ),
+        ranking.key
+      );
+
+      return (
+        <div
+          key={ranking.key}
+          className="rounded-xl border border-white/10 bg-white/[0.02] p-3"
+        >
+
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-bold text-white/80">
+              {ranking.label}
+            </span>
+
+            <span className="text-[9px] uppercase tracking-wider text-white/30">
+              TOP 10
+            </span>
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
-            {(
-              [
-                "All",
-                "Tank",
-                "Dégâts",
-                "Soutien",
-              ] as const
-            ).map((r) => (
-              <button
-                key={r}
-                onClick={() =>
-                  setActiveRole(
-                    r
-                  )
-                }
-                className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                  activeRole ===
-                  r
-                    ? "bg-white text-black"
-                    : "bg-white/5 text-white/60 hover:bg-white/10"
-                }`}
-              >
-                {r === "All"
-                  ? "Tous"
-                  : r}
-              </button>
-            ))}
-          </div>
+          <div className="space-y-1.5">
 
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
-            {(
-              [
-                "All",
-                ...CLASSES,
-              ] as const
-            ).map((c) => (
-              <button
-                key={c}
-                onClick={() =>
-                  setActiveClass(
-                    c
-                  )
-                }
-                className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-                  activeClass ===
-                  c
-                    ? "bg-white text-black"
-                    : "bg-white/5 text-white/60 hover:bg-white/10"
-                } ${
-                  activeClass !==
-                    c &&
-                  c !==
-                    "All"
-                    ? CLASS_TEXT[
-                        c
-                      ]
-                    : ""
-                }`}
-              >
-                {c === "All"
-                  ? "Toutes classes"
-                  : c}
-              </button>
-            ))}
+            {rankedHeroes
+              .slice(0, 10)
+              .map((hero, index) => (
+                <div
+                  key={hero.id}
+                  className="flex items-center gap-2"
+                >
+
+                  <span className="w-4 text-[9px] text-white/30 text-right">
+                    {index + 1}
+                  </span>
+
+                  <img
+                    src={hero.img}
+                    alt={hero.name}
+                    loading="lazy"
+                    className="h-7 w-7 rounded-md object-cover ring-1 ring-white/10"
+                  />
+
+                  <span className="flex-1 min-w-0 text-[10px] text-white/70 truncate">
+                    {hero.name}
+                  </span>
+
+                  <span className="text-[10px] font-bold tabular-nums text-amber-300">
+                    {formatStat(hero.stats[ranking.key])}
+                  </span>
+
+                </div>
+              ))}
+
           </div>
         </div>
+      );
+    })}
+
+  </div>
+</div>
+
+
+
+
 
         {/* =================================================
             ROSTER
