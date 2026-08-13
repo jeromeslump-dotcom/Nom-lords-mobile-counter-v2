@@ -3350,291 +3350,298 @@ useEffect(() => {
     </span>
   </div>
 
-  <div className="space-y-3">
+  {/* =================================================
+      ENNEMI / MOI
+      ================================================= */}
 
-    {/* ATTAQUE */}
-    <div className="grid grid-cols-[1fr_70px_1fr] items-center gap-3">
+  <div className="grid grid-cols-2 gap-3">
 
-      <div className="text-right">
-        <span
-          className={`text-sm font-bold ${
-            enemySum.atk > mySum.atk
-              ? "text-emerald-300"
-              : enemySum.atk < mySum.atk
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {enemySum.atk.toLocaleString("fr-FR")}
-        </span>
+    {/* ================= ENNEMI ================= */}
+
+    <div className="rounded-xl border border-rose-500/20 bg-rose-500/[0.03] p-3">
+
+      <div className="text-center text-[10px] uppercase tracking-wider font-bold text-rose-300/70 mb-3">
+        Ennemi
       </div>
 
-      <span className="text-[10px] text-white/35 text-center">
-        ATTAQUE
-      </span>
+      <div className="space-y-3">
 
-      <div>
-        <span
-          className={`text-sm font-bold ${
-            mySum.atk > enemySum.atk
-              ? "text-emerald-300"
-              : mySum.atk < enemySum.atk
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {mySum.atk.toLocaleString("fr-FR")}
-        </span>
+        {/* ATQ */}
+        <div className="text-center">
+          <div
+            className={`text-base font-bold ${
+              enemySum.atk > mySum.atk
+                ? "text-emerald-300"
+                : enemySum.atk < mySum.atk
+                ? "text-rose-300"
+                : "text-white/70"
+            }`}
+          >
+            {enemySum.atk.toLocaleString("fr-FR")}
+          </div>
+
+          <div className="text-[9px] text-white/35">
+            ATQ
+          </div>
+
+          <div
+            className={`text-[10px] font-semibold ${
+              enemySum.atkPct > mySum.atkPct
+                ? "text-emerald-300"
+                : enemySum.atkPct < mySum.atkPct
+                ? "text-rose-300"
+                : "text-white/50"
+            }`}
+          >
+            {enemySum.atkPct}%
+          </div>
+        </div>
+
+        {/* MATK */}
+        <div className="text-center">
+          <div className="text-[9px] text-white/35 mb-0.5">
+            MATK
+          </div>
+
+          <div
+            className={`text-sm font-semibold ${
+              enemySum.matkPct > mySum.matkPct
+                ? "text-emerald-300"
+                : enemySum.matkPct < mySum.matkPct
+                ? "text-rose-300"
+                : "text-white/50"
+            }`}
+          >
+            {enemySum.matkPct}%
+          </div>
+        </div>
+
+        {/* DEF */}
+        <div className="text-center">
+          <div
+            className={`text-base font-bold ${
+              enemySum.def > mySum.def
+                ? "text-emerald-300"
+                : enemySum.def < mySum.def
+                ? "text-rose-300"
+                : "text-white/70"
+            }`}
+          >
+            {enemySum.def.toLocaleString("fr-FR")}
+          </div>
+
+          <div className="text-[9px] text-white/35">
+            DEF
+          </div>
+
+          <div
+            className={`text-[10px] font-semibold ${
+              enemySum.defPct > mySum.defPct
+                ? "text-emerald-300"
+                : enemySum.defPct < mySum.defPct
+                ? "text-rose-300"
+                : "text-white/50"
+            }`}
+          >
+            {enemySum.defPct}%
+          </div>
+        </div>
+
+        {/* MDEF */}
+        <div className="text-center">
+          <div className="text-[9px] text-white/35 mb-0.5">
+            MDEF
+          </div>
+
+          <div
+            className={`text-sm font-semibold ${
+              enemySum.mdefPct > mySum.mdefPct
+                ? "text-emerald-300"
+                : enemySum.mdefPct < mySum.mdefPct
+                ? "text-rose-300"
+                : "text-white/50"
+            }`}
+          >
+            {enemySum.mdefPct}%
+          </div>
+        </div>
+
+        {/* PV */}
+        <div className="text-center">
+          <div
+            className={`text-base font-bold ${
+              enemySum.hp > mySum.hp
+                ? "text-emerald-300"
+                : enemySum.hp < mySum.hp
+                ? "text-rose-300"
+                : "text-white/70"
+            }`}
+          >
+            {enemySum.hp.toLocaleString("fr-FR")}
+          </div>
+
+          <div className="text-[9px] text-white/35">
+            PV
+          </div>
+        </div>
+
       </div>
-
     </div>
 
 
-    {/* ATK % */}
-    <div className="grid grid-cols-[1fr_70px_1fr] items-center gap-3">
+    {/* ================= MOI ================= */}
 
-      <div className="text-right">
-        <span
-          className={`text-sm font-semibold ${
-            enemySum.atkPct > mySum.atkPct
-              ? "text-emerald-300"
-              : enemySum.atkPct < mySum.atkPct
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {enemySum.atkPct}%
-        </span>
+    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.03] p-3">
+
+      <div className="text-center text-[10px] uppercase tracking-wider font-bold text-emerald-300/70 mb-3">
+        Moi
       </div>
 
-      <span className="text-[10px] text-white/35 text-center">
-        ATK
-      </span>
+      <div className="space-y-3">
 
-      <div>
-        <span
-          className={`text-sm font-semibold ${
-            mySum.atkPct > enemySum.atkPct
-              ? "text-emerald-300"
-              : mySum.atkPct < enemySum.atkPct
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {mySum.atkPct}%
-        </span>
+        {/* ATQ */}
+        <div className="text-center">
+          <div
+            className={`text-base font-bold ${
+              mySum.atk > enemySum.atk
+                ? "text-emerald-300"
+                : mySum.atk < enemySum.atk
+                ? "text-rose-300"
+                : "text-white/70"
+            }`}
+          >
+            {mySum.atk.toLocaleString("fr-FR")}
+          </div>
+
+          <div className="text-[9px] text-white/35">
+            ATQ
+          </div>
+
+          <div
+            className={`text-[10px] font-semibold ${
+              mySum.atkPct > enemySum.atkPct
+                ? "text-emerald-300"
+                : mySum.atkPct < enemySum.atkPct
+                ? "text-rose-300"
+                : "text-white/50"
+            }`}
+          >
+            {mySum.atkPct}%
+          </div>
+        </div>
+
+        {/* MATK */}
+        <div className="text-center">
+          <div className="text-[9px] text-white/35 mb-0.5">
+            MATK
+          </div>
+
+          <div
+            className={`text-sm font-semibold ${
+              mySum.matkPct > enemySum.matkPct
+                ? "text-emerald-300"
+                : mySum.matkPct < enemySum.matkPct
+                ? "text-rose-300"
+                : "text-white/50"
+            }`}
+          >
+            {mySum.matkPct}%
+          </div>
+        </div>
+
+        {/* DEF */}
+        <div className="text-center">
+          <div
+            className={`text-base font-bold ${
+              mySum.def > enemySum.def
+                ? "text-emerald-300"
+                : mySum.def < enemySum.def
+                ? "text-rose-300"
+                : "text-white/70"
+            }`}
+          >
+            {mySum.def.toLocaleString("fr-FR")}
+          </div>
+
+          <div className="text-[9px] text-white/35">
+            DEF
+          </div>
+
+          <div
+            className={`text-[10px] font-semibold ${
+              mySum.defPct > enemySum.defPct
+                ? "text-emerald-300"
+                : mySum.defPct < enemySum.defPct
+                ? "text-rose-300"
+                : "text-white/50"
+            }`}
+          >
+            {mySum.defPct}%
+          </div>
+        </div>
+
+        {/* MDEF */}
+        <div className="text-center">
+          <div className="text-[9px] text-white/35 mb-0.5">
+            MDEF
+          </div>
+
+          <div
+            className={`text-sm font-semibold ${
+              mySum.mdefPct > enemySum.mdefPct
+                ? "text-emerald-300"
+                : mySum.mdefPct < enemySum.mdefPct
+                ? "text-rose-300"
+                : "text-white/50"
+            }`}
+          >
+            {mySum.mdefPct}%
+          </div>
+        </div>
+
+        {/* PV */}
+        <div className="text-center">
+          <div
+            className={`text-base font-bold ${
+              mySum.hp > enemySum.hp
+                ? "text-emerald-300"
+                : mySum.hp < enemySum.hp
+                ? "text-rose-300"
+                : "text-white/70"
+            }`}
+          >
+            {mySum.hp.toLocaleString("fr-FR")}
+          </div>
+
+          <div className="text-[9px] text-white/35">
+            PV
+          </div>
+        </div>
+
       </div>
-
-    </div>
-
-
-    {/* MATK % */}
-    <div className="grid grid-cols-[1fr_70px_1fr] items-center gap-3">
-
-      <div className="text-right">
-        <span
-          className={`text-sm font-semibold ${
-            enemySum.matkPct > mySum.matkPct
-              ? "text-emerald-300"
-              : enemySum.matkPct < mySum.matkPct
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {enemySum.matkPct}%
-        </span>
-      </div>
-
-      <span className="text-[10px] text-white/35 text-center">
-        MATK
-      </span>
-
-      <div>
-        <span
-          className={`text-sm font-semibold ${
-            mySum.matkPct > enemySum.matkPct
-              ? "text-emerald-300"
-              : mySum.matkPct < enemySum.matkPct
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {mySum.matkPct}%
-        </span>
-      </div>
-
-    </div>
-
-
-    {/* DÉFENSE */}
-    <div className="grid grid-cols-[1fr_70px_1fr] items-center gap-3">
-
-      <div className="text-right">
-        <span
-          className={`text-sm font-bold ${
-            enemySum.def > mySum.def
-              ? "text-emerald-300"
-              : enemySum.def < mySum.def
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {enemySum.def.toLocaleString("fr-FR")}
-        </span>
-      </div>
-
-      <span className="text-[10px] text-white/35 text-center">
-        DÉFENSE
-      </span>
-
-      <div>
-        <span
-          className={`text-sm font-bold ${
-            mySum.def > enemySum.def
-              ? "text-emerald-300"
-              : mySum.def < enemySum.def
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {mySum.def.toLocaleString("fr-FR")}
-        </span>
-      </div>
-
-    </div>
-
-
-    {/* DEF % */}
-    <div className="grid grid-cols-[1fr_70px_1fr] items-center gap-3">
-
-      <div className="text-right">
-        <span
-          className={`text-sm font-semibold ${
-            enemySum.defPct > mySum.defPct
-              ? "text-emerald-300"
-              : enemySum.defPct < mySum.defPct
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {enemySum.defPct}%
-        </span>
-      </div>
-
-      <span className="text-[10px] text-white/35 text-center">
-        DEF
-      </span>
-
-      <div>
-        <span
-          className={`text-sm font-semibold ${
-            mySum.defPct > enemySum.defPct
-              ? "text-emerald-300"
-              : mySum.defPct < enemySum.defPct
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {mySum.defPct}%
-        </span>
-      </div>
-
-    </div>
-
-
-    {/* MDEF % */}
-    <div className="grid grid-cols-[1fr_70px_1fr] items-center gap-3">
-
-      <div className="text-right">
-        <span
-          className={`text-sm font-semibold ${
-            enemySum.mdefPct > mySum.mdefPct
-              ? "text-emerald-300"
-              : enemySum.mdefPct < mySum.mdefPct
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {enemySum.mdefPct}%
-        </span>
-      </div>
-
-      <span className="text-[10px] text-white/35 text-center">
-        MDEF
-      </span>
-
-      <div>
-        <span
-          className={`text-sm font-semibold ${
-            mySum.mdefPct > enemySum.mdefPct
-              ? "text-emerald-300"
-              : mySum.mdefPct < enemySum.mdefPct
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {mySum.mdefPct}%
-        </span>
-      </div>
-
-    </div>
-
-
-    {/* PV */}
-    <div className="grid grid-cols-[1fr_70px_1fr] items-center gap-3">
-
-      <div className="text-right">
-        <span
-          className={`text-sm font-bold ${
-            enemySum.hp > mySum.hp
-              ? "text-emerald-300"
-              : enemySum.hp < mySum.hp
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {enemySum.hp.toLocaleString("fr-FR")}
-        </span>
-      </div>
-
-      <span className="text-[10px] text-white/35 text-center">
-        PV
-      </span>
-
-      <div>
-        <span
-          className={`text-sm font-bold ${
-            mySum.hp > enemySum.hp
-              ? "text-emerald-300"
-              : mySum.hp < enemySum.hp
-              ? "text-rose-300"
-              : "text-white/70"
-          }`}
-        >
-          {mySum.hp.toLocaleString("fr-FR")}
-        </span>
-      </div>
-
     </div>
 
   </div>
 
 
-  {/* BARRES */}
+  {/* =================================================
+      COMPARAISON VISUELLE
+      ================================================= */}
+
   <div className="mt-6 pt-4 border-t border-white/5">
 
-    <div className="text-center text-[10px] uppercase tracking-wider text-white/35 mb-3">
+    <div className="text-center text-[10px] uppercase tracking-wider text-white/35 mb-4">
       Comparaison visuelle
     </div>
 
     {[
       {
-        label: "Attaque",
+        label: "ATQ",
         enemy: enemySum.atk,
         mine: mySum.atk,
       },
       {
-        label: "Défense",
+        label: "DEF",
         enemy: enemySum.def,
         mine: mySum.def,
       },
@@ -3660,12 +3667,11 @@ useEffect(() => {
       return (
         <div
           key={bar.label}
-          className="grid grid-cols-[1fr_60px_1fr] items-center gap-2 mb-3"
+          className="grid grid-cols-[1fr_45px_1fr] items-center gap-2 mb-3"
         >
 
           {/* ENNEMI */}
           <div className="flex justify-end">
-
             <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
 
               <div
@@ -3682,7 +3688,6 @@ useEffect(() => {
               />
 
             </div>
-
           </div>
 
 
@@ -3694,7 +3699,6 @@ useEffect(() => {
 
           {/* MOI */}
           <div>
-
             <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
 
               <div
@@ -3711,7 +3715,6 @@ useEffect(() => {
               />
 
             </div>
-
           </div>
 
         </div>
@@ -3721,6 +3724,7 @@ useEffect(() => {
   </div>
 
 </div>
+
 
 </div>
 
