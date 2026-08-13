@@ -1,5 +1,4 @@
 
-
 import { createClient } from "@supabase/supabase-js";
 
 export interface Combat {
@@ -38,18 +37,6 @@ export const supabase = createClient(
  * UTILITAIRES DE NORMALISATION
  * --------------------------------------------------------- */
 
-/**
- * Transforme une valeur Supabase en tableau de chaînes sûr.
- *
- * Accepte :
- *   ["hero1", "hero2"]
- *   '["hero1","hero2"]'
- *   null
- *   undefined
- *   autre valeur
- *
- * Retourne TOUJOURS string[].
- */
 function normalizeHeroArray(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.filter(
@@ -78,14 +65,6 @@ function normalizeHeroArray(value: unknown): string[] {
 
 /**
  * Vérifie et normalise un combat provenant de Supabase.
- *
- * L'objectif est que App.tsx puisse toujours faire :
- *
- *   c.enemy_heroes.filter(...)
- *   c.my_heroes.filter(...)
- *   for (const id of c.enemy_heroes)
- *
- * sans provoquer de crash.
  */
 function normalizeCombat(value: unknown): Combat | null {
   if (!value || typeof value !== "object") {
@@ -123,12 +102,6 @@ function normalizeCombat(value: unknown): Combat | null {
   };
 }
 
-/**
- * Normalise toute la réponse Supabase.
- *
- * Une ligne invalide est ignorée plutôt que de faire planter
- * toute l'application.
- */
 function normalizeCombats(data: unknown): Combat[] {
   if (!Array.isArray(data)) {
     return [];
@@ -207,9 +180,10 @@ export async function signIn(
         user: null,
         session: null,
       },
-      error: error instanceof Error
-        ? error
-        : new Error("Erreur de connexion"),
+      error:
+        error instanceof Error
+          ? error
+          : new Error("Erreur de connexion"),
     };
   }
 }
@@ -270,13 +244,6 @@ export async function loadCombats(): Promise<Combat[]> {
       return [];
     }
 
-    /*
-     * IMPORTANT :
-     * Ne jamais retourner directement `data as Combat[]`.
-     *
-     * Les données Supabase sont normalisées avant d'être
-     * transmises à App.tsx.
-     */
     return normalizeCombats(data);
   } catch (error) {
     console.error(
@@ -308,9 +275,6 @@ export async function addCombat(
     return null;
   }
 
-  /*
-   * Nettoyage avant insertion.
-   */
   const enemyHeroes = normalizeHeroArray(
     input.enemy_heroes
   );
@@ -319,14 +283,6 @@ export async function addCombat(
     input.my_heroes
   );
 
-  /*
-   * Un combat valide doit normalement contenir
-   * exactement 5 héros dans chaque équipe.
-   *
-   * On ne bloque toutefois pas l'insertion ici :
-   * la base peut contenir des combats historiques
-   * différents selon les anciennes données.
-   */
   if (enemyHeroes.length === 0 || myHeroes.length === 0) {
     console.error(
       "Impossible d'enregistrer un combat sans héros."
@@ -369,9 +325,6 @@ export async function addCombat(
       return null;
     }
 
-    /*
-     * Même après insertion, on normalise la réponse.
-     */
     return normalizeCombat(data);
   } catch (error) {
     console.error(
@@ -455,8 +408,8 @@ export async function loadHeroPreferences(): Promise<
       data,
       error,
     } = await supabase
-      .from("hero_preferences")
-      .select("disabled_heroes")
+      .from("hero_settings")
+      .select("excluded_hero_ids")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -474,7 +427,7 @@ export async function loadHeroPreferences(): Promise<
     }
 
     return normalizeHeroArray(
-      data.disabled_heroes
+      data.excluded_hero_ids
     );
   } catch (error) {
     console.error(
@@ -503,12 +456,6 @@ export async function saveHeroPreferences(
     return false;
   }
 
-  /*
-   * Nettoyage :
-   * - uniquement les chaînes
-   * - suppression des valeurs vides
-   * - suppression des doublons
-   */
   const cleanedHeroes = [
     ...new Set(
       normalizeHeroArray(disabledHeroes)
@@ -519,11 +466,11 @@ export async function saveHeroPreferences(
     const {
       error,
     } = await supabase
-      .from("hero_preferences")
+      .from("hero_settings")
       .upsert(
         {
           user_id: user.id,
-          disabled_heroes: cleanedHeroes,
+          excluded_hero_ids: cleanedHeroes,
         },
         {
           onConflict: "user_id",
@@ -549,3 +496,4 @@ export async function saveHeroPreferences(
     return false;
   }
 }
+
