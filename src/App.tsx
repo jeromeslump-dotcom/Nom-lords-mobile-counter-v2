@@ -1,6 +1,12 @@
 
 
-import { useEffect, useMemo, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
 import {
   RotateCcw,
   Search,
@@ -43,12 +49,14 @@ import {
 import type { Combat } from "./storage";
 
 import {
-  loadCombats,
   addCombat,
+  loadCombats,
   removeCombat,
+  getCurrentUser,
   signIn,
   signOut,
-  getCurrentUser,
+  loadHeroPreferences,
+  saveHeroPreferences,
 } from "./storage";
 
 const MAX_PICKS = 5;
@@ -708,68 +716,74 @@ export default function App() {
   const [dragOverIndex, setDragOverIndex] =
     useState<number | null>(null);
 
-  /* =======================================================
-     ENABLED HEROES
-     ======================================================= */
+/* =======================================================
+   ENABLED HEROES
+   ======================================================= */
 
-  const [enabledHeroIds, setEnabledHeroIds] =
-    useState<Set<string>>(
-      () => {
-        try {
-          const saved =
-            localStorage.getItem(
-              HERO_SETTINGS_KEY
-            );
+const enabledHeroesHydrated = useRef(false);
 
-          if (!saved) {
-            return new Set(
-              HEROES.map((h) => h.id)
-            );
-          }
+const [enabledHeroIds, setEnabledHeroIds] = useState<Set<string>>(
+  () => new Set(HEROES.map((hero) => hero.id))
+);
 
-          const parsed =
-            JSON.parse(saved);
+const [heroPreferencesLoaded, setHeroPreferencesLoaded] =
+  useState(false);
 
-          if (
-            !Array.isArray(parsed)
-          ) {
-            return new Set(
-              HEROES.map((h) => h.id)
-            );
-          }
+useEffect(() => {
+  let cancelled = false;
 
-          const validIds =
-            parsed.filter((id) =>
-              HEROES.some(
-                (h) => h.id === id
-              )
-            );
-
-          return new Set(validIds);
-        } catch {
-          return new Set(
-            HEROES.map((h) => h.id)
-          );
-        }
-      }
-    );
-
-  /* Sauvegarde automatique */
-  useEffect(() => {
+  async function loadPreferences() {
     try {
-      localStorage.setItem(
-        HERO_SETTINGS_KEY,
-        JSON.stringify(
-          Array.from(enabledHeroIds)
+      const disabledHeroes = await loadHeroPreferences();
+
+      if (cancelled) return;
+
+      const disabledSet = new Set(disabledHeroes);
+
+      setEnabledHeroIds(
+        new Set(
+          HEROES
+            .filter((hero) => !disabledSet.has(hero.id))
+            .map((hero) => hero.id)
         )
       );
     } catch (error) {
       console.error(
-        "Impossible de sauvegarder la configuration des héros.",
+        "Erreur lors du chargement des préférences héros :",
         error
       );
+    } finally {
+      if (!cancelled) {
+        setHeroPreferencesLoaded(true);
+      }
     }
-  }, [enabledHeroIds]);
+  }
+
+  loadPreferences();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
+
+
+/* Sauvegarde automatique */
+useEffect(() => {
+  if (!heroPreferencesLoaded) {
+    return;
+  }
+
+  const disabledHeroes = HEROES
+    .filter((hero) => !enabledHeroIds.has(hero.id))
+    .map((hero) => hero.id);
+
+  saveHeroPreferences(disabledHeroes).catch((error) => {
+    console.error(
+      "Erreur lors de la sauvegarde des préférences héros :",
+      error
+    );
+  });
+}, [enabledHeroIds, heroPreferencesLoaded]);
 
   /* =======================================================
      USER
