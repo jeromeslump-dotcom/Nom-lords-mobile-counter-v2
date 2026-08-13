@@ -745,7 +745,6 @@ useEffect(() => {
         setHeroPreferencesLoaded(true);
         return;
       }
-
       const disabledHeroes = await loadHeroPreferences();
 
       if (cancelled) return;
@@ -766,6 +765,10 @@ useEffect(() => {
         "Erreur lors du chargement des préférences héros :",
         error
       );
+    } finally {
+      if (!cancelled) {
+        setHeroPreferencesLoaded(true);
+      }
     }
   }
 
