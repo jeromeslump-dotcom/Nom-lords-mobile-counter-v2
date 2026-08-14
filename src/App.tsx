@@ -2239,14 +2239,14 @@ const team =
                       </div>
 
                       {/* PSEUDO SOUS LA CARTE */}
-                      <div className="mt-1.5 text-center text-[10px] sm:text-xs font-semibold text-white/60 truncate">
+                      <div className="mt-1.5 text-center text-[11px] sm:text-xs font-semibold text-white/75 truncate">
                         {hero.alias}
                       </div>
 
                       {/* TYPE + CLASSE SOUS LE PSEUDO */}
                       <div className="mt-0.5 flex items-center justify-center gap-1">
                         <span
-                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${TYPE_TEXT[hero.type]}`}
+                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[10px] font-black ${TYPE_TEXT[hero.type]}`}
                           title={hero.type}
                         >
                           {hero.type === "Infantry"
@@ -2259,7 +2259,7 @@ const team =
                         </span>
 
                         <span
-                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${CLASS_TEXT[hero.cls]}`}
+                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[10px] font-black ${CLASS_TEXT[hero.cls]}`}
                           title={hero.cls}
                         >
                           {hero.cls}
@@ -2411,14 +2411,14 @@ const team =
                       </div>
 
                       {/* PSEUDO SOUS LA CARTE */}
-                      <div className="mt-1.5 text-center text-[10px] sm:text-xs font-semibold text-white/60 truncate">
+                      <div className="mt-1.5 text-center text-[11px] sm:text-xs font-semibold text-white/75 truncate">
                         {hero.alias}
                       </div>
 
                       {/* TYPE + CLASSE SOUS LE PSEUDO */}
                       <div className="mt-0.5 flex items-center justify-center gap-1">
                         <span
-                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${TYPE_TEXT[hero.type]}`}
+                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[10px] font-black ${TYPE_TEXT[hero.type]}`}
                           title={hero.type}
                         >
                           {hero.type === "Infantry"
@@ -2431,7 +2431,7 @@ const team =
                         </span>
 
                         <span
-                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${CLASS_TEXT[hero.cls]}`}
+                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[10px] font-black ${CLASS_TEXT[hero.cls]}`}
                           title={hero.cls}
                         >
                           {hero.cls}
@@ -2439,7 +2439,7 @@ const team =
                       </div>
 
                       {/* ENNEMIS COUVERTS RECOMMANDATION */}
-                      <div className="mt-1.5 text-center">
+                      <div className="mt-2 text-center">
                         <div className="flex flex-wrap items-center justify-center gap-1">
                           {(
                             report.find(
@@ -2460,7 +2460,7 @@ const team =
                               <span
                                 key={t.id}
                                 title={`Contre ${enemy.name}`}
-                                className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/20"
+                                className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-200 border border-rose-500/20"
                               >
                                 <img
                                   src={enemy.img}
