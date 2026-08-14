@@ -1,12 +1,6 @@
 
 
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-
+import { useEffect, useMemo, useState } from "react";
 import {
   RotateCcw,
   Search,
@@ -49,46 +43,17 @@ import {
 import type { Combat } from "./storage";
 
 import {
-  addCombat,
   loadCombats,
+  addCombat,
   removeCombat,
-  getCurrentUser,
   signIn,
   signOut,
-  loadHeroPreferences,
-  saveHeroPreferences,
+  getCurrentUser,
 } from "./storage";
 
 const MAX_PICKS = 5;
 
 const HERO_SETTINGS_KEY = "lords-mobile-counter-v2-enabled-heroes";
-type StatRankingKey =
-  | "hp"
-  | "atk"
-  | "def"
-  | "matk"
-  | "mdef";
-
-const STAT_RANKINGS: {
-  key: StatRankingKey;
-  label: string;
-}[] = [
-  { key: "hp", label: "PV" },
-  { key: "atk", label: "ATK" },
-  { key: "def", label: "DEF" },
-  { key: "matk", label: "ATQ MAG" },
-  { key: "mdef", label: "MDEF" },
-];
-const getHeroRanking = (
-  heroes: typeof HEROES,
-  key: StatRankingKey
-) => {
-  return [...heroes].sort(
-    (a, b) =>
-      b.stats[key] - a.stats[key] ||
-      a.name.localeCompare(b.name)
-  );
-};
 
 type HeroRoleFilter = "All" | "Tank" | "Dégâts" | "Soutien";
 
@@ -110,7 +75,7 @@ function HeroGridPicker({
   enabledIds: Set<string>;
 }) {
   const [q, setQ] = useState("");
-  const [role, setRole] = useState<"All" | HeroClass>("All");
+  const [role, setRole] = useState<HeroRoleFilter>("All");
 
   const pickSet = useMemo(() => new Set(picks), [picks]);
 
@@ -118,7 +83,7 @@ function HeroGridPicker({
     if (!enabledIds.has(h.id)) return false;
     if (excludeIds.has(h.id)) return false;
 
-    if (role !== "All" && h.cls !== role) return false;
+    if (role !== "All" && heroRole(h) !== role) return false;
 
     if (
       q &&
@@ -150,7 +115,7 @@ function HeroGridPicker({
         </div>
 
         <div className="flex gap-1.5 overflow-x-auto pb-1">
-          {(["All", ...CLASSES] as const).map((r) => (
+          {(["All", "Tank", "Dégâts", "Soutien"] as const).map((r) => (
             <button
               key={r}
               onClick={() => setRole(r)}
@@ -160,7 +125,7 @@ function HeroGridPicker({
                   : "bg-white/5 text-white/60 hover:bg-white/10"
               }`}
             >
-              {r === "All" ? "Toutes classes" : r}
+              {r === "All" ? "Tous" : r}
             </button>
           ))}
         </div>
@@ -716,86 +681,68 @@ export default function App() {
   const [dragOverIndex, setDragOverIndex] =
     useState<number | null>(null);
 
-/* =======================================================
-   ENABLED HEROES
-   ======================================================= */
+  /* =======================================================
+     ENABLED HEROES
+     ======================================================= */
 
-const enabledHeroesHydrated = useRef(false);
+  const [enabledHeroIds, setEnabledHeroIds] =
+    useState<Set<string>>(
+      () => {
+        try {
+          const saved =
+            localStorage.getItem(
+              HERO_SETTINGS_KEY
+            );
 
-const [enabledHeroIds, setEnabledHeroIds] = useState<Set<string>>(
-  () => new Set(HEROES.map((hero) => hero.id))
-);
+          if (!saved) {
+            return new Set(
+              HEROES.map((h) => h.id)
+            );
+          }
 
-const [heroPreferencesLoaded, setHeroPreferencesLoaded] =
-  useState(false);
+          const parsed =
+            JSON.parse(saved);
 
-useEffect(() => {
-  let cancelled = false;
+          if (
+            !Array.isArray(parsed)
+          ) {
+            return new Set(
+              HEROES.map((h) => h.id)
+            );
+          }
 
-  async function loadPreferences() {
-    try {
-      const user = await getCurrentUser();
+          const validIds =
+            parsed.filter((id) =>
+              HEROES.some(
+                (h) => h.id === id
+              )
+            );
 
-      if (cancelled) return;
-
-      if (!user) {
-        console.warn(
-          "Préférences héros : utilisateur non connecté."
-        );
-        setHeroPreferencesLoaded(true);
-        return;
+          return new Set(validIds);
+        } catch {
+          return new Set(
+            HEROES.map((h) => h.id)
+          );
+        }
       }
-      const disabledHeroes = await loadHeroPreferences();
+    );
 
-      if (cancelled) return;
-
-      const disabledSet = new Set(disabledHeroes);
-
-      setEnabledHeroIds(
-        new Set(
-          HEROES
-            .filter((hero) => !disabledSet.has(hero.id))
-            .map((hero) => hero.id)
+  /* Sauvegarde automatique */
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        HERO_SETTINGS_KEY,
+        JSON.stringify(
+          Array.from(enabledHeroIds)
         )
       );
-
-      setHeroPreferencesLoaded(true);
     } catch (error) {
       console.error(
-        "Erreur lors du chargement des préférences héros :",
+        "Impossible de sauvegarder la configuration des héros.",
         error
       );
-    } finally {
-      if (!cancelled) {
-        setHeroPreferencesLoaded(true);
-      }
     }
-  }
-
-  loadPreferences();
-
-  return () => {
-    cancelled = true;
-  };
-}, []);
-
-/* Sauvegarde automatique */
-useEffect(() => {
-  if (!heroPreferencesLoaded) {
-    return;
-  }
-
-  const disabledHeroes = HEROES
-    .filter((hero) => !enabledHeroIds.has(hero.id))
-    .map((hero) => hero.id);
-
-  saveHeroPreferences(disabledHeroes).catch((error) => {
-    console.error(
-      "Erreur lors de la sauvegarde des préférences héros :",
-      error
-    );
-  });
-}, [enabledHeroIds, heroPreferencesLoaded]);
+  }, [enabledHeroIds]);
 
   /* =======================================================
      USER
@@ -937,7 +884,12 @@ useEffect(() => {
           return false;
         }
 
-
+        if (
+          activeRole !== "All" &&
+          heroRole(h) !== activeRole
+        ) {
+          return false;
+        }
 
         if (
           activeClass !== "All" &&
@@ -971,12 +923,13 @@ useEffect(() => {
             b.name
           )
       );
-}, [
-  query,
-  activeClass,
-  usage,
-  enabledHeroIds,
-]);
+    }, [
+      query,
+      activeRole,
+      activeClass,
+      usage,
+      enabledHeroIds,
+    ]);
 
   const team =
     useMemo(
@@ -3350,362 +3303,150 @@ useEffect(() => {
     </span>
   </div>
 
-  {/* =================================================
-      ENNEMI / MOI
-      ================================================= */}
-
-  <div className="grid grid-cols-2 gap-3">
-
-    {/* ================= ENNEMI ================= */}
-
-    <div className="rounded-xl border border-rose-500/20 bg-rose-500/[0.03] p-3">
-
-      <div className="text-center text-[10px] uppercase tracking-wider font-bold text-rose-300/70 mb-3">
-        Ennemi
-      </div>
-
-      <div className="space-y-3">
-
-        {/* ATQ */}
-        <div className="text-center">
-          <div
-            className={`text-base font-bold ${
-              enemySum.atk > mySum.atk
-                ? "text-emerald-300"
-                : enemySum.atk < mySum.atk
-                ? "text-rose-300"
-                : "text-white/70"
-            }`}
-          >
-            {enemySum.atk.toLocaleString("fr-FR")}
-          </div>
-
-          <div className="text-[9px] text-white/35">
-            ATQ
-          </div>
-
-          <div
-            className={`text-[10px] font-semibold ${
-              enemySum.atkPct > mySum.atkPct
-                ? "text-emerald-300"
-                : enemySum.atkPct < mySum.atkPct
-                ? "text-rose-300"
-                : "text-white/50"
-            }`}
-          >
-            {enemySum.atkPct}%
-          </div>
-        </div>
-
-        {/* MATK */}
-        <div className="text-center">
-          <div className="text-[9px] text-white/35 mb-0.5">
-            MATK
-          </div>
-
-          <div
-            className={`text-sm font-semibold ${
-              enemySum.matkPct > mySum.matkPct
-                ? "text-emerald-300"
-                : enemySum.matkPct < mySum.matkPct
-                ? "text-rose-300"
-                : "text-white/50"
-            }`}
-          >
-            {enemySum.matkPct}%
-          </div>
-        </div>
-
-        {/* DEF */}
-        <div className="text-center">
-          <div
-            className={`text-base font-bold ${
-              enemySum.def > mySum.def
-                ? "text-emerald-300"
-                : enemySum.def < mySum.def
-                ? "text-rose-300"
-                : "text-white/70"
-            }`}
-          >
-            {enemySum.def.toLocaleString("fr-FR")}
-          </div>
-
-          <div className="text-[9px] text-white/35">
-            DEF
-          </div>
-
-          <div
-            className={`text-[10px] font-semibold ${
-              enemySum.defPct > mySum.defPct
-                ? "text-emerald-300"
-                : enemySum.defPct < mySum.defPct
-                ? "text-rose-300"
-                : "text-white/50"
-            }`}
-          >
-            {enemySum.defPct}%
-          </div>
-        </div>
-
-        {/* MDEF */}
-        <div className="text-center">
-          <div className="text-[9px] text-white/35 mb-0.5">
-            MDEF
-          </div>
-
-          <div
-            className={`text-sm font-semibold ${
-              enemySum.mdefPct > mySum.mdefPct
-                ? "text-emerald-300"
-                : enemySum.mdefPct < mySum.mdefPct
-                ? "text-rose-300"
-                : "text-white/50"
-            }`}
-          >
-            {enemySum.mdefPct}%
-          </div>
-        </div>
-
-        {/* PV */}
-        <div className="text-center">
-          <div
-            className={`text-base font-bold ${
-              enemySum.hp > mySum.hp
-                ? "text-emerald-300"
-                : enemySum.hp < mySum.hp
-                ? "text-rose-300"
-                : "text-white/70"
-            }`}
-          >
-            {enemySum.hp.toLocaleString("fr-FR")}
-          </div>
-
-          <div className="text-[9px] text-white/35">
-            PV
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-
-    {/* ================= MOI ================= */}
-
-    <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.03] p-3">
-
-      <div className="text-center text-[10px] uppercase tracking-wider font-bold text-emerald-300/70 mb-3">
-        Moi
-      </div>
-
-      <div className="space-y-3">
-
-        {/* ATQ */}
-        <div className="text-center">
-          <div
-            className={`text-base font-bold ${
-              mySum.atk > enemySum.atk
-                ? "text-emerald-300"
-                : mySum.atk < enemySum.atk
-                ? "text-rose-300"
-                : "text-white/70"
-            }`}
-          >
-            {mySum.atk.toLocaleString("fr-FR")}
-          </div>
-
-          <div className="text-[9px] text-white/35">
-            ATQ
-          </div>
-
-          <div
-            className={`text-[10px] font-semibold ${
-              mySum.atkPct > enemySum.atkPct
-                ? "text-emerald-300"
-                : mySum.atkPct < enemySum.atkPct
-                ? "text-rose-300"
-                : "text-white/50"
-            }`}
-          >
-            {mySum.atkPct}%
-          </div>
-        </div>
-
-        {/* MATK */}
-        <div className="text-center">
-          <div className="text-[9px] text-white/35 mb-0.5">
-            MATK
-          </div>
-
-          <div
-            className={`text-sm font-semibold ${
-              mySum.matkPct > enemySum.matkPct
-                ? "text-emerald-300"
-                : mySum.matkPct < enemySum.matkPct
-                ? "text-rose-300"
-                : "text-white/50"
-            }`}
-          >
-            {mySum.matkPct}%
-          </div>
-        </div>
-
-        {/* DEF */}
-        <div className="text-center">
-          <div
-            className={`text-base font-bold ${
-              mySum.def > enemySum.def
-                ? "text-emerald-300"
-                : mySum.def < enemySum.def
-                ? "text-rose-300"
-                : "text-white/70"
-            }`}
-          >
-            {mySum.def.toLocaleString("fr-FR")}
-          </div>
-
-          <div className="text-[9px] text-white/35">
-            DEF
-          </div>
-
-          <div
-            className={`text-[10px] font-semibold ${
-              mySum.defPct > enemySum.defPct
-                ? "text-emerald-300"
-                : mySum.defPct < enemySum.defPct
-                ? "text-rose-300"
-                : "text-white/50"
-            }`}
-          >
-            {mySum.defPct}%
-          </div>
-        </div>
-
-        {/* MDEF */}
-        <div className="text-center">
-          <div className="text-[9px] text-white/35 mb-0.5">
-            MDEF
-          </div>
-
-          <div
-            className={`text-sm font-semibold ${
-              mySum.mdefPct > enemySum.mdefPct
-                ? "text-emerald-300"
-                : mySum.mdefPct < enemySum.mdefPct
-                ? "text-rose-300"
-                : "text-white/50"
-            }`}
-          >
-            {mySum.mdefPct}%
-          </div>
-        </div>
-
-        {/* PV */}
-        <div className="text-center">
-          <div
-            className={`text-base font-bold ${
-              mySum.hp > enemySum.hp
-                ? "text-emerald-300"
-                : mySum.hp < enemySum.hp
-                ? "text-rose-300"
-                : "text-white/70"
-            }`}
-          >
-            {mySum.hp.toLocaleString("fr-FR")}
-          </div>
-
-          <div className="text-[9px] text-white/35">
-            PV
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-
-
-  {/* =================================================
-      COMPARAISON VISUELLE
-      ================================================= */}
-
-  <div className="mt-6 pt-4 border-t border-white/5">
-
-    <div className="text-center text-[10px] uppercase tracking-wider text-white/35 mb-4">
-      Comparaison visuelle
-    </div>
+  <div className="space-y-3">
 
     {[
       {
-        label: "ATQ",
+        key: "atk",
+        label: "ATTAQUE",
         enemy: enemySum.atk,
         mine: mySum.atk,
       },
       {
-        label: "DEF",
+        key: "matk",
+        label: "ATQ MAG",
+        enemy: enemySum.matk,
+        mine: mySum.matk,
+      },
+      {
+        key: "def",
+        label: "DÉFENSE",
         enemy: enemySum.def,
         mine: mySum.def,
       },
       {
+        key: "mdef",
+        label: "MDEF",
+        enemy: enemySum.mdef,
+        mine: mySum.mdef,
+      },
+      {
+        key: "hp",
         label: "PV",
         enemy: enemySum.hp,
         mine: mySum.hp,
       },
-    ].map((bar) => {
+    ].map((stat) => {
 
       const max = Math.max(
-        bar.enemy,
-        bar.mine,
+        stat.enemy,
+        stat.mine,
         1
       );
 
       const enemyWidth =
-        (bar.enemy / max) * 100;
+        (stat.enemy / max) * 100;
 
       const mineWidth =
-        (bar.mine / max) * 100;
+        (stat.mine / max) * 100;
+
+      const enemyBetter =
+        stat.enemy > stat.mine;
+
+      const mineBetter =
+        stat.mine > stat.enemy;
 
       return (
         <div
-          key={bar.label}
-          className="grid grid-cols-[1fr_45px_1fr] items-center gap-2 mb-3"
+          key={stat.key}
+          className="grid grid-cols-[1fr_55px_auto_55px_1fr] items-center gap-2"
         >
 
-          {/* ENNEMI */}
+          {/* ================================
+              BARRE ENNEMI
+              ANCRÉE AU CENTRE
+              ================================ */}
+
           <div className="flex justify-end">
-            <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
+
+            <div className="w-full h-2.5 rounded-full bg-white/5 overflow-hidden">
 
               <div
                 className={`h-full rounded-full ${
-                  bar.enemy > bar.mine
+                  enemyBetter
                     ? "bg-emerald-400"
-                    : bar.enemy < bar.mine
+                    : mineBetter
                     ? "bg-rose-400"
                     : "bg-white/30"
                 }`}
                 style={{
                   width: `${enemyWidth}%`,
+                  marginLeft: "auto",
                 }}
               />
 
             </div>
+
           </div>
 
 
-          {/* LABEL */}
-          <span className="text-[9px] text-white/35 text-center">
-            {bar.label}
+          {/* ================================
+              VALEUR ENNEMIE
+              ================================ */}
+
+          <span
+            className={`text-right text-xs font-bold tabular-nums ${
+              enemyBetter
+                ? "text-emerald-300"
+                : mineBetter
+                ? "text-rose-300"
+                : "text-white/70"
+            }`}
+          >
+            {stat.enemy.toLocaleString("fr-FR")}
           </span>
 
 
-          {/* MOI */}
+          {/* ================================
+              NOM STAT
+              ================================ */}
+
+          <span className="text-[9px] font-bold text-white/40 text-center whitespace-nowrap">
+            {stat.label}
+          </span>
+
+
+          {/* ================================
+              VALEUR MOI
+              ================================ */}
+
+          <span
+            className={`text-left text-xs font-bold tabular-nums ${
+              mineBetter
+                ? "text-emerald-300"
+                : enemyBetter
+                ? "text-rose-300"
+                : "text-white/70"
+            }`}
+          >
+            {stat.mine.toLocaleString("fr-FR")}
+          </span>
+
+
+          {/* ================================
+              BARRE MOI
+              ANCRÉE AU CENTRE
+              ================================ */}
+
           <div>
-            <div className="w-full h-2 rounded-full bg-white/5 overflow-hidden">
+
+            <div className="w-full h-2.5 rounded-full bg-white/5 overflow-hidden">
 
               <div
                 className={`h-full rounded-full ${
-                  bar.mine > bar.enemy
+                  mineBetter
                     ? "bg-emerald-400"
-                    : bar.mine < bar.enemy
+                    : enemyBetter
                     ? "bg-rose-400"
                     : "bg-white/30"
                 }`}
@@ -3715,6 +3456,7 @@ useEffect(() => {
               />
 
             </div>
+
           </div>
 
         </div>
@@ -3725,12 +3467,18 @@ useEffect(() => {
 
 </div>
 
-
 </div>
 
               );
               })()}
 
+{/* =================================================
+    BEST WIN TEAM
+    ================================================= */}
+
+{/* =================================================
+    BEST WIN TEAM
+    ================================================= */}
 {/* =================================================
     BEST WIN TEAM
     ================================================= */}
@@ -3946,135 +3694,99 @@ useEffect(() => {
         </div>
       )}
 
-  {/* =================================================
-    FILTERS
-    ================================================= */}
+      {/* =================================================
+          FILTERS
+          ================================================= */}
+  
+  
+  
 
-<div className="flex flex-col sm:flex-row gap-3 mb-5">
+        <div className="flex flex-col sm:flex-row gap-3 mb-5">
 
-  {/* RECHERCHE */}
-  <div className="relative flex-1">
-    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
 
-    <input
-      value={query}
-      onChange={(e) => setQuery(e.target.value)}
-      placeholder="Rechercher par nom ou alias..."
-      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/30"
-    />
-  </div>
-
-  {/* CLASSES */}
-  <div className="flex gap-1.5 overflow-x-auto pb-1">
-    {(["All", ...CLASSES] as const).map((c) => (
-      <button
-        key={c}
-        onClick={() => setActiveClass(c)}
-        className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-          activeClass === c
-            ? "bg-white text-black"
-            : "bg-white/5 text-white/60 hover:bg-white/10"
-        } ${
-          activeClass !== "All"
-            ? CLASS_TEXT[c]
-            : ""
-        }`}
-      >
-        {c === "All" ? "Toutes classes" : c}
-      </button>
-    ))}
-  </div>
-
-</div>
-
-
-{/* =================================================
-    STATISTIQUES — CLASSEMENTS
-    ================================================= */}
-
-<div className="mb-6 rounded-2xl border border-white/10 bg-black/20 p-4">
-
-  <div className="flex items-center gap-2 mb-4">
-    <Trophy className="h-4 w-4 text-amber-400" />
-
-    <span className="text-sm font-bold text-white/80">
-      Classements des héros
-    </span>
-
-    <span className="text-[10px] text-white/35">
-      Valeurs individuelles
-    </span>
-  </div>
-
-  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3">
-
-    {STAT_RANKINGS.map((ranking) => {
-      const rankedHeroes = getHeroRanking(
-        HEROES.filter((hero) =>
-          enabledHeroIds.has(hero.id)
-        ),
-        ranking.key
-      );
-
-      return (
-        <div
-          key={ranking.key}
-          className="rounded-xl border border-white/10 bg-white/[0.02] p-3"
-        >
-
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-white/80">
-              {ranking.label}
-            </span>
-
-            <span className="text-[9px] uppercase tracking-wider text-white/30">
-              TOP 10
-            </span>
+            <input
+              value={
+                query
+              }
+              onChange={(e) =>
+                setQuery(
+                  e.target.value
+                )
+              }
+              placeholder="Rechercher par nom ou alias..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/30"
+            />
           </div>
 
-          <div className="space-y-1.5">
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            {(
+              [
+                "All",
+                "Tank",
+                "Dégâts",
+                "Soutien",
+              ] as const
+            ).map((r) => (
+              <button
+                key={r}
+                onClick={() =>
+                  setActiveRole(
+                    r
+                  )
+                }
+                className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+                  activeRole ===
+                  r
+                    ? "bg-white text-black"
+                    : "bg-white/5 text-white/60 hover:bg-white/10"
+                }`}
+              >
+                {r === "All"
+                  ? "Tous"
+                  : r}
+              </button>
+            ))}
+          </div>
 
-            {rankedHeroes
-              .slice(0, 10)
-              .map((hero, index) => (
-                <div
-                  key={hero.id}
-                  className="flex items-center gap-2"
-                >
-
-                  <span className="w-4 text-[9px] text-white/30 text-right">
-                    {index + 1}
-                  </span>
-
-                  <img
-                    src={hero.img}
-                    alt={hero.name}
-                    loading="lazy"
-                    className="h-7 w-7 rounded-md object-cover ring-1 ring-white/10"
-                  />
-
-                  <span className="flex-1 min-w-0 text-[10px] text-white/70 truncate">
-                    {hero.name}
-                  </span>
-
-                  <span className="text-[10px] font-bold tabular-nums text-amber-300">
-                    {formatStat(hero.stats[ranking.key])}
-                  </span>
-
-                </div>
-              ))}
-
+          <div className="flex gap-1.5 overflow-x-auto pb-1">
+            {(
+              [
+                "All",
+                ...CLASSES,
+              ] as const
+            ).map((c) => (
+              <button
+                key={c}
+                onClick={() =>
+                  setActiveClass(
+                    c
+                  )
+                }
+                className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
+                  activeClass ===
+                  c
+                    ? "bg-white text-black"
+                    : "bg-white/5 text-white/60 hover:bg-white/10"
+                } ${
+                  activeClass !==
+                    c &&
+                  c !==
+                    "All"
+                    ? CLASS_TEXT[
+                        c
+                      ]
+                    : ""
+                }`}
+              >
+                {c === "All"
+                  ? "Toutes classes"
+                  : c}
+              </button>
+            ))}
           </div>
         </div>
-      );
-    })}
-
-  </div>
-</div>
-
-
-
-
 
         {/* =================================================
             ROSTER
