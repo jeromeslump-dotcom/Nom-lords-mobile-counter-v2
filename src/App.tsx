@@ -29,15 +29,12 @@ import {
   TYPE_GRADIENT,
   TYPE_TEXT,
   CLASS_TEXT,
-  heroRole,
-  ROLE_TEXT,
   formatStat,
 } from "./heroes";
 
 import {
   coverageReport,
   recommendTeam,
-  balancedTeam,
 } from "./counter";
 
 import type { Combat } from "./storage";
@@ -55,7 +52,7 @@ const MAX_PICKS = 5;
 
 const HERO_SETTINGS_KEY = "lords-mobile-counter-v2-enabled-heroes";
 
-type HeroRoleFilter = "All" | "Tank" | "Dégâts" | "Soutien";
+
 
 /* =========================================================
    HERO GRID PICKER
@@ -75,15 +72,12 @@ function HeroGridPicker({
   enabledIds: Set<string>;
 }) {
   const [q, setQ] = useState("");
-  const [role, setRole] = useState<HeroRoleFilter>("All");
 
   const pickSet = useMemo(() => new Set(picks), [picks]);
 
   const filtered = HEROES.filter((h) => {
     if (!enabledIds.has(h.id)) return false;
     if (excludeIds.has(h.id)) return false;
-
-    if (role !== "All" && heroRole(h) !== role) return false;
 
     if (
       q &&
@@ -114,21 +108,6 @@ function HeroGridPicker({
           />
         </div>
 
-        <div className="flex gap-1.5 overflow-x-auto pb-1">
-          {(["All", "Tank", "Dégâts", "Soutien"] as const).map((r) => (
-            <button
-              key={r}
-              onClick={() => setRole(r)}
-              className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                role === r
-                  ? "bg-white text-black"
-                  : "bg-white/5 text-white/60 hover:bg-white/10"
-              }`}
-            >
-              {r === "All" ? "Tous" : r}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-64 overflow-y-auto pr-1">
@@ -325,20 +304,12 @@ function HeroManager({
   onClose: () => void;
 }) {
   const [q, setQ] = useState("");
-  const [role, setRole] =
-    useState<HeroRoleFilter>("All");
   const [cls, setCls] =
     useState<HeroClass | "All">("All");
 
   const filtered = useMemo(() => {
     return HEROES.filter((h) => {
-      if (
-        role !== "All" &&
-        heroRole(h) !== role
-      ) {
-        return false;
-      }
-
+     
       if (
         cls !== "All" &&
         h.cls !== cls
@@ -368,7 +339,7 @@ function HeroManager({
         a.name.localeCompare(b.name)
       );
     });
-  }, [q, role, cls, enabledIds]);
+ }, [q, cls, enabledIds]);
 
   const enabledCount = enabledIds.size;
   const totalCount = HEROES.length;
@@ -497,7 +468,9 @@ function HeroManager({
         {/* Hero list */}
         <div className="p-5 sm:p-6 overflow-y-auto max-h-[calc(90vh-255px)]">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-            {filtered.map((hero) => {
+            {HEROES
+  .filter((h) => enabledHeroIds.has(h.id))
+  .map((hero) => {
               const enabled =
                 enabledIds.has(hero.id);
 
@@ -638,9 +611,6 @@ export default function App() {
 
   const [loggingIn, setLoggingIn] =
     useState(false);
-
-  const [activeRole, setActiveRole] =
-    useState<HeroRoleFilter>("All");
 
   const [activeClass, setActiveClass] =
     useState<HeroClass | "All">("All");
@@ -875,62 +845,6 @@ export default function App() {
       return counts;
     }, [combats]);
 
-  const filtered =
-    useMemo(() => {
-      return HEROES.filter((h) => {
-        if (
-          !enabledHeroIds.has(h.id)
-        ) {
-          return false;
-        }
-
-        if (
-          activeRole !== "All" &&
-          heroRole(h) !== activeRole
-        ) {
-          return false;
-        }
-
-        if (
-          activeClass !== "All" &&
-          h.cls !== activeClass
-        ) {
-          return false;
-        }
-
-        if (
-          query &&
-          !h.name
-            .toLowerCase()
-            .includes(
-              query.toLowerCase()
-            ) &&
-          !h.alias
-            .toLowerCase()
-            .includes(
-              query.toLowerCase()
-            )
-        ) {
-          return false;
-        }
-
-        return true;
-      }).sort(
-        (a, b) =>
-          (usage[b.id] ?? 0) -
-            (usage[a.id] ?? 0) ||
-          a.name.localeCompare(
-            b.name
-          )
-      );
-    }, [
-      query,
-      activeRole,
-      activeClass,
-      usage,
-      enabledHeroIds,
-    ]);
-
   const team =
     useMemo(
       () =>
@@ -943,14 +857,6 @@ export default function App() {
       [picks, full, combats]
     );
 
-  const balanced =
-    useMemo(
-      () =>
-        full
-          ? balancedTeam(picks)
-          : [],
-      [picks, full]
-    );
 
   const editedHeroes =
     useMemo(
@@ -1355,7 +1261,6 @@ export default function App() {
   function reset() {
     setPicks([]);
     setQuery("");
-    setActiveRole("All");
     setActiveClass("All");
     setShowResult(false);
     setEditedTeam([]);
@@ -3581,67 +3486,6 @@ export default function App() {
                 </div>
               )}
 
-           {/* =================================================
-              BALANCED TEAM
-              ================================================= */}
-
-          {balanced.length === 5 && (
-            <div className="mb-6 rounded-2xl border border-sky-500/20 bg-sky-500/[0.03] p-4">
-              <h3 className="text-sm font-bold flex items-center gap-2 mb-3 text-sky-300">
-                <Shield className="h-4 w-4" />
-
-                Équipe équilibrée
-
-                <span className="text-xs font-normal text-white/40">
-                  Tank · Soigneur · Dégâts
-                </span>
-              </h3>
-
-              <div className="grid grid-cols-5 gap-2">
-                {balanced.map((h) => (
-                  <button
-                    key={h.id}
-                    onClick={() =>
-                      setEditedTeam(
-                        balanced.map((x) => x.id)
-                      )
-                    }
-                    className="group relative rounded-xl overflow-hidden border border-sky-500/30 hover:border-sky-400/60 hover:scale-[1.03] transition-all"
-                  >
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${TYPE_GRADIENT[h.type]} opacity-70`}
-                    />
-
-                    <div className="absolute inset-0 bg-black/40" />
-
-                    <div className="relative p-2 flex flex-col items-center gap-1">
-                      <img
-                        src={h.img}
-                        alt={h.name}
-                        loading="lazy"
-                        className="h-12 w-12 rounded-lg object-cover ring-1 ring-white/20"
-                      />
-
-                      <span className="text-white font-semibold text-[11px] text-center leading-tight drop-shadow line-clamp-1">
-                        {h.name}
-                      </span>
-
-                      <span
-                        className={`text-[8px] uppercase tracking-wider font-bold ${ROLE_TEXT[heroRole(h)]} drop-shadow`}
-                      >
-                        {heroRole(h)}
-                      </span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
-              <p className="mt-3 text-[11px] text-white/40">
-                Clique sur l'équipe pour l'utiliser. Composition garantie
-                avec un tank, un soigneur et des dégâts.
-              </p>
-            </div>
-          )}
 
           {/* =================================================
               RECORD RESULT
@@ -3721,33 +3565,7 @@ export default function App() {
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-1">
-            {(
-              [
-                "All",
-                "Tank",
-                "Dégâts",
-                "Soutien",
-              ] as const
-            ).map((r) => (
-              <button
-                key={r}
-                onClick={() =>
-                  setActiveRole(
-                    r
-                  )
-                }
-                className={`px-3 py-2 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
-                  activeRole ===
-                  r
-                    ? "bg-white text-black"
-                    : "bg-white/5 text-white/60 hover:bg-white/10"
-                }`}
-              >
-                {r === "All"
-                  ? "Tous"
-                  : r}
-              </button>
-            ))}
+            
           </div>
 
           <div className="flex gap-1.5 overflow-x-auto pb-1">
@@ -3793,7 +3611,7 @@ export default function App() {
             ================================================= */}
 
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5 sm:gap-3">
-          {filtered.map(
+          {HEROES.filter((h) => enabledHeroIds.has(h.id)).map(
             (hero) => (
               <button
                 key={
@@ -3857,16 +3675,6 @@ export default function App() {
                   >
                     {
                       hero.cls
-                    }
-                  </span>
-
-                  <span
-                    className={`text-[9px] uppercase tracking-wider font-bold ${ROLE_TEXT[heroRole(hero)]} drop-shadow`}
-                  >
-                    {
-                      heroRole(
-                        hero
-                      )
                     }
                   </span>
 
@@ -3957,14 +3765,6 @@ export default function App() {
             )
           )}
         </div>
-
-        {filtered.length ===
-          0 && (
-          <p className="text-center text-white/40 py-10">
-            Aucun héros actif ne
-            correspond.
-          </p>
-        )}
 
         {/* =================================================
             FOOTER
