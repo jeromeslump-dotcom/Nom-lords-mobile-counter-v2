@@ -479,8 +479,7 @@ return a.name.localeCompare(b.name);
         {/* Hero list */}
         <div className="p-5 sm:p-6 overflow-y-auto max-h-[calc(90vh-255px)]">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-{HEROES
-  .map((hero) => {
+            {HEROES.map((hero) => {
               const enabled =
                 enabledIds.has(hero.id);
 
@@ -490,71 +489,141 @@ return a.name.localeCompare(b.name);
                   onClick={() =>
                     onToggleHero(hero.id)
                   }
-                  className={`relative overflow-hidden rounded-xl border text-left transition-all ${
+                  className={`relative overflow-hidden rounded-2xl border text-left transition-all ${
                     enabled
                       ? "border-emerald-400/40 bg-emerald-500/[0.05]"
                       : "border-white/10 bg-black/20 opacity-50"
                   } hover:scale-[1.02]`}
                 >
                   <div
-                    className={`absolute inset-0 bg-gradient-to-br ${TYPE_GRADIENT[hero.type]} ${
+                    className={`absolute inset-0 bg-gradient-to-br ${
+                      TYPE_GRADIENT[hero.type]
+                    } ${
                       enabled
-                        ? "opacity-40"
+                        ? "opacity-30"
                         : "opacity-10"
                     }`}
                   />
 
                   <div className="relative p-2.5">
-                    <div className="flex items-center gap-2">
+
+                    {/* CARTE */}
+                    <div className="aspect-square rounded-xl overflow-hidden relative bg-[#11151c]">
                       <img
                         src={hero.img}
                         alt={hero.name}
                         loading="lazy"
-                        className={`h-11 w-11 rounded-lg object-cover ring-1 ${
+                        className={`absolute inset-0 h-full w-full object-cover ${
                           enabled
-                            ? "ring-emerald-400/40"
-                            : "ring-white/10 grayscale"
+                            ? ""
+                            : "grayscale"
                         }`}
                       />
 
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-white truncate">
-                            {hero.name}
-                          </span>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/15 to-transparent" />
 
-                          <span
-                            className={`shrink-0 h-5 w-5 rounded-md flex items-center justify-center ${
-                              enabled
-                                ? "bg-emerald-400 text-black"
-                                : "bg-white/10 text-white/30"
-                            }`}
-                          >
-                            {enabled ? (
-                              <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                            ) : (
-                              <X className="h-3 w-3" />
-                            )}
-                          </span>
+                      <span className="absolute bottom-2 left-2 right-2 text-center text-xs font-bold text-white drop-shadow-lg line-clamp-1">
+                        {hero.name}
+                      </span>
+
+                      <span
+                        className={`absolute top-2 right-2 h-5 w-5 rounded-md flex items-center justify-center ${
+                          enabled
+                            ? "bg-emerald-400 text-black"
+                            : "bg-black/70 text-white/30"
+                        }`}
+                      >
+                        {enabled ? (
+                          <Check
+                            className="h-3.5 w-3.5"
+                            strokeWidth={3}
+                          />
+                        ) : (
+                          <X className="h-3 w-3" />
+                        )}
+                      </span>
+                    </div>
+
+                    {/* PSEUDO */}
+                    <div className="mt-1.5 text-center text-[10px] sm:text-xs font-semibold text-white/60 truncate">
+                      {hero.alias}
+                    </div>
+
+                    {/* TYPE + CLASSE */}
+                    <div className="mt-0.5 flex items-center justify-center gap-1">
+                      <span
+                        className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${
+                          TYPE_TEXT[hero.type]
+                        }`}
+                        title={hero.type}
+                      >
+                        {hero.type === "Infantry"
+                          ? "🛡️"
+                          : hero.type === "Cavalry"
+                          ? "🐎"
+                          : hero.type === "Ranged"
+                          ? "🏹"
+                          : "⚙️"}
+                      </span>
+
+                      <span
+                        className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${
+                          CLASS_TEXT[hero.cls]
+                        }`}
+                        title={hero.cls}
+                      >
+                        {hero.cls}
+                      </span>
+                    </div>
+
+                    {/* STATS */}
+                    <div className="mt-1.5 grid grid-cols-5 gap-0.5">
+                      <div className="rounded bg-black/35 px-0.5 py-1 text-center">
+                        <div className="text-[7px] text-white/35">
+                          PV
                         </div>
+                        <div className="text-[8px] font-bold text-white/80">
+                          {hero.stats.hp}
+                        </div>
+                      </div>
 
-                        <div className="flex items-center gap-1 mt-1">
-                          <span
-                            className={`text-[8px] font-bold ${CLASS_TEXT[hero.cls]}`}
-                          >
-                            {hero.cls}
-                          </span>
+                      <div className="rounded bg-black/35 px-0.5 py-1 text-center">
+                        <div className="text-[7px] text-white/35">
+                          ATK
+                        </div>
+                        <div className="text-[8px] font-bold text-white/80">
+                          {hero.stats.atk}
+                        </div>
+                      </div>
 
-                          <span className="text-white/20">
-                            ·
-                          </span>
+                      <div className="rounded bg-black/35 px-0.5 py-1 text-center">
+                        <div className="text-[7px] text-white/35">
+                          MATK
+                        </div>
+                        <div className="text-[8px] font-bold text-white/80">
+                          {hero.stats.matk}
+                        </div>
+                      </div>
+
+                      <div className="rounded bg-black/35 px-0.5 py-1 text-center">
+                        <div className="text-[7px] text-white/35">
+                          DEF
+                        </div>
+                        <div className="text-[8px] font-bold text-white/80">
+                          {hero.stats.def}
+                        </div>
+                      </div>
+
+                      <div className="rounded bg-black/35 px-0.5 py-1 text-center">
+                        <div className="text-[7px] text-white/35">
+                          MDEF
+                        </div>
+                        <div className="text-[8px] font-bold text-white/80">
+                          {hero.stats.mdef}
                         </div>
                       </div>
                     </div>
 
-                    <div className="mt-2 text-[9px] text-white/40 truncate">
-                      {hero.alias}
-                    </div>
                   </div>
                 </button>
               );
@@ -3591,24 +3660,14 @@ const team =
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5 sm:gap-3">
          {filtered.map((hero) => (
               <button
-                key={
-                  hero.id
-                }
-                onClick={() =>
-                  toggle(
-                    hero.id
-                  )
-                }
+                key={hero.id}
+                onClick={() => toggle(hero.id)}
                 disabled={
                   full &&
-                  !pickSet.has(
-                    hero.id
-                  )
+                  !pickSet.has(hero.id)
                 }
-                className={`group relative w-full overflow-hidden rounded-2xl border border-white/10 text-left transition-all duration-200 shadow-sm hover:shadow-lg ${
-                  pickSet.has(
-                    hero.id
-                  )
+                className={`group relative w-full overflow-hidden rounded-2xl border text-left transition-all duration-200 ${
+                  pickSet.has(hero.id)
                     ? "border-amber-400/80 ring-1 ring-amber-400/50 scale-[1.02] shadow-lg"
                     : full
                     ? "border-white/10 opacity-30 cursor-not-allowed"
@@ -3616,138 +3675,107 @@ const team =
                 }`}
               >
                 <div
-                  className="absolute inset-0 bg-[#141820]"
+                  className={`absolute inset-0 bg-gradient-to-br ${TYPE_GRADIENT[hero.type]} opacity-30`}
                 />
 
-                <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors" />
+                <div className="absolute inset-0 bg-black/40 group-hover:bg-black/25 transition-colors" />
 
-                <div className="relative p-2 flex flex-col items-center gap-1">
+                <div className="relative p-2.5 flex flex-col items-center">
+
+                  {/* IMAGE */}
                   <img
-                    src={
-                      hero.img
-                    }
-                    alt={
-                      hero.name
-                    }
+                    src={hero.img}
+                    alt={hero.name}
                     loading="lazy"
-                    className="h-14 w-14 rounded-lg object-cover ring-1 ring-white/20"
+                    className="h-20 w-20 sm:h-24 sm:w-24 rounded-xl object-cover ring-1 ring-white/20 shadow-lg"
                   />
 
-                  <span className="text-white font-semibold text-xs text-center leading-tight drop-shadow line-clamp-1">
-                    {
-                      hero.name
-                    }
+                  {/* NOM */}
+                  <span className="mt-2 text-white font-bold text-xs sm:text-sm text-center leading-tight drop-shadow line-clamp-1 w-full">
+                    {hero.name}
                   </span>
 
-                  <span
-                    className={`text-[9px] uppercase tracking-wider font-medium ${TYPE_TEXT[hero.type]} drop-shadow`}
-                  >
-                    {
-                      hero.type
-                    }
+                  {/* PSEUDO */}
+                  <span className="mt-0.5 text-[10px] sm:text-xs font-semibold text-white/60 text-center truncate w-full">
+                    {hero.alias}
                   </span>
 
-                  <span
-                    className={`text-[9px] uppercase tracking-wider font-bold ${CLASS_TEXT[hero.cls]} drop-shadow`}
-                  >
-                    {
-                      hero.cls
-                    }
-                  </span>
+                  {/* TYPE + CLASSE */}
+                  <div className="mt-1.5 flex items-center justify-center gap-1.5">
 
-                  <div className="mt-1 w-full grid grid-cols-2 gap-x-2 gap-y-0.5 text-[8px] text-white/70">
-                    <div className="flex justify-between">
-                      <span className="text-rose-300/80">
+                    <span
+                      className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${TYPE_TEXT[hero.type]}`}
+                      title={hero.type}
+                    >
+                      {hero.type === "Infantry"
+                        ? "🛡️"
+                        : hero.type === "Cavalry"
+                        ? "🐎"
+                        : hero.type === "Ranged"
+                        ? "🏹"
+                        : "⚙️"}
+                    </span>
+
+                    <span
+                      className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${CLASS_TEXT[hero.cls]}`}
+                      title={hero.cls}
+                    >
+                      {hero.cls}
+                    </span>
+
+                  </div>
+
+                  {/* STATS */}
+                  <div className="mt-2 w-full grid grid-cols-2 gap-x-2 gap-y-1 rounded-lg bg-black/35 border border-white/5 px-2 py-1.5 text-[9px]">
+
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-rose-300/90 font-bold">
                         PV
                       </span>
-
-                      <span className="font-semibold">
-                        {formatStat(
-                          hero
-                            .stats
-                            .hp
-                        )}
+                      <span className="font-bold text-white/80">
+                        {formatStat(hero.stats.hp)}
                       </span>
                     </div>
-					
-                    <div className="flex justify-between">
-                      <span className="text-amber-300/80">
+
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-amber-300/90 font-bold">
                         ATK
                       </span>
-
-                      <span className="font-semibold">
-                        {formatStat(
-                          hero
-                            .stats
-                            .atk
-                        )}
+                      <span className="font-bold text-white/80">
+                        {formatStat(hero.stats.atk)}
                       </span>
                     </div>
 
-                    <div className="flex justify-between">
-                      <span className="text-sky-300/80">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-sky-300/90 font-bold">
                         MATK
                       </span>
-
-                      <span className="font-semibold">
-                        {formatStat(
-                          hero
-                            .stats
-                            .matk
-                        )}
+                      <span className="font-bold text-white/80">
+                        {formatStat(hero.stats.matk)}
                       </span>
                     </div>
 
-                    <div className="flex justify-between">
-                      <span className="text-emerald-300/80">
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-emerald-300/90 font-bold">
                         DEF
                       </span>
-
-                      <span className="font-semibold">
-                        {formatStat(
-                          hero
-                            .stats
-                            .def
-                        )}
+                      <span className="font-bold text-white/80">
+                        {formatStat(hero.stats.def)}
                       </span>
                     </div>
 
-                    <div className="flex justify-between">
-                      <span className="text-cyan-300/80">
+                    <div className="col-span-2 flex items-center justify-between gap-1 border-t border-white/5 pt-1">
+                      <span className="text-indigo-300/90 font-bold">
                         MDEF
                       </span>
-
-                      <span className="font-semibold">
-                        {formatStat(
-                          hero
-                            .stats
-                            .mdef
-                        )}
+                      <span className="font-bold text-white/80">
+                        {formatStat(hero.stats.mdef)}
                       </span>
                     </div>
+
                   </div>
+
                 </div>
-
-              {pickSet.has(
-  hero.id
-) && (
-  <>
-    {/* Numéro d'ordre de sélection */}
-    <div className="absolute top-1.5 left-1.5 z-20 h-6 w-6 rounded-full bg-amber-400 border-2 border-black flex items-center justify-center shadow-lg pointer-events-none">
-      <span className="text-xs font-black text-black">
-        {picks.indexOf(hero.id) + 1}
-      </span>
-    </div>
-
-    {/* Bouton retirer */}
-    <div className="absolute top-1.5 right-1.5 z-20 h-5 w-5 rounded-full bg-amber-400 flex items-center justify-center">
-      <X
-        className="h-3 w-3 text-black"
-        strokeWidth={3}
-      />
-    </div>
-  </>
-                )}
               </button>
             )
           )}
