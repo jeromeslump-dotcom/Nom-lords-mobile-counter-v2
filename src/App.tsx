@@ -2135,11 +2135,10 @@ const team =
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-rose-400" />
 
-              <span className="text-sm font-medium text-white/80">
+              <span className="text-xl font-bold text-white/80">
                 Ennemis choisis{" "}
                 <span className="text-white/40">
-                  ({picks.length}/
-                  {MAX_PICKS})
+                  ({picks.length}/{MAX_PICKS})
                 </span>
               </span>
             </div>
@@ -2159,13 +2158,11 @@ const team =
             {Array.from({
               length: MAX_PICKS,
             }).map((_, i) => {
-              const id =
-                picks[i];
+              const id = picks[i];
 
               const hero = id
                 ? HEROES.find(
-                    (h) =>
-                      h.id === id
+                    (h) => h.id === id
                   )
                 : null;
 
@@ -2177,28 +2174,18 @@ const team =
                     setDragIndex(i)
                   }
                   onDragEnd={() => {
-                    setDragIndex(
-                      null
-                    );
-                    setDragOverIndex(
-                      null
-                    );
+                    setDragIndex(null);
+                    setDragOverIndex(null);
                   }}
                   onDragOver={(e) => {
                     e.preventDefault();
-                    setDragOverIndex(
-                      i
-                    );
+                    setDragOverIndex(i);
                   }}
                   onDrop={() => {
                     if (
-                      dragIndex !==
-                        null &&
-                      dragIndex !==
-                        i &&
-                      picks[
-                        dragIndex
-                      ]
+                      dragIndex !== null &&
+                      dragIndex !== i &&
+                      picks[dragIndex]
                     ) {
                       reorderPicks(
                         dragIndex,
@@ -2206,25 +2193,14 @@ const team =
                       );
                     }
 
-                    setDragIndex(
-                      null
-                    );
-
-                    setDragOverIndex(
-                      null
-                    );
+                    setDragIndex(null);
+                    setDragOverIndex(null);
                   }}
-                  className={`aspect-square rounded-2xl border flex items-center justify-center overflow-hidden relative transition-all ${
-                    hero
-                      ? "border-amber-400/50 cursor-grab active:cursor-grabbing"
-                      : "border-dashed border-white/15 bg-white/[0.02]"
-                  } ${
-                    dragOverIndex ===
-                      i &&
-                    dragIndex !==
-                      null &&
+                  className={`transition-all ${
+                    dragOverIndex === i &&
+                    dragIndex !== null &&
                     dragIndex !== i
-                      ? "ring-2 ring-cyan-400/60 scale-105"
+                      ? "ring-2 ring-cyan-400/60 scale-105 rounded-2xl"
                       : ""
                   } ${
                     dragIndex === i
@@ -2234,53 +2210,69 @@ const team =
                 >
                   {hero ? (
                     <>
+                      {/* CARTE */}
                       <div
-                        className={`absolute inset-0 bg-gradient-to-br ${TYPE_GRADIENT[hero.type]} opacity-40`}
-                      />
-
-                      <img
-                        src={hero.img}
-                        alt={hero.name}
-                        loading="lazy"
-                        className="absolute inset-0 h-full w-full object-cover"
-                      />
-
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-
-                      <button
-                        onClick={() =>
-                          toggle(
-                            hero.id
-                          )
-                        }
-                        className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/70 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"
+                        className="aspect-square rounded-2xl border border-amber-400/50 overflow-hidden relative cursor-grab active:cursor-grabbing"
                       >
-                        <X className="h-3 w-3 text-white" />
-                      </button>
+                        <img
+                          src={hero.img}
+                          alt={hero.name}
+                          loading="lazy"
+                          className="absolute inset-0 h-full w-full object-cover"
+                        />
 
-                      <div className="absolute bottom-1 left-1 right-1 text-center">
-                        <span className="text-[9px] sm:text-[11px] font-semibold drop-shadow-lg line-clamp-1 block">
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/10" />
+
+                        <button
+                          onClick={() =>
+                            toggle(hero.id)
+                          }
+                          className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/70 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"
+                        >
+                          <X className="h-3 w-3 text-white" />
+                        </button>
+
+                        {/* NOM SUR LA CARTE */}
+                        <span className="absolute bottom-2 left-2 right-2 text-xs sm:text-sm font-bold text-center drop-shadow-lg line-clamp-1">
                           {hero.name}
                         </span>
+                      </div>
 
+                      {/* PSEUDO SOUS LA CARTE */}
+                      <div className="mt-1.5 text-center text-[10px] sm:text-xs font-semibold text-white/60 truncate">
+                        {hero.alias}
+                      </div>
+
+                      {/* TYPE + CLASSE SOUS LE PSEUDO */}
+                      <div className="mt-0.5 flex items-center justify-center gap-1">
                         <span
-                          className={`text-[8px] sm:text-[10px] font-bold drop-shadow-lg ${TYPE_TEXT[hero.type]}`}
+                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${TYPE_TEXT[hero.type]}`}
+                          title={hero.type}
                         >
-                          {hero.type}
+                          {hero.type === "Infantry"
+                            ? "🛡️"
+                            : hero.type === "Cavalry"
+                            ? "🐎"
+                            : hero.type === "Ranged"
+                            ? "🏹"
+                            : "⚙️"}
                         </span>
 
                         <span
-                          className={`text-[8px] sm:text-[10px] font-bold drop-shadow-lg ${CLASS_TEXT[hero.cls]}`}
+                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${CLASS_TEXT[hero.cls]}`}
+                          title={hero.cls}
                         >
-                          {" · "}
                           {hero.cls}
                         </span>
                       </div>
+                      
                     </>
                   ) : (
-                    <span className="text-white/20 text-2xl font-light">
-                      {i + 1}
-                    </span>
+                    <div className="aspect-square rounded-2xl border border-dashed border-white/15 bg-white/[0.02] flex items-center justify-center">
+                      <span className="text-white/20 text-2xl font-light">
+                        {i + 1}
+                      </span>
+                    </div>
                   )}
                 </div>
               );
@@ -2328,7 +2320,7 @@ const team =
 
         {showResult &&
           full && (
-            <div className="mb-10 rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-7 backdrop-blur-sm">
+            <div className="mb-8">
 
               <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
                 <h2 className="text-xl font-bold flex items-center gap-2 flex-wrap">
@@ -2397,181 +2389,89 @@ const team =
                   }, idx) => (
                     <div
                       key={hero.id}
-                      className="rounded-2xl overflow-hidden border border-white/10 bg-[#11151c]"
+                      className="transition-all"
                     >
+                      {/* CARTE */}
                       <div
-                        className={`relative h-28 bg-gradient-to-br ${TYPE_GRADIENT[hero.type]}`}
+                        className="aspect-square rounded-2xl border border-white/10 overflow-hidden relative bg-[#11151c]"
                       >
                         <img
                           src={hero.img}
-                          alt={
-                            hero.name
-                          }
+                          alt={hero.name}
                           loading="lazy"
-                          className="absolute inset-0 h-full w-full object-cover opacity-90"
+                          className="absolute inset-0 h-full w-full object-cover"
                         />
 
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/10" />
 
-                        <div className="absolute bottom-1 left-2 right-2 flex items-center justify-center gap-1.5">
-
-                          {/* Type */}
-                          <span
-                            className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${TYPE_TEXT[hero.type]}`}
-                            title={hero.type}
-                          >
-                            {hero.type === "Infantry"
-                              ? "🛡️"
-                              : hero.type === "Cavalry"
-                              ? "🐎"
-                              : hero.type === "Ranged"
-                              ? "🏹"
-                              : "⚙️"}
-                          </span>
-
-                          {/* Classe */}
-                          <span
-                            className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${CLASS_TEXT[hero.cls]}`}
-                            title={hero.cls}
-                          >
-                            {hero.cls}
-                          </span>
-
-                        </div>
-
-                        <span className="absolute bottom-7 left-2 right-2 text-sm font-bold drop-shadow-lg text-center line-clamp-1">
+                        {/* NOM SUR LA CARTE */}
+                        <span className="absolute bottom-2 left-2 right-2 text-xs sm:text-sm font-bold text-center drop-shadow-lg line-clamp-1">
                           {hero.name}
                         </span>
                       </div>
 
-                      <div className="p-3">
-                        <div className="text-[11px] text-white/40 italic">
-                          "{hero.alias}"
-                        </div>
+                      {/* PSEUDO SOUS LA CARTE */}
+                      <div className="mt-1.5 text-center text-[10px] sm:text-xs font-semibold text-white/60 truncate">
+                        {hero.alias}
+                      </div>
 
-                        <div className="mt-1.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[9px] text-white/60">
-                          <span className="text-rose-300/80">
-                            PV{" "}
-                            <b className="text-white/80">
-                              {formatStat(
-                                hero
-                                  .stats
-                                  .hp
-                              )}
-                            </b>
-                          </span>
+                      {/* TYPE + CLASSE SOUS LE PSEUDO */}
+                      <div className="mt-0.5 flex items-center justify-center gap-1">
+                        <span
+                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${TYPE_TEXT[hero.type]}`}
+                          title={hero.type}
+                        >
+                          {hero.type === "Infantry"
+                            ? "🛡️"
+                            : hero.type === "Cavalry"
+                            ? "🐎"
+                            : hero.type === "Ranged"
+                            ? "🏹"
+                            : "⚙️"}
+                        </span>
 
-                          <span className="text-amber-300/80">
-                            ATK{" "}
-                            <b className="text-white/80">
-                              {formatStat(
-                                hero
-                                  .stats
-                                  .atk
-                              )}
-                            </b>
-                          </span>
+                        <span
+                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${CLASS_TEXT[hero.cls]}`}
+                          title={hero.cls}
+                        >
+                          {hero.cls}
+                        </span>
+                      </div>
 
-                          <span className="text-sky-300/80">
-                            MATK{" "}
-                            <b className="text-white/80">
-                              {formatStat(
-                                hero
-                                  .stats
-                                  .matk
-                              )}
-                            </b>
-                          </span>
-
-                          <span className="text-emerald-300/80">
-                            DEF{" "}
-                            <b className="text-white/80">
-                              {formatStat(
-                                hero
-                                  .stats
-                                  .def
-                              )}
-                            </b>
-                          </span>
-
-                          <span className="text-cyan-300/80">
-                            MDEF{" "}
-                            <b className="text-white/80">
-                              {formatStat(
-                                hero
-                                  .stats
-                                  .mdef
-                              )}
-                            </b>
-                          </span>
-                        </div>
-
-                        <div className="mt-2 flex flex-wrap gap-1">
-                          {report.find(
-                            (r) =>
-                              r.hero
-                                .id ===
-                              hero.id
-                          )?.targets.map(
-                            (t) => {
-                              const e =
-                                HEROES.find(
-                                  (h) =>
-                                    h.id ===
-                                    t.id
-                                )!;
-
-                              return (
-                                <span
-                                  key={
-                                    t.id
-                                  }
-                                  title={`Contre ${e.name}`}
-                                  className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/20"
-                                >
-                                  <img
-                                    src={
-                                      e.img
-                                    }
-                                    alt=""
-                                    className="h-3 w-3 rounded object-cover"
-                                  />
-                                  {
-                                    e.name
-                                  }
-                                </span>
-                              );
-                            }
-                          )}
-
+                      {/* ENNEMIS COUVERTS RECOMMANDATION */}
+                      <div className="mt-1.5 text-center">
+                        <div className="flex flex-wrap items-center justify-center gap-1">
                           {(
                             report.find(
                               (r) =>
-                                r.hero
-                                  .id ===
-                                hero.id
-                            )?.targets
-                              .length ??
-                            0
-                          ) ===
-                            0 && (
-                            <span className="text-[10px] text-white/30">
-                              Polyvalent
-                            </span>
-                          )}
-                        </div>
+                                r.hero.id === hero.id
+                            )?.targets ?? []
+                          ).map((t) => {
+                            const enemy =
+                              HEROES.find(
+                                (h) => h.id === t.id
+                              );
 
-                        <button
-                          onClick={() =>
-                            setSwapIndex(
-                              idx
-                            )
-                          }
-                          className="mt-3 w-full px-2 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-white/60 hover:bg-white/10 hover:text-white transition-colors flex items-center justify-center gap-1.5"
-                        >
-                          <ArrowLeftRight className="h-3 w-3" />
-                          Remplacer
-                        </button>
+                            if (!enemy) {
+                              return null;
+                            }
+
+                            return (
+                              <span
+                                key={t.id}
+                                title={`Contre ${enemy.name}`}
+                                className="inline-flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-300 border border-rose-500/20"
+                              >
+                                <img
+                                  src={enemy.img}
+                                  alt=""
+                                  className="h-3 w-3 rounded object-cover"
+                                />
+                                {enemy.name}
+                              </span>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   )
