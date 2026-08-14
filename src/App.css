@@ -1,0 +1,36 @@
+:root {
+  --lmac-bg: #080b12;
+  --lmac-surface: #10151f;
+  --lmac-surface-2: #151b26;
+  --lmac-border: rgba(255, 255, 255, 0.08);
+  --lmac-border-hover: rgba(255, 183, 77, 0.35);
+  --lmac-amber: #f59e0b;
+  --lmac-text: #f5f5f5;
+  --lmac-muted: #8b95a7;
+}
+
+.lmac-app {
+  min-height: 100vh;
+  background: var(--lmac-bg);
+  color: var(--lmac-text);
+}
+
+.lmac-panel {
+  background: var(--lmac-surface);
+  border: 1px solid var(--lmac-border);
+  border-radius: 16px;
+}
+
+.lmac-panel-soft {
+  background: var(--lmac-surface-2);
+  border: 1px solid var(--lmac-border);
+}
+
+.lmac-accent {
+  color: var(--lmac-amber);
+}
+
+.lmac-divider {
+  height: 1px;
+  background: var(--lmac-border);
+}
