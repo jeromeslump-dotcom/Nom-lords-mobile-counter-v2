@@ -1,4 +1,4 @@
-
+﻿
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -26,7 +26,6 @@ import {
   HEROES,
   CLASSES,
   HeroClass,
-  TYPE_GRADIENT,
   TYPE_TEXT,
   CLASS_TEXT,
   formatStat,
@@ -48,9 +47,19 @@ import {
   getCurrentUser,
 } from "./storage";
 
+import "./App.css";
+
 const MAX_PICKS = 5;
 const HERO_SETTINGS_KEY = "lords-mobile-counter-v2-enabled-heroes";
-const APP_VERSION = "2.0.1";
+const APP_VERSION = "2.1.0";
+
+const TYPE_GRADIENT: Record<string, string> = {
+  Infantry: "from-red-900 via-red-700 to-orange-900",
+  Cavalry: "from-blue-900 via-blue-700 to-cyan-900",
+  Ranged: "from-emerald-900 via-green-700 to-teal-900",
+  "Siege Engine": "from-purple-900 via-violet-700 to-indigo-900",
+};
+
 
 
 
@@ -125,7 +134,7 @@ function HeroGridPicker({
               className={`absolute inset-0 bg-gradient-to-br ${TYPE_GRADIENT[h.type]} opacity-70`}
             />
 
-            <div className="absolute inset-0 bg-black/40" />
+            <div className="absolute inset-0 bg-black/30" />
 
             <div className="relative p-1.5 flex flex-col items-center gap-0.5">
               <img
@@ -383,7 +392,7 @@ return a.name.localeCompare(b.name);
       onClick={onClose}
     >
       <div
-        className="w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-3xl border border-white/10 bg-[#11111d] shadow-2xl"
+        className="w-full max-w-5xl max-h-[90vh] overflow-hidden rounded-3xl border border-white/10 bg-[#11151c] shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -541,7 +550,7 @@ return a.name.localeCompare(b.name);
 
           {filtered.length === 0 && (
             <p className="text-center text-white/40 py-12 text-sm">
-              Aucun héros ne correspond à ta recherche.
+              Aucun héros ne correspond Ã  ta recherche.
             </p>
           )}
         </div>
@@ -1485,7 +1494,7 @@ const team =
      ======================================================= */
 
   return (
-    <div className="min-h-screen bg-[#0a0a14] text-white relative overflow-hidden">
+   <div className="lmac-app relative overflow-hidden">
 
       {/* =================================================
           HERO MANAGER
@@ -1518,16 +1527,16 @@ const team =
 
       {showLogin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#11111d] shadow-2xl p-6">
+          <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#11151c] shadow-2xl p-6">
 
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-xl font-bold text-white">
-                  🔐 Administration
+                  ðŸ” Administration
                 </h2>
 
                 <p className="text-xs text-white/40 mt-1">
-                  Connexion réservée à
+                  Connexion réservée Ã 
                   l'administrateur
                 </p>
               </div>
@@ -1618,11 +1627,7 @@ const team =
           BACKGROUND
           ================================================= */}
 
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-40 -left-40 h-96 w-96 rounded-full bg-amber-500/10 blur-3xl" />
-        <div className="absolute top-1/3 -right-40 h-96 w-96 rounded-full bg-rose-500/10 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
-      </div>
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.045),transparent_38%)]" />
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
@@ -1634,14 +1639,14 @@ const team =
   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
 
     <div className="text-center lg:text-left">
-<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs text-white/60 mb-4">
+<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.035] text-xs text-white/60 mb-4">
   <Swords className="h-3.5 w-3.5 text-amber-400" />
   <span>Lords Mobile Counter By Kikoine</span>
-  <span className="text-white/30">•</span>
+  <span className="text-white/30">â€¢</span>
   <span className="text-amber-300/70">v{APP_VERSION}</span>
 </div>
 
-      <h1 className="text-4xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-amber-300 via-rose-300 to-cyan-300 bg-clip-text text-transparent">
+      <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white">
         Colisée des héros 
       </h1>
 
@@ -1658,7 +1663,7 @@ const team =
         {user ? (
           <>
             <span className="text-xs text-emerald-300">
-              👑 Admin
+              ðŸ‘‘ Admin
             </span>
 
             <button
@@ -1676,7 +1681,7 @@ const team =
             }}
             className="px-3 py-1.5 rounded-lg bg-amber-400/10 border border-amber-400/30 text-xs text-amber-300 hover:bg-amber-400/20 transition-colors"
           >
-            🔐 Admin
+            ðŸ” Admin
           </button>
         )}
       </div>
@@ -1731,7 +1736,7 @@ const team =
           </>
         ) : (
           <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40">
-            🔒 Historique et enregistrement réservés à l'Admin
+            ðŸ”’ Historique et enregistrement réservés Ã  l'Admin
           </span>
         )}
       </div>
@@ -1780,7 +1785,7 @@ const team =
                   {combats.map((c) => (
                     <div
                       key={c.id}
-                      className="flex items-center gap-3 rounded-lg bg-black/30 border border-white/5 p-2"
+                      className="flex items-center gap-3 rounded-lg bg-white/[0.035] border border-white/10 p-2"
                     >
                       <span
                         className={`text-xs font-bold px-2 py-1 rounded ${
@@ -1905,7 +1910,7 @@ const team =
             }
           >
             <div
-              className="bg-[#12121e] border border-white/10 rounded-2xl p-5 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+              className="bg-[#11151c] border border-white/10 rounded-2xl p-5 sm:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl"
               onClick={(e) =>
                 e.stopPropagation()
               }
@@ -1928,7 +1933,7 @@ const team =
 
               <p className="text-xs text-white/50 mb-5">
                 Renseigne les équipes et le résultat
-                d'un combat déjà joué pour améliorer
+                d'un combat déjÃ  joué pour améliorer
                 les recommandations.
               </p>
 
@@ -2297,7 +2302,7 @@ const team =
                     true
                   );
                 }}
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-400 to-rose-500 text-black font-bold shadow-lg shadow-amber-500/20 hover:scale-105 transition-transform"
+                className="px-8 py-3 rounded-xl bg-amber-400 text-black font-bold shadow-lg shadow-amber-500/20 hover:scale-105 transition-transform"
               >
                 Trouver la meilleure contre
               </button>
@@ -2385,7 +2390,7 @@ const team =
                   }, idx) => (
                     <div
                       key={hero.id}
-                      className="rounded-2xl overflow-hidden border border-white/10 bg-black/30"
+                      className="rounded-2xl overflow-hidden border border-white/10 bg-[#11151c]"
                     >
                       <div
                         className={`relative h-28 bg-gradient-to-br ${TYPE_GRADIENT[hero.type]}`}
@@ -2692,7 +2697,7 @@ const team =
                                 className={`absolute inset-0 bg-gradient-to-br ${TYPE_GRADIENT[h.type]} opacity-80`}
                               />
 
-                              <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-colors" />
+                              <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors" />
 
                               <div className="relative p-2 flex flex-col items-center gap-1">
                                 <img
@@ -3212,7 +3217,7 @@ const team =
                     >
                       {cls}{" "}
                       <span className="text-white/60 font-normal">
-                        ×{count}
+                        Ã—{count}
                       </span>
                     </span>
                   );
@@ -3222,7 +3227,7 @@ const team =
 				
 				
 
-<div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
+<div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
   <div className="flex items-center gap-2 mb-4">
     <Scale className="h-4 w-4 text-amber-400" />
     <span className="text-sm font-medium text-white/80">
@@ -3248,7 +3253,7 @@ const team =
     COMPARAISON DES STATISTIQUES
     ================================================= */}
 
-<div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
+<div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
 
   <div className="flex items-center gap-2 mb-4">
     <Scale className="h-4 w-4 text-amber-400" />
@@ -3493,7 +3498,7 @@ const team =
                               className={`absolute inset-0 bg-gradient-to-br ${TYPE_GRADIENT[h.type]} opacity-70`}
                             />
 
-                            <div className="absolute inset-0 bg-black/40" />
+                            <div className="absolute inset-0 bg-black/30" />
 
                             <div className="relative p-2 flex flex-col items-center gap-1">
                               <img
@@ -3541,7 +3546,7 @@ const team =
               RECORD RESULT
               ================================================= */}
 
-          <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
+          <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
             <div className="flex items-center gap-2 mb-3">
               <Plus className="h-4 w-4 text-amber-400" />
 
@@ -3679,21 +3684,21 @@ const team =
                     hero.id
                   )
                 }
-                className={`group relative w-full overflow-hidden rounded-2xl border text-left transition-all duration-200 ${
+                className={`group relative w-full overflow-hidden rounded-2xl border border-white/10 text-left transition-all duration-200 shadow-sm hover:shadow-lg ${
                   pickSet.has(
                     hero.id
                   )
-                    ? "border-amber-400 ring-2 ring-amber-400/60 scale-[1.02]"
+                    ? "border-amber-400/80 ring-1 ring-amber-400/50 scale-[1.02] shadow-lg"
                     : full
-                    ? "border-white/5 opacity-30 cursor-not-allowed"
-                    : "border-white/10 hover:border-white/30 hover:scale-[1.03] cursor-pointer"
+                    ? "border-white/10 opacity-30 cursor-not-allowed"
+                    : "border-white/10 hover:border-white/25 hover:bg-white/[0.025] hover:scale-[1.02] cursor-pointer"
                 }`}
               >
                 <div
-                  className={`absolute inset-0 bg-gradient-to-br ${TYPE_GRADIENT[hero.type]} opacity-80`}
+                  className="absolute inset-0 bg-[#141820]"
                 />
 
-                <div className="absolute inset-0 bg-black/50 group-hover:bg-black/30 transition-colors" />
+                <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors" />
 
                 <div className="relative p-2 flex flex-col items-center gap-1">
                   <img
@@ -3743,7 +3748,7 @@ const team =
                         )}
                       </span>
                     </div>
-
+					
                     <div className="flex justify-between">
                       <span className="text-amber-300/80">
                         ATK
