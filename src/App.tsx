@@ -1,4 +1,4 @@
-﻿
+
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -150,12 +150,25 @@ function HeroGridPicker({
             </div>
 
             {pickSet.has(h.id) && (
-              <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-amber-400 flex items-center justify-center">
-                <X
-                  className="h-2.5 w-2.5 text-black"
-                  strokeWidth={3}
-                />
-              </div>
+              <>
+			  <span className="text-amber-400 font-black text-lg">
+  TEST {picks.indexOf(h.id) + 1}
+</span>
+<div className="absolute top-1 left-1 z-[60] h-6 w-6 rounded-full bg-amber-400 border-2 border-black flex items-center justify-center shadow-xl pointer-events-none">
+  <span className="text-xs font-black text-black">
+    {picks.indexOf(h.id) + 1}
+  </span>
+</div>
+
+                <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-amber-400 flex items-center justify-center z-10">
+                  <X
+                    className="h-2.5 w-2.5 text-black"
+                    strokeWidth={3}
+                  />
+                </div>
+
+                <div className="absolute inset-0 rounded-lg ring-2 ring-amber-400/70 pointer-events-none z-10" />
+              </>
             )}
           </button>
         ))}
@@ -3807,15 +3820,25 @@ const team =
                   </div>
                 </div>
 
-                {pickSet.has(
-                  hero.id
-                ) && (
-                  <div className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full bg-amber-400 flex items-center justify-center">
-                    <X
-                      className="h-3 w-3 text-black"
-                      strokeWidth={3}
-                    />
-                  </div>
+              {pickSet.has(
+  hero.id
+) && (
+  <>
+    {/* Numéro d'ordre de sélection */}
+    <div className="absolute top-1.5 left-1.5 z-20 h-6 w-6 rounded-full bg-amber-400 border-2 border-black flex items-center justify-center shadow-lg pointer-events-none">
+      <span className="text-xs font-black text-black">
+        {picks.indexOf(hero.id) + 1}
+      </span>
+    </div>
+
+    {/* Bouton retirer */}
+    <div className="absolute top-1.5 right-1.5 z-20 h-5 w-5 rounded-full bg-amber-400 flex items-center justify-center">
+      <X
+        className="h-3 w-3 text-black"
+        strokeWidth={3}
+      />
+    </div>
+  </>
                 )}
               </button>
             )
