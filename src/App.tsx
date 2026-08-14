@@ -2372,12 +2372,6 @@ const team =
                 </h2>
 
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-white/50">
-                    {totalCoverage} contre(s)
-                    couvert(s) sur{" "}
-                    {MAX_PICKS} ennemis
-                  </span>
-
                   <button
                     onClick={() =>
                       setEditedTeam(
@@ -2419,19 +2413,33 @@ const team =
 
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30" />
 
-                        <span
-                          className={`absolute top-2 left-2 text-[10px] uppercase tracking-wider font-medium ${TYPE_TEXT[hero.type]} drop-shadow-lg`}
-                        >
-                          {hero.type}
-                        </span>
+                        <div className="absolute bottom-1 left-2 right-2 flex items-center justify-center gap-1.5">
 
-                        <span
-                          className={`absolute top-2 right-2 text-[10px] uppercase tracking-wider font-bold ${CLASS_TEXT[hero.cls]} drop-shadow-lg`}
-                        >
-                          {hero.cls}
-                        </span>
+                          {/* Type */}
+                          <span
+                            className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${TYPE_TEXT[hero.type]}`}
+                            title={hero.type}
+                          >
+                            {hero.type === "Infantry"
+                              ? "🛡️"
+                              : hero.type === "Cavalry"
+                              ? "🐎"
+                              : hero.type === "Ranged"
+                              ? "🏹"
+                              : "⚙️"}
+                          </span>
 
-                        <span className="absolute bottom-2 left-2 right-2 text-sm font-bold drop-shadow-lg">
+                          {/* Classe */}
+                          <span
+                            className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${CLASS_TEXT[hero.cls]}`}
+                            title={hero.cls}
+                          >
+                            {hero.cls}
+                          </span>
+
+                        </div>
+
+                        <span className="absolute bottom-7 left-2 right-2 text-sm font-bold drop-shadow-lg text-center line-clamp-1">
                           {hero.name}
                         </span>
                       </div>
