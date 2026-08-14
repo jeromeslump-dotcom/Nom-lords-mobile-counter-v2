@@ -292,12 +292,14 @@ function HeroSlots({
 
 function HeroManager({
   enabledIds,
+  usage,
   onToggleHero,
   onEnableAll,
   onDisableAll,
   onClose,
 }: {
   enabledIds: Set<string>;
+  usage: Record<string, number>;
   onToggleHero: (id: string) => void;
   onEnableAll: () => void;
   onDisableAll: () => void;
@@ -306,6 +308,7 @@ function HeroManager({
   const [q, setQ] = useState("");
   const [cls, setCls] =
     useState<HeroClass | "All">("All");
+	const [sortBy, setSortBy] = useState<"played" | "hp" | "atk" | "matk" | "def" | "mdef">("played");
 
   const filtered = useMemo(() => {
     return HEROES.filter((h) => {
@@ -330,16 +333,46 @@ function HeroManager({
       }
 
       return true;
-    }).sort((a, b) => {
-      const enabledA = enabledIds.has(a.id) ? 0 : 1;
-      const enabledB = enabledIds.has(b.id) ? 0 : 1;
+}).sort((a, b) => {
+  const enabledA = enabledIds.has(a.id) ? 0 : 1;
+  const enabledB = enabledIds.has(b.id) ? 0 : 1;
 
-      return (
-        enabledA - enabledB ||
-        a.name.localeCompare(b.name)
-      );
-    });
- }, [q, cls, enabledIds]);
+  if (enabledA !== enabledB) {
+    return enabledA - enabledB;
+  }
+
+  if (sortBy === "hp") {
+    return b.stats.hp - a.stats.hp;
+  }
+
+  if (sortBy === "atk") {
+    return b.stats.atk - a.stats.atk;
+  }
+
+  if (sortBy === "matk") {
+    return b.stats.matk - a.stats.matk;
+  }
+
+  if (sortBy === "def") {
+    return b.stats.def - a.stats.def;
+  }
+
+  if (sortBy === "mdef") {
+    return b.stats.mdef - a.stats.mdef;
+  }
+
+if (sortBy === "played") {
+  return (
+    (usage[b.id] ?? 0) -
+      (usage[a.id] ?? 0) ||
+    a.name.localeCompare(b.name)
+  );
+}
+
+return a.name.localeCompare(b.name);
+
+});
+}, [q, cls, enabledIds, sortBy]);
 
   const enabledCount = enabledIds.size;
   const totalCount = HEROES.length;
@@ -419,57 +452,12 @@ function HeroManager({
               />
             </div>
           </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {(
-              [
-                "All",
-                "Tank",
-                "Dégâts",
-                "Soutien",
-              ] as const
-            ).map((r) => (
-              <button
-                key={r}
-                onClick={() => setRole(r)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  role === r
-                    ? "bg-white text-black"
-                    : "bg-white/5 text-white/60 hover:bg-white/10"
-                }`}
-              >
-                {r === "All" ? "Tous les rôles" : r}
-              </button>
-            ))}
-
-            <div className="w-px bg-white/10 mx-1" />
-
-            {(
-              ["All", ...CLASSES] as const
-            ).map((c) => (
-              <button
-                key={c}
-                onClick={() => setCls(c)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                  cls === c
-                    ? "bg-white text-black"
-                    : "bg-white/5 text-white/60 hover:bg-white/10"
-                }`}
-              >
-                {c === "All"
-                  ? "Toutes classes"
-                  : c}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Hero list */}
         <div className="p-5 sm:p-6 overflow-y-auto max-h-[calc(90vh-255px)]">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2.5">
-            {HEROES
-  .filter((h) => enabledHeroIds.has(h.id))
+{HEROES
   .map((hero) => {
               const enabled =
                 enabledIds.has(hero.id);
@@ -537,12 +525,6 @@ function HeroManager({
 
                           <span className="text-white/20">
                             ·
-                          </span>
-
-                          <span
-                            className={`text-[8px] font-bold ${ROLE_TEXT[heroRole(hero)]}`}
-                          >
-                            {heroRole(hero)}
                           </span>
                         </div>
                       </div>
@@ -614,6 +596,11 @@ export default function App() {
 
   const [activeClass, setActiveClass] =
     useState<HeroClass | "All">("All");
+	
+	const [sortBy, setSortBy] =
+  useState<
+    "played" | "hp" | "atk" | "matk" | "def" | "mdef"
+  >("played");
 
   const [showResult, setShowResult] =
     useState(false);
@@ -845,18 +832,79 @@ export default function App() {
       return counts;
     }, [combats]);
 
-  const team =
-    useMemo(
-      () =>
-        full
-          ? recommendTeam(
-              picks,
-              combats
-            )
-          : [],
-      [picks, full, combats]
-    );
+const filtered = useMemo(() => {
+  return HEROES
+    .filter((h) => {
+      if (!enabledHeroIds.has(h.id)) {
+        return false;
+      }
 
+      if (
+        activeClass !== "All" &&
+        h.cls !== activeClass
+      ) {
+        return false;
+      }
+
+      if (
+        query &&
+        !h.name
+          .toLowerCase()
+          .includes(query.toLowerCase()) &&
+        !h.alias
+          .toLowerCase()
+          .includes(query.toLowerCase())
+      ) {
+        return false;
+      }
+
+      return true;
+    })
+    .sort((a, b) => {
+      if (sortBy === "hp") {
+        return b.stats.hp - a.stats.hp;
+      }
+
+      if (sortBy === "atk") {
+        return b.stats.atk - a.stats.atk;
+      }
+
+      if (sortBy === "matk") {
+        return b.stats.matk - a.stats.matk;
+      }
+
+      if (sortBy === "def") {
+        return b.stats.def - a.stats.def;
+      }
+
+      if (sortBy === "mdef") {
+        return b.stats.mdef - a.stats.mdef;
+      }
+
+      return (
+        (usage[b.id] ?? 0) -
+        (usage[a.id] ?? 0)
+      );
+    });
+}, [
+  query,
+  activeClass,
+  enabledHeroIds,
+  usage,
+  sortBy,
+]);
+
+const team =
+  useMemo(
+    () =>
+      full
+        ? recommendTeam(
+            picks,
+            combats
+          )
+        : [],
+    [picks, full, combats]
+  );
 
   const editedHeroes =
     useMemo(
@@ -1448,6 +1496,7 @@ export default function App() {
           enabledIds={
             enabledHeroIds
           }
+		  usage={usage}
           onToggleHero={
             toggleHeroEnabled
           }
@@ -3542,78 +3591,79 @@ export default function App() {
       {/* =================================================
           FILTERS
           ================================================= */}
-  
-  
-  
+<div className="flex flex-col gap-3 mb-5">
 
-        <div className="flex flex-col sm:flex-row gap-3 mb-5">
+  {/* Recherche */}
+  <div className="relative">
+    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
 
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
+    <input
+      value={query}
+      onChange={(e) =>
+        setQuery(e.target.value)
+      }
+      placeholder="Rechercher par nom ou alias..."
+      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/30"
+    />
+  </div>
 
-            <input
-              value={
-                query
-              }
-              onChange={(e) =>
-                setQuery(
-                  e.target.value
-                )
-              }
-              placeholder="Rechercher par nom ou alias..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/30"
-            />
-          </div>
+  {/* Classement */}
+  <div className="flex flex-wrap gap-2">
+    {(
+      [
+        ["played", "Plus joués"],
+        ["hp", "PV"],
+        ["atk", "ATQ"],
+        ["matk", "ATQ MAG"],
+        ["def", "DEF"],
+        ["mdef", "MDEF"],
+      ] as const
+    ).map(([value, label]) => (
+      <button
+        key={value}
+        onClick={() => setSortBy(value)}
+        className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
+          sortBy === value
+            ? "bg-amber-400 text-black"
+            : "bg-white/5 text-white/60 hover:bg-white/10"
+        }`}
+      >
+        {label}
+      </button>
+    ))}
+  </div>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
-            
-          </div>
+  {/* Classes */}
+  <div className="flex flex-wrap gap-2">
+    {(
+      ["All", ...CLASSES] as const
+    ).map((c) => (
+      <button
+        key={c}
+        onClick={() =>
+          setActiveClass(c)
+        }
+        className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
+          activeClass === c
+            ? "bg-white text-black"
+            : "bg-white/5 text-white/60 hover:bg-white/10"
+        }`}
+      >
+        {c === "All"
+          ? "Toutes classes"
+          : c}
+      </button>
+    ))}
+  </div>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-1">
-            {(
-              [
-                "All",
-                ...CLASSES,
-              ] as const
-            ).map((c) => (
-              <button
-                key={c}
-                onClick={() =>
-                  setActiveClass(
-                    c
-                  )
-                }
-                className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-                  activeClass ===
-                  c
-                    ? "bg-white text-black"
-                    : "bg-white/5 text-white/60 hover:bg-white/10"
-                } ${
-                  activeClass !==
-                    c &&
-                  c !==
-                    "All"
-                    ? CLASS_TEXT[
-                        c
-                      ]
-                    : ""
-                }`}
-              >
-                {c === "All"
-                  ? "Toutes classes"
-                  : c}
-              </button>
-            ))}
-          </div>
-        </div>
+</div>
 
         {/* =================================================
             ROSTER
             ================================================= */}
 
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2.5 sm:gap-3">
-          {HEROES.filter((h) => enabledHeroIds.has(h.id)).map(
-            (hero) => (
+         {filtered.map((hero) => (
               <button
                 key={
                   hero.id
