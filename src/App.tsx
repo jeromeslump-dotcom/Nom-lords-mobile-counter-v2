@@ -49,8 +49,8 @@ import {
 } from "./storage";
 
 const MAX_PICKS = 5;
-
 const HERO_SETTINGS_KEY = "lords-mobile-counter-v2-enabled-heroes";
+const APP_VERSION = "2.0.1";
 
 
 
@@ -1585,19 +1585,20 @@ export default function App() {
   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
 
     <div className="text-center lg:text-left">
-      <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs text-white/60 mb-4">
-        <Swords className="h-3.5 w-3.5 text-amber-400" />
-        Lords Mobile Counter-Picker
-      </div>
+<div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs text-white/60 mb-4">
+  <Swords className="h-3.5 w-3.5 text-amber-400" />
+  <span>Lords Mobile Counter By Kikoine</span>
+  <span className="text-white/30">•</span>
+  <span className="text-amber-300/70">v{APP_VERSION}</span>
+</div>
 
       <h1 className="text-4xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-amber-300 via-rose-300 to-cyan-300 bg-clip-text text-transparent">
-        Compose ton équipe de contre
+        Colisée des héros 
       </h1>
 
       <p className="mt-3 text-white/60 max-w-xl mx-auto lg:mx-0">
         Compose l'escouade adverse pour voir
-        une équipe recommandée issue de
-        l'historique.
+        une équipe recommandée.
       </p>
     </div>
 
