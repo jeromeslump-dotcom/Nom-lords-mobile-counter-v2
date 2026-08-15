@@ -647,7 +647,7 @@ return a.name.localeCompare(b.name);
 
           {filtered.length === 0 && (
             <p className="text-center text-white/40 py-12 text-sm">
-              Aucun héros ne correspond Ã  ta recherche.
+              Aucun héros ne correspond à ta recherche.
             </p>
           )}
         </div>
@@ -1644,11 +1644,11 @@ const team =
             <div className="flex items-center justify-between mb-5">
               <div>
                 <h2 className="text-xl font-bold text-white">
-                  ðŸ” Administration
+                  🔒 Administration
                 </h2>
 
                 <p className="text-xs text-white/40 mt-1">
-                  Connexion réservée Ã 
+                  Connexion réservée à
                   l'administrateur
                 </p>
               </div>
@@ -1793,7 +1793,7 @@ const team =
             }}
             className="px-3 py-1.5 rounded-lg bg-amber-400/10 border border-amber-400/30 text-xs text-amber-300 hover:bg-amber-400/20 transition-colors"
           >
-            ðŸ” Admin
+            Admin
           </button>
         )}
       </div>
@@ -1848,7 +1848,7 @@ const team =
           </>
         ) : (
           <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40">
-            ðŸ”’ Historique et enregistrement réservés Ã  l'Admin
+            🔒 Historique et enregistrement réservés à l'Admin
           </span>
         )}
       </div>
@@ -2045,7 +2045,7 @@ const team =
 
               <p className="text-xs text-white/50 mb-5">
                 Renseigne les équipes et le résultat
-                d'un combat déjÃ  joué pour améliorer
+                d'un combat déjà joué pour améliorer
                 les recommandations.
               </p>
 
@@ -3310,7 +3310,7 @@ const team =
                     >
                       {cls}{" "}
                       <span className="text-white/60 font-normal">
-                        Ã—{count}
+                        ×{count}
                       </span>
                     </span>
                   );
