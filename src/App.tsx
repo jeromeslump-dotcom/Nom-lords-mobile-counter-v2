@@ -509,6 +509,21 @@ return a.name.localeCompare(b.name);
 
                     {/* CARTE */}
                     <div className="aspect-square rounded-xl overflow-hidden relative bg-[#11151c]">
+
+```
+                    {/* CROIX SUPPRESSION EQUIPE RECOMMANDEE */}
+                    <button
+                      type="button"
+                      onClick={() => hideRecommendedHero(hero.id)}
+                      className="absolute top-2 right-2 z-20 h-7 w-7 rounded-full bg-black/70 border border-white/20 text-white/70 hover:text-white hover:bg-rose-500/80 hover:border-rose-400/60 flex items-center justify-center transition-all"
+                      title="Retirer ce héros"
+                      aria-label={`Retirer ${hero.name}`}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+```
+
+
                       <img
                         src={hero.img}
                         alt={hero.name}
@@ -716,6 +731,21 @@ export default function App() {
 
   const [editedTeam, setEditedTeam] =
     useState<string[]>([]);
+
+  const [
+    hiddenRecommendedIds,
+    setHiddenRecommendedIds,
+  ] = useState<Set<string>>(new Set());
+
+  const hideRecommendedHero = (heroId: string) => {
+    setHiddenRecommendedIds((previous) => {
+      const next = new Set(previous);
+      next.add(heroId);
+      return next;
+    });
+  };
+
+
 
   const [swapIndex, setSwapIndex] =
     useState<number | null>(null);
@@ -1724,7 +1754,7 @@ const team =
 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.035] text-xs text-white/60 mb-4">
   <Swords className="h-3.5 w-3.5 text-amber-400" />
   <span>Lords Mobile Counter By Kikoine</span>
-  <span className="text-white/30">â€¢</span>
+  <span className="text-white/30">•</span>
   <span className="text-amber-300/70">v{APP_VERSION}</span>
 </div>
 
@@ -1745,7 +1775,7 @@ const team =
         {user ? (
           <>
             <span className="text-xs text-emerald-300">
-              ðŸ‘‘ Admin
+              👑 Admin
             </span>
 
             <button
@@ -2372,6 +2402,10 @@ const team =
                       )
                   );
 
+                  setHiddenRecommendedIds(
+                    new Set()
+                  );
+
                   setShowResult(
                     true
                   );
@@ -2434,117 +2468,186 @@ const team =
 
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() =>
-                      setEditedTeam(
-                        team.map(
-                          (h) =>
-                            h.id
-                        )
-                      )
-                    }
+                    type="button"
+                    onClick={() => {
+                      setHiddenRecommendedIds(
+                        new Set()
+                      );
+                    }}
                     className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-amber-300 transition-colors"
                   >
                     <RotateCcw className="h-3.5 w-3.5" />
-                    Restaurer
+                    Réinitialiser
                   </button>
                 </div>
               </div>
 
               {/* TEAM CARDS */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+
                 {report.map(
-                  ({
-                    hero,
-                  }, idx) => (
-                    <div
-                      key={hero.id}
-                      className="transition-all"
-                    >
-                      {/* CARTE */}
+                  ({ hero }, idx) => {
+
+                    const hidden =
+                      hiddenRecommendedIds.has(hero.id);
+
+                    return (
                       <div
-                        className="aspect-square rounded-2xl border border-white/10 overflow-hidden relative bg-[#11151c]"
+                        key={hero.id}
+                        className="transition-all"
                       >
-                        <img
-                          src={hero.img}
-                          alt={hero.name}
-                          loading="lazy"
-                          className="absolute inset-0 h-full w-full object-cover"
-                        />
 
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/10" />
+                        {hidden ? (
+                          /* =================================================
+                             EMPLACEMENT HERO MASQUE
+                             ================================================= */
+                          <div
+                            className="aspect-square rounded-2xl border border-dashed border-amber-400/30 bg-white/[0.02] flex flex-col items-center justify-center gap-2"
+                          >
+                            <span className="text-white/20 text-3xl">
+                              +
+                            </span>
 
-                        {/* NOM SUR LA CARTE */}
-                        <span className="absolute bottom-2 left-2 right-2 text-xs sm:text-sm font-bold text-center drop-shadow-lg line-clamp-1">
-                          {hero.name}
-                        </span>
-                      </div>
+                            <span className="text-[10px] text-white/40 text-center px-2">
+                              Héros retiré
+                            </span>
 
-                      {/* PSEUDO SOUS LA CARTE */}
-                      <div className="mt-1.5 text-center text-[11px] sm:text-xs font-semibold text-white/75 truncate">
-                        {hero.alias}
-                      </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setSwapIndex(idx);
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-cyan-400/10 border border-cyan-400/30 text-[10px] text-cyan-300 hover:bg-cyan-400/20 transition-all"
+                            >
+                              Changer
+                            </button>
+                          </div>
 
-                      {/* TYPE + CLASSE SOUS LE PSEUDO */}
-                      <div className="mt-0.5 flex items-center justify-center gap-1">
-                        <span
-                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[10px] font-black ${TYPE_TEXT[hero.type]}`}
-                          title={hero.type}
-                        >
-                          {hero.type === "Infantry"
-                            ? "🛡️"
-                            : hero.type === "Cavalry"
-                            ? "🐎"
-                            : hero.type === "Ranged"
-                            ? "🏹"
-                            : "⚙️"}
-                        </span>
+                        ) : (
 
-                        <span
-                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[10px] font-black ${CLASS_TEXT[hero.cls]}`}
-                          title={hero.cls}
-                        >
-                          {hero.cls}
-                        </span>
-                      </div>
+                          /* =================================================
+                             CARTE RECOMMANDATION
+                             ================================================= */
+                          <>
+                            <div
+                              className="aspect-square rounded-2xl border border-white/10 overflow-hidden relative bg-[#11151c]"
+                            >
 
-                      {/* ENNEMIS COUVERTS RECOMMANDATION */}
-                      <div className="mt-2 text-center">
-                        <div className="flex flex-wrap items-center justify-center gap-1">
-                          {(
-                            report.find(
-                              (r) =>
-                                r.hero.id === hero.id
-                            )?.targets ?? []
-                          ).map((t) => {
-                            const enemy =
-                              HEROES.find(
-                                (h) => h.id === t.id
-                              );
+                              {/* CROIX */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
 
-                            if (!enemy) {
-                              return null;
-                            }
-
-                            return (
-                              <span
-                                key={t.id}
-                                title={`Contre ${enemy.name}`}
-                                className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-200 border border-rose-500/20"
+                                  hideRecommendedHero(
+                                    hero.id
+                                  );
+                                }}
+                                className="absolute top-2 right-2 z-50 h-8 w-8 rounded-full bg-black/85 border-2 border-white/70 text-white flex items-center justify-center shadow-lg hover:bg-rose-500 hover:border-rose-300 transition-all cursor-pointer"
+                                title="Retirer ce héros"
+                                aria-label={`Retirer ${hero.name}`}
                               >
-                                <img
-                                  src={enemy.img}
-                                  alt=""
-                                  className="h-3 w-3 rounded object-cover"
-                                />
-                                {enemy.name}
+                                <X className="h-4 w-4" />
+                              </button>
+
+                              <img
+                                src={hero.img}
+                                alt={hero.name}
+                                loading="lazy"
+                                className="absolute inset-0 h-full w-full object-cover"
+                              />
+
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/10" />
+
+                              {/* NOM */}
+                              <span className="absolute bottom-2 left-2 right-2 text-xs sm:text-sm font-bold text-center drop-shadow-lg line-clamp-1">
+                                {hero.name}
                               </span>
-                            );
-                          })}
-                        </div>
+
+                            </div>
+
+                            {/* PSEUDO */}
+                            <div className="mt-1.5 text-center text-[11px] sm:text-xs font-semibold text-white/75 truncate">
+                              {hero.alias}
+                            </div>
+
+                            {/* TYPE + CLASSE */}
+                            <div className="mt-0.5 flex items-center justify-center gap-1">
+
+                              <span
+                                className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[10px] font-black ${TYPE_TEXT[hero.type]}`}
+                                title={hero.type}
+                              >
+                                {hero.type === "Infantry"
+                                  ? "🛡️"
+                                  : hero.type === "Cavalry"
+                                  ? "🐎"
+                                  : hero.type === "Ranged"
+                                  ? "🏹"
+                                  : "⚙️"}
+                              </span>
+
+                              <span
+                                className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[10px] font-black ${CLASS_TEXT[hero.cls]}`}
+                                title={hero.cls}
+                              >
+                                {hero.cls}
+                              </span>
+
+                            </div>
+
+                            {/* ENNEMIS COUVERTS */}
+                            <div className="mt-2 text-center">
+                              <div className="flex flex-wrap items-center justify-center gap-1">
+
+                                {(
+                                  report.find(
+                                    (r) =>
+                                      r.hero.id === hero.id
+                                  )?.targets ?? []
+                                ).map((t) => {
+
+                                  const enemy =
+                                    HEROES.find(
+                                      (h) =>
+                                        h.id === t.id
+                                    );
+
+                                  if (!enemy) {
+                                    return null;
+                                  }
+
+                                  return (
+                                    <span
+                                      key={t.id}
+                                      title={`Contre ${enemy.name}`}
+                                      className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-200 border border-rose-500/20"
+                                    >
+                                      <img
+                                        src={enemy.img}
+                                        alt=""
+                                        className="h-3 w-3 rounded object-cover"
+                                      />
+
+                                      {enemy.name}
+                                    </span>
+                                  );
+                                })}
+
+                              </div>
+                            </div>
+
+                          </>
+                        )}
+
                       </div>
-                    </div>
-                  )
+                    );
+                  }
                 )}
+
               </div>
 
               {/* =================================================
@@ -3681,6 +3784,13 @@ const team =
                 <div className="absolute inset-0 bg-black/40 group-hover:bg-black/25 transition-colors" />
 
                 <div className="relative p-2.5 flex flex-col items-center">
+
+                  {/* NUMERO DE SELECTION */}
+                  {pickSet.has(hero.id) && (
+                    <div className="absolute top-2 left-2 z-20 h-7 w-7 rounded-full bg-amber-400 text-black text-xs font-black flex items-center justify-center shadow-lg ring-2 ring-black/50">
+                      {picks.indexOf(hero.id) + 1}
+                    </div>
+                  )}
 
                   {/* IMAGE */}
                   <img
