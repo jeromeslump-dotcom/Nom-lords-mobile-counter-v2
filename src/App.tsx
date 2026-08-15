@@ -42,6 +42,8 @@ import {
   loadCombats,
   addCombat,
   removeCombat,
+  loadHeroPreferences,
+  saveHeroPreferences,
   signIn,
   signOut,
   getCurrentUser,
@@ -50,7 +52,6 @@ import {
 import "./App.css";
 
 const MAX_PICKS = 5;
-const HERO_SETTINGS_KEY = "lords-mobile-counter-v2-enabled-heroes";
 const APP_VERSION = "2.1.0";
 
 const TYPE_GRADIENT: Record<string, string> = {
@@ -656,7 +657,7 @@ return a.name.localeCompare(b.name);
         <div className="px-5 sm:px-6 py-4 border-t border-white/10 flex items-center justify-between gap-3">
           <span className="text-[10px] text-white/30">
             La configuration est sauvegardée
-            automatiquement sur cet appareil.
+            automatiquement dans Supabase.
           </span>
 
           <button
@@ -760,67 +761,16 @@ export default function App() {
     useState<number | null>(null);
 
   /* =======================================================
-     ENABLED HEROES
+     ENABLED HEROES — SUPABASE
      ======================================================= */
 
   const [enabledHeroIds, setEnabledHeroIds] =
     useState<Set<string>>(
-      () => {
-        try {
-          const saved =
-            localStorage.getItem(
-              HERO_SETTINGS_KEY
-            );
-
-          if (!saved) {
-            return new Set(
-              HEROES.map((h) => h.id)
-            );
-          }
-
-          const parsed =
-            JSON.parse(saved);
-
-          if (
-            !Array.isArray(parsed)
-          ) {
-            return new Set(
-              HEROES.map((h) => h.id)
-            );
-          }
-
-          const validIds =
-            parsed.filter((id) =>
-              HEROES.some(
-                (h) => h.id === id
-              )
-            );
-
-          return new Set(validIds);
-        } catch {
-          return new Set(
-            HEROES.map((h) => h.id)
-          );
-        }
-      }
+      () => new Set(HEROES.map((h) => h.id))
     );
 
-  /* Sauvegarde automatique */
-  useEffect(() => {
-    try {
-      localStorage.setItem(
-        HERO_SETTINGS_KEY,
-        JSON.stringify(
-          Array.from(enabledHeroIds)
-        )
-      );
-    } catch (error) {
-      console.error(
-        "Impossible de sauvegarder la configuration des héros.",
-        error
-      );
-    }
-  }, [enabledHeroIds]);
+  const [heroPreferencesLoaded, setHeroPreferencesLoaded] =
+    useState(false);
 
   /* =======================================================
      USER
@@ -829,6 +779,73 @@ export default function App() {
   useEffect(() => {
     getCurrentUser().then(setUser);
   }, []);
+
+  /* =======================================================
+     HERO PREFERENCES — CHARGEMENT SUPABASE
+     ======================================================= */
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadHeroSettings() {
+      if (!user) {
+        setHeroPreferencesLoaded(false);
+        setEnabledHeroIds(
+          new Set(HEROES.map((h) => h.id))
+        );
+        return;
+      }
+
+      setHeroPreferencesLoaded(false);
+
+      const disabledHeroes = await loadHeroPreferences();
+
+      if (cancelled) {
+        return;
+      }
+
+      const disabledSet = new Set(disabledHeroes);
+
+      const enabled = HEROES
+        .filter((hero) => !disabledSet.has(hero.id))
+        .map((hero) => hero.id);
+
+      setEnabledHeroIds(new Set(enabled));
+      setHeroPreferencesLoaded(true);
+    }
+
+    loadHeroSettings();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  /* =======================================================
+     HERO PREFERENCES — SAUVEGARDE SUPABASE
+     ======================================================= */
+
+  useEffect(() => {
+    if (!user || !heroPreferencesLoaded) {
+      return;
+    }
+
+    const disabledHeroes = HEROES
+      .filter((hero) => !enabledHeroIds.has(hero.id))
+      .map((hero) => hero.id);
+
+    saveHeroPreferences(disabledHeroes).then((success) => {
+      if (!success) {
+        console.error(
+          "Impossible de sauvegarder la configuration des héros dans Supabase."
+        );
+      }
+    });
+  }, [
+    enabledHeroIds,
+    user,
+    heroPreferencesLoaded,
+  ]);
 
   useEffect(() => {
     async function loadHistory() {
