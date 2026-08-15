@@ -72,11 +72,10 @@ export const HEROES: Hero[] = [
   { id: "wandering_alchemist", name: "Wandering Alchemist", alias: "Kimiya", type: "Ranged", cls: "INT", img: "https://static.wikia.nocookie.net/lordsmobile/images/7/7f/Wandering_Alchemist_medal.png/revision/latest/scale-to-width-down/200?cb=20230621102247", stats: { hp: 13500, atk: 0, matk: 2800, def: 130, mdef: 470 } },
   { id: "wave_crasher", name: "Wave Crasher", alias: "Austin", type: "Cavalry", cls: "AGI", img: "https://static.wikia.nocookie.net/lordsmobile/images/8/83/Wave_Crasher_medal.png/revision/latest/scale-to-width-down/200?cb=20230113164511", stats: { hp: 17000, atk: 2550, matk: 0, def: 190, mdef: 335 } },
   { id: "witch_doll", name: "Witch Doll", alias: "Astre", type: "Cavalry", cls: "INT", img: "https://static.wikia.nocookie.net/lordsmobile/images/8/8f/Witch_Doll_medal.png/revision/latest/scale-to-width-down/200?cb=20200103220609", stats: { hp: 14000, atk: 0, matk: 2600, def: 140, mdef: 480 } },
-  { id: "prima_donna", name: "Prima Donna", alias: "Donatienne", type: "Ranged", cls: "INT", img: "https://static.wikia.nocookie.net/lordsmobile/images/d/d9/Prima_Donna_medal.png/revision/latest/scale-to-width-down/50?cb=20200103214949", stats: { hp: 14025, atk: 0, matk: 2408, def: 142, mdef: 512 } },
+  { id: "prima_donna", name: "Prima Donna", alias: "Donatienne", type: "Ranged", cls: "INT", img: "https://static.wikia.nocookie.net/lordsmobile/images/d/d9/Prima_Donna_medal.png/revision/latest/scale-to-width-down/200?cb=20200103214949", stats: { hp: 14025, atk: 0, matk: 2408, def: 142, mdef: 512 } },
   { id: "watchman", name: "Watchman", alias: "Veilleur", type: "Infantry", cls: "STR", img: "https://static.wikia.nocookie.net/lordsmobile/images/0/0c/Watcher_medal.png/revision/latest/scale-to-width-down/50?cb=20200103204745", stats: { hp: 37172, atk: 930, matk: 0, def: 494, mdef: 555 } },
   { id: "elementalist", name: "Elementalist", alias: "Élémentaliste", type: "Ranged", cls: "INT", img: "https://static.wikia.nocookie.net/lordsmobile/images/5/54/Elementalist_medal.png/revision/latest/scale-to-width-down/50?cb=20200103211538", stats: { hp: 13510, atk: 0, matk: 2912, def: 134, mdef: 482 } },
-  { id: "stellina_unicorno", name: "Stellina Unicorno", alias: "Stellina", type: "Cavalry", cls: "AGI", img: "https://static.wikia.nocookie.net/lordsmobile/images/1/16/Energium.png/revision/latest/scale-to-width-down/200?cb=20250111154429", stats: { hp: 17200, atk: 2500, matk: 0, def: 200, mdef: 350 } },
-];
+{ id: "stellina_unicorno", name: "Stellina Unicorno", alias: "Stellina", type: "Cavalry", cls: "AGI", img: "/heroes/stellina.jpg", stats: { hp: 17200, atk: 2500, matk: 0, def: 200, mdef: 350 } },];
 
 export type HeroRole = "Tank" | "Support" | "Damage";
 
