@@ -153,7 +153,6 @@ function HeroGridPicker({
             {pickSet.has(h.id) && (
               <>
 			  <span className="text-amber-400 font-black text-lg">
-  TEST {picks.indexOf(h.id) + 1}
 </span>
 <div className="absolute top-1 left-1 z-[60] h-6 w-6 rounded-full bg-amber-400 border-2 border-black flex items-center justify-center shadow-xl pointer-events-none">
   <span className="text-xs font-black text-black">
@@ -798,12 +797,20 @@ export default function App() {
 
       setHeroPreferencesLoaded(false);
 
-      const disabledHeroes = await loadHeroPreferences();
+      const loadedPreferences = await loadHeroPreferences();
 
       if (cancelled) {
         return;
       }
 
+      if (loadedPreferences === null) {
+        console.error(
+          "Impossible de charger la configuration des héros depuis Supabase."
+        );
+        return;
+      }
+
+      const disabledHeroes = loadedPreferences;
       const disabledSet = new Set(disabledHeroes);
 
       const enabled = HEROES
@@ -834,6 +841,8 @@ export default function App() {
       .filter((hero) => !enabledHeroIds.has(hero.id))
       .map((hero) => hero.id);
 
+    // La sauvegarde n'est exécutée qu'après un chargement
+    // Supabase réussi grâce à heroPreferencesLoaded.
     saveHeroPreferences(disabledHeroes).then((success) => {
       if (!success) {
         console.error(
