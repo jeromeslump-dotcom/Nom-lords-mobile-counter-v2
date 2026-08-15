@@ -1368,16 +1368,22 @@ const team =
             MANUAL COMBAT MODAL
             ================================================= */}
 
-        <ManualCombatModal
-          mEnemies={mEnemies}
-          mMine={mMine}
-          mWon={mWon}
-          savingManual={savingManual}
-          setShowManual={setShowManual}
-          toggleManual={toggleManual}
-          saveManual={saveManual}
-          mReady={mReady}
-        />
+{showManual && (
+<ManualCombatModal
+  mEnemies={mEnemies}
+  mMine={mMine}
+  mWon={mWon}
+  savingManual={savingManual}
+  setShowManual={setShowManual}
+  saveManual={saveManual}
+  mReady={mReady}
+  setMEnemies={setMEnemies}
+  setMMine={setMMine}
+  setMWon={setMWon}
+  usage={usage}
+  enabledHeroIds={enabledHeroIds}
+/>
+)}
         {/* =================================================
             PICKS
             ================================================= */}

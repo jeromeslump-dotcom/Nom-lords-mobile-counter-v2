@@ -9,6 +9,26 @@ import {
 } from "lucide-react";
 import { HEROES, HeroClass } from "../heroes";
 
+const TYPE_GRADIENT: Record<string, string> = {
+  Infantry: "from-red-900/80 to-red-500/20",
+  Cavalry: "from-blue-900/80 to-blue-500/20",
+  Ranged: "from-green-900/80 to-green-500/20",
+  "Siege Engine": "from-purple-900/80 to-purple-500/20",
+};
+
+const TYPE_TEXT: Record<string, string> = {
+  Infantry: "INF",
+  Cavalry: "CAV",
+  Ranged: "RNG",
+  "Siege Engine": "SIEGE",
+};
+
+const CLASS_TEXT: Record<string, string> = {
+  STR: "text-red-300",
+  AGI: "text-green-300",
+  INT: "text-blue-300",
+};
+
 export default function HeroManager({
   enabledIds,
   usage,
