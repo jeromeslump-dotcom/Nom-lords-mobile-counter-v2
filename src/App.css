@@ -59,9 +59,24 @@ body.lmac-role-user button:has(svg.lucide-trophy) + button {
   display: none !important;
 }
 
-/* The current App labels every authenticated account as Admin.
-   Hide that label for non-admin roles while keeping logout available. */
-body.lmac-role-user span.text-emerald-300:has(+ button),
-body.lmac-role-contributor span.text-emerald-300:has(+ button) {
-  display: none !important;
+/* Show the profile name instead of the old generic "Admin" label. */
+body.lmac-role-user span.text-emerald-300,
+body.lmac-role-contributor span.text-emerald-300,
+body.lmac-role-admin span.text-emerald-300 {
+  font-size: 0;
+}
+
+body.lmac-role-user span.text-emerald-300::after {
+  content: "👤 " var(--lmac-display-name, "Utilisateur");
+  font-size: 0.75rem;
+}
+
+body.lmac-role-contributor span.text-emerald-300::after {
+  content: "🔵 " var(--lmac-display-name, "Contributor");
+  font-size: 0.75rem;
+}
+
+body.lmac-role-admin span.text-emerald-300::after {
+  content: "👑 " var(--lmac-display-name, "Admin");
+  font-size: 0.75rem;
 }
