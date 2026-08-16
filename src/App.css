@@ -83,3 +83,44 @@ body.lmac-role-admin header span.text-emerald-300::after {
   content: "👑 " var(--lmac-display-name, "Admin");
   font-size: 0.75rem;
 }
+
+/* =========================================================
+   VISITOR / USER RESULT RECORDING
+   Visitors and normal users may use the Counter, but must not
+   see the Win/Lose recording panel. Contributor and Admin keep it.
+   ========================================================= */
+body:not(.lmac-role-contributor):not(.lmac-role-admin) div:has(> div > svg.lucide-plus) {
+  display: none !important;
+}
+
+/* =========================================================
+   COMPACT HERO FILTER BAR
+   Search text is smaller and ranking/class filters share one row.
+   ========================================================= */
+div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) {
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 8px !important;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) > div:first-child {
+  flex: 0 0 220px;
+}
+
+div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) > div:nth-child(2),
+div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) > div:nth-child(3) {
+  flex: 0 0 auto;
+  flex-wrap: nowrap !important;
+}
+
+div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) input[placeholder="Rechercher par nom ou alias..."] {
+  font-size: 12px !important;
+}
+
+div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) button {
+  font-size: 11px !important;
+  padding: 6px 9px !important;
+}
