@@ -1129,7 +1129,7 @@ const team =
         {user ? (
           <>
             <span className="text-xs text-emerald-300">
-              👑 Admin
+              👑 Connexion 👑
             </span>
 
             <button
@@ -1197,12 +1197,12 @@ const team =
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 transition-colors"
             >
               <BookOpen className="h-4 w-4" />
-              Enregistrer un combat passé
+              Ajouter un combat à l'historique
             </button>
           </>
         ) : (
           <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40">
-            🔒 Historique et enregistrement réservés à l'Admin
+            🔒 Historique et enregistrement 🔒
           </span>
         )}
       </div>
