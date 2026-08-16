@@ -108,6 +108,21 @@ function clearRoleClass(): void {
     "lmac-role-contributor",
     "lmac-role-admin"
   );
+  document.body.style.removeProperty("--lmac-display-name");
+}
+
+function setDisplayName(displayName: string | null): void {
+  if (typeof document === "undefined") return;
+
+  const safeName = (displayName ?? "").trim();
+  if (safeName) {
+    document.body.style.setProperty(
+      "--lmac-display-name",
+      JSON.stringify(safeName)
+    );
+  } else {
+    document.body.style.removeProperty("--lmac-display-name");
+  }
 }
 
 async function syncRoleClass(userId: string): Promise<void> {
@@ -116,13 +131,15 @@ async function syncRoleClass(userId: string): Promise<void> {
   try {
     const { data, error } = await supabase
       .from("profiles")
-      .select("role, active")
+      .select("role, active, display_name")
       .eq("id", userId)
       .maybeSingle();
 
     clearRoleClass();
 
     if (error || !data || data.active !== true) return;
+
+    setDisplayName(data.display_name);
 
     if (
       data.role === "user" ||
