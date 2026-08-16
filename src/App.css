@@ -3,7 +3,7 @@
   --lmac-surface: #10151f;
   --lmac-surface-2: #151b26;
   --lmac-border: rgba(255, 255, 255, 0.08);
-  --lmac-border-hover: rgba(255, 183, 77, 0.35);
+  --lmac-border-hover: rgba(255, 255, 255, 0.35);
   --lmac-amber: #f59e0b;
   --lmac-text: #f5f5f5;
   --lmac-muted: #8b95a7;
@@ -33,4 +33,35 @@
 .lmac-divider {
   height: 1px;
   background: var(--lmac-border);
+}
+
+/* =========================================================
+   ROLE-BASED UI GUARD
+   The database/RLS remains the real security boundary.
+   These rules only keep the interface consistent with it.
+   ========================================================= */
+
+/* Only admins can access the manual past-combat entry. */
+body.lmac-role-user button:has(svg.lucide-book-open),
+body.lmac-role-contributor button:has(svg.lucide-book-open) {
+  display: none !important;
+}
+
+/* Only admins can manage the hero configuration. */
+body.lmac-role-user button:has(svg.lucide-settings),
+body.lmac-role-contributor button:has(svg.lucide-settings) {
+  display: none !important;
+}
+
+/* A normal user cannot record Win/Lose. Contributors and admins can. */
+body.lmac-role-user button:has(svg.lucide-trophy),
+body.lmac-role-user button:has(svg.lucide-trophy) + button {
+  display: none !important;
+}
+
+/* The current App labels every authenticated account as Admin.
+   Hide that label for non-admin roles while keeping logout available. */
+body.lmac-role-user span.text-emerald-300:has(+ button),
+body.lmac-role-contributor span.text-emerald-300:has(+ button) {
+  display: none !important;
 }
