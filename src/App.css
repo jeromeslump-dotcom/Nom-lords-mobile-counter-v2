@@ -59,12 +59,27 @@ body.lmac-role-user button:has(svg.lucide-trophy) + button {
   display: none !important;
 }
 
-/*
-   IMPORTANT:
-   Do not replace every emerald text span with the current user's
-   display name. Hero cards and statistics also use emerald text;
-   doing that caused names such as "Test Contributor" to appear
-   beside heroes and in recommendation/statistics sections.
-   The profile name must only be rendered by the dedicated account
-   UI in App.tsx, not by a global CSS selector.
-*/
+/* =========================================================
+   HEADER USER NAME
+   Keep the profile name only in the authentication header.
+   ========================================================= */
+body.lmac-role-user header span.text-emerald-300,
+body.lmac-role-contributor header span.text-emerald-300,
+body.lmac-role-admin header span.text-emerald-300 {
+  font-size: 0;
+}
+
+body.lmac-role-user header span.text-emerald-300::after {
+  content: "👤 " var(--lmac-display-name, "Utilisateur");
+  font-size: 0.75rem;
+}
+
+body.lmac-role-contributor header span.text-emerald-300::after {
+  content: "🔵 " var(--lmac-display-name, "Contributor");
+  font-size: 0.75rem;
+}
+
+body.lmac-role-admin header span.text-emerald-300::after {
+  content: "👑 " var(--lmac-display-name, "Admin");
+  font-size: 0.75rem;
+}
