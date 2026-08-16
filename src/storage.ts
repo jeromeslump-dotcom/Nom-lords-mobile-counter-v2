@@ -100,18 +100,63 @@ function normalizeCombats(data: unknown): Combat[] {
   });
 }
 
+function clearRoleClass(): void {
+  if (typeof document === "undefined") return;
+
+  document.body.classList.remove(
+    "lmac-role-user",
+    "lmac-role-contributor",
+    "lmac-role-admin"
+  );
+}
+
+async function syncRoleClass(userId: string): Promise<void> {
+  if (typeof document === "undefined") return;
+
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role, active")
+      .eq("id", userId)
+      .maybeSingle();
+
+    clearRoleClass();
+
+    if (error || !data || data.active !== true) return;
+
+    if (
+      data.role === "user" ||
+      data.role === "contributor" ||
+      data.role === "admin"
+    ) {
+      document.body.classList.add(`lmac-role-${data.role}`);
+    }
+  } catch {
+    clearRoleClass();
+  }
+}
+
 export async function getCurrentUser() {
   try {
     const { data: { user }, error } = await supabase.auth.getUser();
     if (error) {
+      clearRoleClass();
       // Une absence de session est normale pour un visiteur.
       if (error.name !== "AuthSessionMissingError") {
         console.error("Erreur récupération utilisateur :", error);
       }
       return null;
     }
+
+    if (!user) {
+      clearRoleClass();
+      return null;
+    }
+
+    await syncRoleClass(user.id);
     return user;
   } catch (error) {
+    clearRoleClass();
     console.error("Erreur inattendue récupération utilisateur :", error);
     return null;
   }
@@ -153,11 +198,20 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
 
 export async function signIn(email: string, password: string) {
   try {
-    return await supabase.auth.signInWithPassword({
+    const result = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
+
+    if (result.data.user) {
+      await syncRoleClass(result.data.user.id);
+    } else {
+      clearRoleClass();
+    }
+
+    return result;
   } catch (error) {
+    clearRoleClass();
     console.error("Erreur inattendue lors de la connexion :", error);
     return {
       data: { user: null, session: null },
@@ -168,8 +222,11 @@ export async function signIn(email: string, password: string) {
 
 export async function signOut() {
   try {
-    return await supabase.auth.signOut();
+    const result = await supabase.auth.signOut();
+    clearRoleClass();
+    return result;
   } catch (error) {
+    clearRoleClass();
     console.error("Erreur inattendue lors de la déconnexion :", error);
     return {
       error: error instanceof Error ? error : new Error("Erreur de déconnexion"),
