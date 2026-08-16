@@ -124,3 +124,40 @@ div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) button {
   font-size: 11px !important;
   padding: 6px 9px !important;
 }
+
+/* =========================================================
+   VISITOR LOGIN BUTTON
+   Keep the visitor action the same size as the logout button,
+   but label it clearly as Connexion instead of Admin.
+   ========================================================= */
+body:not(.lmac-role-user):not(.lmac-role-contributor):not(.lmac-role-admin) header > div > div:last-child > div:first-child > button {
+  min-width: 110px;
+  justify-content: center;
+  font-size: 0 !important;
+}
+
+body:not(.lmac-role-user):not(.lmac-role-contributor):not(.lmac-role-admin) header > div > div:last-child > div:first-child > button::after {
+  content: "Connexion";
+  font-size: 12px;
+}
+
+/* =========================================================
+   RECOMMENDED TEAM — MOBILE CLOSE BUTTON
+   The recommendation cards are small on phones, so the close
+   button must not cover a large part of the hero image.
+   Enemy cards keep their existing close button unchanged.
+   ========================================================= */
+@media (max-width: 640px) {
+  div.aspect-square > button[title="Retirer ce héros"] {
+    top: 4px !important;
+    right: 4px !important;
+    width: 24px !important;
+    height: 24px !important;
+    border-width: 1px !important;
+  }
+
+  div.aspect-square > button[title="Retirer ce héros"] svg {
+    width: 12px !important;
+    height: 12px !important;
+  }
+}
