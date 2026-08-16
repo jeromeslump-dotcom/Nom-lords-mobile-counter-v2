@@ -207,7 +207,17 @@ export async function addCombat(
 ): Promise<Combat | null> {
   const user = await getCurrentUser();
   if (!user) {
-    console.error("Aucun utilisateur connecté.");
+    return null;
+  }
+
+  // La règle métier est volontairement doublée côté application.
+  // La vraie sécurité reste assurée par la RLS Supabase.
+  const profile = await getCurrentProfile();
+  if (
+    !profile ||
+    !profile.active ||
+    (profile.role !== "contributor" && profile.role !== "admin")
+  ) {
     return null;
   }
 
@@ -255,6 +265,11 @@ export async function addCombat(
 export async function removeCombat(id: string): Promise<boolean> {
   const user = await getCurrentUser();
   if (!user || !id || typeof id !== "string") return false;
+
+  const profile = await getCurrentProfile();
+  if (!profile || !profile.active || profile.role !== "admin") {
+    return false;
+  }
 
   try {
     const { error } = await supabase
