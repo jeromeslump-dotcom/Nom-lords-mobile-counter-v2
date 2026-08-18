@@ -74,3 +74,97 @@ export function calculateWinRate(
     count: enemyMatched.length,
   };
 }
+
+export interface BestWinTeamResult {
+  ids: string[];
+  rate: number;
+  count: number;
+}
+
+export function findBestHistoricalTeam(
+  combats: Combat[],
+  enemyIds: string[],
+  currentTeamIds: string[]
+): BestWinTeamResult | null {
+  const relevant = combats.filter(
+    (combat) =>
+      combat.enemy_heroes.filter((id) =>
+        enemyIds.includes(id)
+      ).length === 5
+  );
+
+  if (relevant.length === 0) {
+    return null;
+  }
+
+  const teamMap = new Map<
+    string,
+    {
+      wins: number;
+      total: number;
+    }
+  >();
+
+  for (const combat of relevant) {
+    const key = [...combat.my_heroes]
+      .sort()
+      .join(",");
+
+    const entry =
+      teamMap.get(key) ?? {
+        wins: 0,
+        total: 0,
+      };
+
+    entry.total++;
+
+    if (combat.won) {
+      entry.wins++;
+    }
+
+    teamMap.set(key, entry);
+  }
+
+  let best: BestWinTeamResult | null = null;
+
+  for (const [key, entry] of teamMap) {
+    if (entry.total < 2) {
+      continue;
+    }
+
+    const rate = Math.round(
+      (entry.wins / entry.total) * 100
+    );
+
+    if (
+      !best ||
+      rate > best.rate ||
+      (rate === best.rate &&
+        entry.total > best.count)
+    ) {
+      best = {
+        ids: key.split(","),
+        rate,
+        count: entry.total,
+      };
+    }
+  }
+
+  if (!best) {
+    return null;
+  }
+
+  const currentKey = [...currentTeamIds]
+    .sort()
+    .join(",");
+
+  const bestKey = [...best.ids]
+    .sort()
+    .join(",");
+
+  if (bestKey === currentKey) {
+    return null;
+  }
+
+  return best;
+}

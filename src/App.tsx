@@ -1,4 +1,17 @@
+import {
+  filterAndSortHeroes,
+  type HeroSort,
+} from "./utils/heroRanking";
 
+import { reorderArray } from "./utils/selectionUtils";
+
+import {
+  calculateHeroUsage,
+  findBestHistoricalTeam,
+  calculateWinRate,
+} from "./utils/combatStats";
+
+import { useHeroPreferences } from "./hooks/useHeroPreferences";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -113,10 +126,8 @@ export default function App() {
   const [activeClass, setActiveClass] =
     useState<HeroClass | "All">("All");
 	
-	const [sortBy, setSortBy] =
-  useState<
-    "played" | "hp" | "atk" | "matk" | "def" | "mdef"
-  >("played");
+const [sortBy, setSortBy] =
+  useState<HeroSort>("played");
 
   const [showResult, setShowResult] =
     useState(false);
@@ -172,14 +183,13 @@ export default function App() {
   /* =======================================================
      ENABLED HEROES — SUPABASE
      ======================================================= */
-
-  const [enabledHeroIds, setEnabledHeroIds] =
-    useState<Set<string>>(
-      () => new Set(HEROES.map((h) => h.id))
-    );
-
-  const [heroPreferencesLoaded, setHeroPreferencesLoaded] =
-    useState(false);
+const {
+  enabledHeroIds,
+  setEnabledHeroIds,
+  heroPreferencesLoaded,
+  toggleHeroEnabled,
+  enableAllHeroes,
+ } = useHeroPreferences(user);
 
   /* =======================================================
      USER
@@ -188,106 +198,6 @@ export default function App() {
   useEffect(() => {
     getCurrentUser().then(setUser);
   }, []);
-
-  /* =======================================================
-     HERO PREFERENCES — CHARGEMENT SUPABASE
-     ======================================================= */
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadHeroSettings() {
-      if (!user) {
-        setHeroPreferencesLoaded(false);
-        setEnabledHeroIds(
-          new Set(HEROES.map((h) => h.id))
-        );
-        return;
-      }
-
-      setHeroPreferencesLoaded(false);
-
-      const loadedPreferences = await loadHeroPreferences();
-
-      if (cancelled) {
-        return;
-      }
-
-      if (loadedPreferences === null) {
-        console.error(
-          "Impossible de charger la configuration des héros depuis Supabase."
-        );
-        return;
-      }
-
-      const disabledHeroes = loadedPreferences;
-      const disabledSet = new Set(disabledHeroes);
-
-      const enabled = HEROES
-        .filter((hero) => !disabledSet.has(hero.id))
-        .map((hero) => hero.id);
-
-      setEnabledHeroIds(new Set(enabled));
-      setHeroPreferencesLoaded(true);
-    }
-
-    loadHeroSettings();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [user]);
-
-  /* =======================================================
-     HERO PREFERENCES — SAUVEGARDE SUPABASE
-     ======================================================= */
-
-  useEffect(() => {
-    if (!user || !heroPreferencesLoaded) {
-      return;
-    }
-
-    const disabledHeroes = HEROES
-      .filter((hero) => !enabledHeroIds.has(hero.id))
-      .map((hero) => hero.id);
-
-    // La sauvegarde n'est exécutée qu'après un chargement
-    // Supabase réussi grâce à heroPreferencesLoaded.
-    saveHeroPreferences(disabledHeroes).then((success) => {
-      if (!success) {
-        console.error(
-          "Impossible de sauvegarder la configuration des héros dans Supabase."
-        );
-      }
-    });
-  }, [
-    enabledHeroIds,
-    user,
-    heroPreferencesLoaded,
-  ]);
-
-  useEffect(() => {
-    async function loadHistory() {
-      if (!user) {
-        setCombats([]);
-        setLoadingHistory(false);
-        return;
-      }
-
-      const loaded =
-        await loadCombats();
-
-      setCombats(
-        Array.isArray(loaded)
-          ? loaded
-          : []
-      );
-
-      setLoadingHistory(false);
-    }
-
-    loadHistory();
-  }, [user]);
 
   /* =======================================================
      CLEAN DISABLED HEROES FROM CURRENT SELECTIONS
@@ -323,28 +233,6 @@ export default function App() {
      HERO MANAGEMENT
      ======================================================= */
 
-  function toggleHeroEnabled(id: string) {
-    setEnabledHeroIds((prev) => {
-      const next = new Set(prev);
-
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-
-      return next;
-    });
-  }
-
-  function enableAllHeroes() {
-    setEnabledHeroIds(
-      new Set(
-        HEROES.map((h) => h.id)
-      )
-    );
-  }
-
   function disableAllHeroes() {
     setEnabledHeroIds(new Set());
     setPicks([]);
@@ -367,89 +255,29 @@ export default function App() {
   const full =
     picks.length === MAX_PICKS;
 
-  const usage =
-    useMemo(() => {
-      const counts: Record<
-        string,
-        number
-      > = {};
+const usage = useMemo(
+  () => calculateHeroUsage(combats),
+  [combats]
+);
 
-      for (const c of combats) {
-        for (const id of c.enemy_heroes) {
-          counts[id] =
-            (counts[id] ?? 0) + 1;
-        }
+const filtered = useMemo(
+  () =>
+    filterAndSortHeroes(HEROES, {
+      enabledHeroIds,
+      activeClass,
+      query,
+      sortBy,
+      usage,
+    }),
+  [
+    enabledHeroIds,
+    activeClass,
+    query,
+    sortBy,
+    usage,
+  ]
+);
 
-        for (const id of c.my_heroes) {
-          counts[id] =
-            (counts[id] ?? 0) + 1;
-        }
-      }
-
-      return counts;
-    }, [combats]);
-
-const filtered = useMemo(() => {
-  return HEROES
-    .filter((h) => {
-      if (!enabledHeroIds.has(h.id)) {
-        return false;
-      }
-
-      if (
-        activeClass !== "All" &&
-        h.cls !== activeClass
-      ) {
-        return false;
-      }
-
-      if (
-        query &&
-        !h.name
-          .toLowerCase()
-          .includes(query.toLowerCase()) &&
-        !h.alias
-          .toLowerCase()
-          .includes(query.toLowerCase())
-      ) {
-        return false;
-      }
-
-      return true;
-    })
-    .sort((a, b) => {
-      if (sortBy === "hp") {
-        return b.stats.hp - a.stats.hp;
-      }
-
-      if (sortBy === "atk") {
-        return b.stats.atk - a.stats.atk;
-      }
-
-      if (sortBy === "matk") {
-        return b.stats.matk - a.stats.matk;
-      }
-
-      if (sortBy === "def") {
-        return b.stats.def - a.stats.def;
-      }
-
-      if (sortBy === "mdef") {
-        return b.stats.mdef - a.stats.mdef;
-      }
-
-      return (
-        (usage[b.id] ?? 0) -
-        (usage[a.id] ?? 0)
-      );
-    });
-}, [
-  query,
-  activeClass,
-  enabledHeroIds,
-  usage,
-  sortBy,
-]);
 
 const team =
   useMemo(
@@ -506,242 +334,61 @@ const team =
      BEST HISTORICAL TEAM
      ======================================================= */
 
-  const bestWinTeam =
-    useMemo(() => {
-      if (
-        !full ||
-        !showResult ||
-        combats.length === 0
-      ) {
-        return null;
-      }
+  const bestWinTeam = useMemo(() => {
+  if (
+    !full ||
+    !showResult ||
+    combats.length === 0
+  ) {
+    return null;
+  }
 
-      const relevant =
-        combats.filter(
-          (c) =>
-            c.enemy_heroes.filter(
-              (id) =>
-                picks.includes(id)
-            ).length === 5
-        );
+  const currentTeamIds =
+    editedTeam.length === 5
+      ? editedTeam
+      : team.map((hero) => hero.id);
 
-      if (
-        relevant.length === 0
-      ) {
-        return null;
-      }
-
-      const teamMap =
-        new Map<
-          string,
-          {
-            wins: number;
-            total: number;
-          }
-        >();
-
-      for (const c of relevant) {
-        const key = [
-          ...c.my_heroes,
-        ]
-          .sort()
-          .join(",");
-
-        const entry =
-          teamMap.get(key) ?? {
-            wins: 0,
-            total: 0,
-          };
-
-        entry.total++;
-
-        if (c.won) {
-          entry.wins++;
-        }
-
-        teamMap.set(
-          key,
-          entry
-        );
-      }
-
-      let best:
-        | {
-            ids: string[];
-            rate: number;
-            count: number;
-          }
-        | null = null;
-
-      for (const [
-        key,
-        entry,
-      ] of teamMap) {
-        if (
-          entry.total < 2
-        ) {
-          continue;
-        }
-
-        const rate =
-          Math.round(
-            (entry.wins /
-              entry.total) *
-              100
-          );
-
-        if (
-          !best ||
-          rate > best.rate ||
-          (rate === best.rate &&
-            entry.total >
-              best.count)
-        ) {
-          best = {
-            ids: key.split(","),
-            rate,
-            count: entry.total,
-          };
-        }
-      }
-
-      if (!best) {
-        return null;
-      }
-
-      const currentKey = [
-        ...(editedTeam.length === 5
-          ? editedTeam
-          : team.map(
-              (h) => h.id
-            )),
-      ]
-        .sort()
-        .join(",");
-
-      if (
-        [...best.ids]
-          .sort()
-          .join(",") ===
-        currentKey
-          .split(",")
-          .sort()
-          .join(",")
-      ) {
-        return null;
-      }
-
-      return best;
-    }, [
-      combats,
-      picks,
-      full,
-      showResult,
-      editedTeam,
-      team,
-    ]);
+  return findBestHistoricalTeam(
+    combats,
+    picks,
+    currentTeamIds
+  );
+}, [
+  combats,
+  picks,
+  full,
+  showResult,
+  editedTeam,
+  team,
+]);
 
   /* =======================================================
      WIN RATE
      ======================================================= */
 
-  const winRate =
-    useMemo(() => {
-      if (
-        !full ||
-        !showResult
-      ) {
-        return null;
-      }
+ const winRate = useMemo(() => {
+  if (!full || !showResult) {
+    return null;
+  }
 
-      const teamIds =
-        editedTeam.length === 5
-          ? editedTeam
-          : team.map(
-              (h) => h.id
-            );
+  const teamIds =
+    editedTeam.length === 5
+      ? editedTeam
+      : team.map((hero) => hero.id);
 
-      const teamMatched =
-        combats.filter(
-          (c) => {
-            const enemyOverlap =
-              c.enemy_heroes.filter(
-                (id) =>
-                  picks.includes(id)
-              ).length;
-
-            const myOverlap =
-              c.my_heroes.filter(
-                (id) =>
-                  teamIds.includes(
-                    id
-                  )
-              ).length;
-
-            return (
-              enemyOverlap >= 4 &&
-              myOverlap >= 4
-            );
-          }
-        );
-
-      if (
-        teamMatched.length > 0
-      ) {
-        const wins =
-          teamMatched.filter(
-            (c) => c.won
-          ).length;
-
-        return {
-          rate: Math.round(
-            (wins /
-              teamMatched.length) *
-              100
-          ),
-          count:
-            teamMatched.length,
-        };
-      }
-
-      const enemyMatched =
-        combats.filter(
-          (c) =>
-            c.enemy_heroes.filter(
-              (id) =>
-                picks.includes(id)
-            ).length >= 4
-        );
-
-      if (
-        enemyMatched.length ===
-        0
-      ) {
-        return null;
-      }
-
-      const wins =
-        enemyMatched.filter(
-          (c) => c.won
-        ).length;
-
-      return {
-        rate: Math.round(
-          (wins /
-            enemyMatched.length) *
-            100
-        ),
-        count:
-          enemyMatched.length,
-      };
-    }, [
-      combats,
-      picks,
-      full,
-      showResult,
-      editedTeam,
-      team,
-    ]);
+  return calculateWinRate(
+    combats,
+    picks,
+    teamIds
+  );
+}, [
+  combats,
+  picks,
+  full,
+  showResult,
+  editedTeam,
+  team,
+]);
 
   /* =======================================================
      LOGIN
@@ -815,53 +462,31 @@ const team =
     );
   }
 
-  function reorderPicks(
-    from: number,
-    to: number
-  ) {
-    setPicks((prev) => {
-      const next = [...prev];
+function reorderPicks(
+  from: number,
+  to: number
+) {
+  setPicks((prev) =>
+    reorderArray(prev, from, to)
+  );
+}
 
-      const [moved] =
-        next.splice(
-          from,
-          1
-        );
-
-      next.splice(
-        to,
-        0,
-        moved
-      );
-
-      return next;
-    });
-  }
-
-  function reorderManual(
-    arr: string[],
-    setArr: (
-      v: string[]
-    ) => void,
-    from: number,
-    to: number
-  ) {
-    const next = [...arr];
-
-    const [moved] =
-      next.splice(
-        from,
-        1
-      );
-
-    next.splice(
-      to,
-      0,
-      moved
-    );
-
-    setArr(next);
-  }
+function reorderManual(
+  arr: string[],
+  setArr: (
+    v: string[]
+  ) => void,
+  from: number,
+  to: number
+) {
+  setArr(
+    reorderArray(
+      arr,
+      from,
+      to
+    )
+  );
+}
 
   function reset() {
     setPicks([]);
