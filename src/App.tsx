@@ -116,6 +116,8 @@ const {
   setCombats([]);
 });
 
+  const [editedTeam, setEditedTeam] =
+    useState<string[]>([]);
 
 const {
   combats,
@@ -129,6 +131,14 @@ const {
   picks,
   editedTeam,
 });
+
+const {
+  enabledHeroIds,
+  setEnabledHeroIds,
+  heroPreferencesLoaded,
+  toggleHeroEnabled,
+  enableAllHeroes,
+ } = useHeroPreferences(user);
 
 const {
   mEnemies,
@@ -170,8 +180,7 @@ const [sortBy, setSortBy] =
   const [showHeroManager, setShowHeroManager] =
     useState(false);
 
-  const [editedTeam, setEditedTeam] =
-    useState<string[]>([]);
+
 
   const [
     hiddenRecommendedIds,
@@ -203,13 +212,7 @@ const [sortBy, setSortBy] =
   /* =======================================================
      ENABLED HEROES — SUPABASE
      ======================================================= */
-const {
-  enabledHeroIds,
-  setEnabledHeroIds,
-  heroPreferencesLoaded,
-  toggleHeroEnabled,
-  enableAllHeroes,
- } = useHeroPreferences(user);
+
 
   /* =======================================================
      USER
