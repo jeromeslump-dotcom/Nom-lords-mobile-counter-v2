@@ -12,6 +12,9 @@ import {
 } from "./utils/combatStats";
 
 import { useHeroPreferences } from "./hooks/useHeroPreferences";
+import { useAuth } from "./hooks/useAuth";
+import { useCombatHistory } from "./hooks/useCombatHistory";
+import { useManualCombat } from "./hooks/useManualCombat";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -52,14 +55,8 @@ import {
 import type { Combat } from "./storage";
 
 import {
-  loadCombats,
-  addCombat,
-  removeCombat,
   loadHeroPreferences,
   saveHeroPreferences,
-  signIn,
-  signOut,
-  getCurrentUser,
 } from "./storage";
 
 import "./App.css";
@@ -78,8 +75,6 @@ const TYPE_GRADIENT: Record<string, string> = {
   Ranged: "from-emerald-900 via-green-700 to-teal-900",
   "Siege Engine": "from-purple-900 via-violet-700 to-indigo-900",
 };
-
-
 
 
 /* =========================================================
@@ -104,24 +99,58 @@ export default function App() {
 
   const [query, setQuery] =
     useState("");
+const {
+  user,
+  loginEmail,
+  setLoginEmail,
+  loginPassword,
+  setLoginPassword,
+  loginError,
+  setLoginError,
+  showLogin,
+  setShowLogin,
+  loggingIn,
+  handleLogin,
+  handleLogout,
+} = useAuth(() => {
+  setCombats([]);
+});
 
-  const [user, setUser] =
-    useState<any>(null);
 
-  const [loginEmail, setLoginEmail] =
-    useState("");
+const {
+  combats,
+  setCombats,
+  loadingHistory,
+  recording,
+  recordCombat,
+  deleteCombat,
+} = useCombatHistory({
+  user,
+  picks,
+  editedTeam,
+});
 
-  const [loginPassword, setLoginPassword] =
-    useState("");
-
-  const [loginError, setLoginError] =
-    useState("");
-
-  const [showLogin, setShowLogin] =
-    useState(false);
-
-  const [loggingIn, setLoggingIn] =
-    useState(false);
+const {
+  mEnemies,
+  setMEnemies,
+  mMine,
+  setMMine,
+  mWon,
+  setMWon,
+  savingManual,
+  toggleManual,
+  saveManual,
+  mReady,
+} = useManualCombat({
+  user,
+  enabledHeroIds,
+  onCombatSaved: (combat) => {
+    setCombats((prev) => [
+      combat,
+      ...prev,
+    ]);
+  },
+});
 
   const [activeClass, setActiveClass] =
     useState<HeroClass | "All">("All");
@@ -130,15 +159,6 @@ const [sortBy, setSortBy] =
   useState<HeroSort>("played");
 
   const [showResult, setShowResult] =
-    useState(false);
-
-  const [combats, setCombats] =
-    useState<Combat[]>([]);
-
-  const [loadingHistory, setLoadingHistory] =
-    useState(true);
-
-  const [recording, setRecording] =
     useState(false);
 
   const [showHistory, setShowHistory] =
@@ -194,10 +214,6 @@ const {
   /* =======================================================
      USER
      ======================================================= */
-
-  useEffect(() => {
-    getCurrentUser().then(setUser);
-  }, []);
 
   /* =======================================================
      CLEAN DISABLED HEROES FROM CURRENT SELECTIONS
@@ -393,50 +409,7 @@ const team =
   /* =======================================================
      LOGIN
      ======================================================= */
-
-  async function handleLogin() {
-    if (
-      !loginEmail ||
-      !loginPassword
-    ) {
-      setLoginError(
-        "Veuillez saisir votre email et votre mot de passe."
-      );
-      return;
-    }
-
-    setLoggingIn(true);
-    setLoginError("");
-
-    const {
-      data,
-      error,
-    } = await signIn(
-      loginEmail,
-      loginPassword
-    );
-
-    if (error) {
-      setLoginError(
-        "Email ou mot de passe incorrect."
-      );
-      setLoggingIn(false);
-      return;
-    }
-
-    setUser(data.user);
-    setLoginEmail("");
-    setLoginPassword("");
-    setShowLogin(false);
-    setLoggingIn(false);
-  }
-
-  async function handleLogout() {
-    await signOut();
-    setUser(null);
-    setCombats([]);
-  }
-
+	 
   /* =======================================================
      SELECTION
      ======================================================= */
@@ -501,166 +474,14 @@ function reorderManual(
      COMBAT RECORDING
      ======================================================= */
 
-  async function recordCombat(
-    won: boolean
-  ) {
-    if (
-      !user ||
-      !full ||
-      editedTeam.length !== 5 ||
-      recording
-    ) {
-      return;
-    }
-
-    setRecording(true);
-
-    try {
-      const combat =
-        await addCombat({
-          enemy_heroes:
-            picks,
-          my_heroes:
-            editedTeam,
-          won,
-        });
-
-      if (combat) {
-        setCombats(
-          (prev) => [
-            combat,
-            ...prev,
-          ]
-        );
-      }
-    } catch (error) {
-      console.error(
-        "Erreur lors de l'enregistrement du combat :",
-        error
-      );
-    } finally {
-      setRecording(false);
-    }
-  }
-
-  async function deleteCombat(
-    id: string
-  ) {
-    const success =
-      await removeCombat(id);
-
-    if (success) {
-      setCombats(
-        (prev) =>
-          prev.filter(
-            (c) =>
-              c.id !== id
-          )
-      );
-    }
-  }
-
   /* =======================================================
      MANUAL COMBAT
      ======================================================= */
-
-  const [mEnemies, setMEnemies] =
-    useState<string[]>([]);
-
-  const [mMine, setMMine] =
-    useState<string[]>([]);
-
-  const [mWon, setMWon] =
-    useState<boolean | null>(
-      null
-    );
-
-  const [savingManual, setSavingManual] =
-    useState(false);
-
-  function toggleManual(
-    arr: string[],
-    setArr: (
-      v: string[]
-    ) => void,
-    id: string
-  ) {
-    if (
-      !enabledHeroIds.has(id)
-    ) {
-      return;
-    }
-
-    if (arr.includes(id)) {
-      setArr(
-        arr.filter(
-          (p) => p !== id
-        )
-      );
-    } else if (
-      arr.length < MAX_PICKS
-    ) {
-      setArr([
-        ...arr,
-        id,
-      ]);
-    }
-  }
-
-  async function saveManual() {
-    if (
-      !user ||
-      mEnemies.length !== 5 ||
-      mMine.length !== 5 ||
-      mWon === null
-    ) {
-      return;
-    }
-
-    setSavingManual(true);
-
-    try {
-      const combat =
-        await addCombat({
-          enemy_heroes:
-            mEnemies,
-          my_heroes:
-            mMine,
-          won: mWon,
-        });
-
-      if (combat) {
-        setCombats(
-          (prev) => [
-            combat,
-            ...prev,
-          ]
-        );
-
-        setMEnemies([]);
-        setMMine([]);
-        setMWon(null);
-        setShowManual(false);
-      }
-    } catch (error) {
-      console.error(
-        "Erreur lors de l'enregistrement manuel du combat :",
-        error
-      );
-    } finally {
-      setSavingManual(false);
-    }
-  }
 
   const winCount =
     combats.filter(
       (c) => c.won
     ).length;
-
-  const mReady =
-    mEnemies.length === 5 &&
-    mMine.length === 5 &&
-    mWon !== null;
 
   /* =======================================================
      RENDER
