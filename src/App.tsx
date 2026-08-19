@@ -12,11 +12,13 @@ import {
 } from "./utils/combatStats";
 
 import { useHeroPreferences } from "./hooks/useHeroPreferences";
+import { useHeroSelection } from "./hooks/useHeroSelection";
+import { useCombatAnalytics } from "./hooks/useCombatAnalytics";
 import { useAuth } from "./hooks/useAuth";
 import { useCombatHistory } from "./hooks/useCombatHistory";
 import { useManualCombat } from "./hooks/useManualCombat";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   RotateCcw,
   Search,
@@ -94,11 +96,27 @@ const TYPE_GRADIENT: Record<string, string> = {
    ========================================================= */
 
 export default function App() {
-  const [picks, setPicks] =
-    useState<string[]>([]);
-
   const [query, setQuery] =
     useState("");
+
+  const {
+    picks,
+    setPicks,
+    editedTeam,
+    setEditedTeam,
+    swapIndex,
+    setSwapIndex,
+    swapQuery,
+    setSwapQuery,
+    dragIndex,
+    setDragIndex,
+    dragOverIndex,
+    setDragOverIndex,
+    toggle,
+    reorderPicks,
+    reorderManual,
+    resetSelection,
+  } = useHeroSelection();
 const {
   user,
   loginEmail,
@@ -115,9 +133,6 @@ const {
 } = useAuth(() => {
   setCombats([]);
 });
-
-  const [editedTeam, setEditedTeam] =
-    useState<string[]>([]);
 
 const {
   combats,
@@ -197,18 +212,6 @@ const [sortBy, setSortBy] =
 
 
 
-  const [swapIndex, setSwapIndex] =
-    useState<number | null>(null);
-
-  const [swapQuery, setSwapQuery] =
-    useState("");
-
-  const [dragIndex, setDragIndex] =
-    useState<number | null>(null);
-
-  const [dragOverIndex, setDragOverIndex] =
-    useState<number | null>(null);
-
   /* =======================================================
      ENABLED HEROES — SUPABASE
      ======================================================= */
@@ -261,216 +264,37 @@ const [sortBy, setSortBy] =
     setShowResult(false);
   }
 
-  /* =======================================================
-     DERIVED DATA
-     ======================================================= */
-
-  const pickSet =
-    useMemo(
-      () => new Set(picks),
-      [picks]
-    );
-
-  const full =
-    picks.length === MAX_PICKS;
-
-const usage = useMemo(
-  () => calculateHeroUsage(combats),
-  [combats]
-);
-
-const filtered = useMemo(
-  () =>
-    filterAndSortHeroes(HEROES, {
-      enabledHeroIds,
-      activeClass,
-      query,
-      sortBy,
-      usage,
-    }),
-  [
+  const {
+    pickSet,
+    full,
+    usage,
+    filtered,
+    team,
+    editedHeroes,
+    report,
+    totalCoverage,
+    bestWinTeam,
+    winRate,
+  } = useCombatAnalytics({
+    combats,
+    picks,
+    editedTeam,
     enabledHeroIds,
     activeClass,
     query,
     sortBy,
-    usage,
-  ]
-);
-
-
-const team =
-  useMemo(
-    () =>
-      full
-        ? recommendTeam(
-            picks,
-            combats
-          )
-        : [],
-    [picks, full, combats]
-  );
-
-  const editedHeroes =
-    useMemo(
-      () =>
-        editedTeam
-          .map((id) =>
-            HEROES.find(
-              (h) => h.id === id
-            )
-          )
-          .filter(Boolean),
-      [editedTeam]
-    );
-
-  const report =
-    useMemo(
-      () =>
-        full &&
-        showResult &&
-        editedHeroes.length === 5
-          ? coverageReport(
-              editedHeroes as any,
-              picks
-            )
-          : [],
-      [
-        editedHeroes,
-        picks,
-        full,
-        showResult,
-      ]
-    );
-
-  const totalCoverage =
-    report.reduce(
-      (acc, r) =>
-        acc + r.targets.length,
-      0
-    );
-
-  /* =======================================================
-     BEST HISTORICAL TEAM
-     ======================================================= */
-
-  const bestWinTeam = useMemo(() => {
-  if (
-    !full ||
-    !showResult ||
-    combats.length === 0
-  ) {
-    return null;
-  }
-
-  const currentTeamIds =
-    editedTeam.length === 5
-      ? editedTeam
-      : team.map((hero) => hero.id);
-
-  return findBestHistoricalTeam(
-    combats,
-    picks,
-    currentTeamIds
-  );
-}, [
-  combats,
-  picks,
-  full,
-  showResult,
-  editedTeam,
-  team,
-]);
-
-  /* =======================================================
-     WIN RATE
-     ======================================================= */
-
- const winRate = useMemo(() => {
-  if (!full || !showResult) {
-    return null;
-  }
-
-  const teamIds =
-    editedTeam.length === 5
-      ? editedTeam
-      : team.map((hero) => hero.id);
-
-  return calculateWinRate(
-    combats,
-    picks,
-    teamIds
-  );
-}, [
-  combats,
-  picks,
-  full,
-  showResult,
-  editedTeam,
-  team,
-]);
+    showResult,
+  });
 
   /* =======================================================
      LOGIN
      ======================================================= */
 	 
-  /* =======================================================
-     SELECTION
-     ======================================================= */
-
-  function toggle(id: string) {
-    if (
-      !enabledHeroIds.has(id)
-    ) {
-      return;
-    }
-
-    setShowResult(false);
-
-    setPicks((prev) =>
-      prev.includes(id)
-        ? prev.filter(
-            (p) => p !== id
-          )
-        : prev.length >=
-          MAX_PICKS
-        ? prev
-        : [...prev, id]
-    );
-  }
-
-function reorderPicks(
-  from: number,
-  to: number
-) {
-  setPicks((prev) =>
-    reorderArray(prev, from, to)
-  );
-}
-
-function reorderManual(
-  arr: string[],
-  setArr: (
-    v: string[]
-  ) => void,
-  from: number,
-  to: number
-) {
-  setArr(
-    reorderArray(
-      arr,
-      from,
-      to
-    )
-  );
-}
-
   function reset() {
-    setPicks([]);
+    resetSelection();
     setQuery("");
     setActiveClass("All");
     setShowResult(false);
-    setEditedTeam([]);
-    setSwapIndex(null);
   }
 
   /* =======================================================
@@ -932,7 +756,7 @@ function reorderManual(
 
                         <button
                           onClick={() =>
-                            toggle(hero.id)
+                            toggle(hero.id, enabledHeroIds)
                           }
                           className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/70 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"
                         >
@@ -2372,7 +2196,7 @@ function reorderManual(
          {filtered.map((hero) => (
               <button
                 key={hero.id}
-                onClick={() => toggle(hero.id)}
+                onClick={() => toggle(hero.id, enabledHeroIds)}
                 disabled={
                   full &&
                   !pickSet.has(hero.id)
