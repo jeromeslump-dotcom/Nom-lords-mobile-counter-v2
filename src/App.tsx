@@ -11,8 +11,12 @@ import {
   calculateWinRate,
 } from "./utils/combatStats";
 
-import HeroRoster from "./components/HeroRoster";
-import HeroFilters from "./components/HeroFilters";
+import HeroManager from "./components/HeroManager";
+import ManualCombatModal from "./components/ManualCombatModal";
+import HeroSlots from "./components/HeroSlots";
+import HeroGridPicker from "./components/HeroGridPicker";
+import LoginModal from "./components/LoginModal";
+import EnemySlots from "./components/EnemySlots";
 
 import { useHeroPreferences } from "./hooks/useHeroPreferences";
 import { useHeroSelection } from "./hooks/useHeroSelection";
@@ -660,159 +664,23 @@ const [sortBy, setSortBy] =
   enabledHeroIds={enabledHeroIds}
 />
 )}
-        {/* =================================================
-            PICKS
-            ================================================= */}
 
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Target className="h-4 w-4 text-rose-400" />
+{/* =================================================
+    PICKS
+    ================================================= */}
 
-              <span className="text-xl font-bold text-white/80">
-                Ennemis choisis{" "}
-                <span className="text-white/40">
-                  ({picks.length}/{MAX_PICKS})
-                </span>
-              </span>
-            </div>
-
-            {picks.length > 0 && (
-              <button
-                onClick={reset}
-                className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
-              >
-                <RotateCcw className="h-3.5 w-3.5" />
-                Réinitialiser
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-5 gap-2 sm:gap-3">
-            {Array.from({
-              length: MAX_PICKS,
-            }).map((_, i) => {
-              const id = picks[i];
-
-              const hero = id
-                ? HEROES.find(
-                    (h) => h.id === id
-                  )
-                : null;
-
-              return (
-                <div
-                  key={i}
-                  draggable={!!hero}
-                  onDragStart={() =>
-                    setDragIndex(i)
-                  }
-                  onDragEnd={() => {
-                    setDragIndex(null);
-                    setDragOverIndex(null);
-                  }}
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setDragOverIndex(i);
-                  }}
-                  onDrop={() => {
-                    if (
-                      dragIndex !== null &&
-                      dragIndex !== i &&
-                      picks[dragIndex]
-                    ) {
-                      reorderPicks(
-                        dragIndex,
-                        i
-                      );
-                    }
-
-                    setDragIndex(null);
-                    setDragOverIndex(null);
-                  }}
-                  className={`transition-all ${
-                    dragOverIndex === i &&
-                    dragIndex !== null &&
-                    dragIndex !== i
-                      ? "ring-2 ring-cyan-400/60 scale-105 rounded-2xl"
-                      : ""
-                  } ${
-                    dragIndex === i
-                      ? "opacity-40"
-                      : ""
-                  }`}
-                >
-                  {hero ? (
-                    <>
-                      {/* CARTE */}
-                      <div
-                        className="aspect-square rounded-2xl border border-amber-400/50 overflow-hidden relative cursor-grab active:cursor-grabbing"
-                      >
-                        <img
-                          src={hero.img}
-                          alt={hero.name}
-                          loading="lazy"
-                          className="absolute inset-0 h-full w-full object-cover"
-                        />
-
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/10" />
-
-                        <button
-                          onClick={() =>
-                            toggle(hero.id, enabledHeroIds)
-                          }
-                          className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/70 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"
-                        >
-                          <X className="h-3 w-3 text-white" />
-                        </button>
-
-                        {/* NOM SUR LA CARTE */}
-                        <span className="absolute bottom-2 left-2 right-2 text-xs sm:text-sm font-bold text-center drop-shadow-lg line-clamp-1">
-                          {hero.name}
-                        </span>
-                      </div>
-
-                      {/* PSEUDO SOUS LA CARTE */}
-                      <div className="mt-1.5 text-center text-[11px] sm:text-xs font-semibold text-white/75 truncate">
-                        {hero.alias}
-                      </div>
-
-                      {/* TYPE + CLASSE SOUS LE PSEUDO */}
-                      <div className="mt-0.5 flex items-center justify-center gap-1">
-                        <span
-                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[10px] font-black ${TYPE_TEXT[hero.type]}`}
-                          title={hero.type}
-                        >
-                          {hero.type === "Infantry"
-                            ? "🛡️"
-                            : hero.type === "Cavalry"
-                            ? "🐎"
-                            : hero.type === "Ranged"
-                            ? "🏹"
-                            : "⚙️"}
-                        </span>
-
-                        <span
-                          className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[10px] font-black ${CLASS_TEXT[hero.cls]}`}
-                          title={hero.cls}
-                        >
-                          {hero.cls}
-                        </span>
-                      </div>
-                      
-                    </>
-                  ) : (
-                    <div className="aspect-square rounded-2xl border border-dashed border-white/15 bg-white/[0.02] flex items-center justify-center">
-                      <span className="text-white/20 text-2xl font-light">
-                        {i + 1}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+<EnemySlots
+  picks={picks}
+  maxPicks={MAX_PICKS}
+  dragIndex={dragIndex}
+  dragOverIndex={dragOverIndex}
+  setDragIndex={setDragIndex}
+  setDragOverIndex={setDragOverIndex}
+  reorderPicks={reorderPicks}
+  toggle={toggle}
+  enabledHeroIds={enabledHeroIds}
+  reset={reset}
+/>
 
         {/* =================================================
             FIND TEAM
