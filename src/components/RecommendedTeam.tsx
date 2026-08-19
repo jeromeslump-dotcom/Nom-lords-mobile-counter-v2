@@ -150,7 +150,7 @@ export default function RecommendedTeam({
           TEAM CARDS
           ================================================= */}
 
-      <div className="grid grid-cols-5 gap-2 sm:gap-3">
+            <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-6">
 
         {report.map(({ hero, targets }, idx) => {
 
@@ -461,7 +461,7 @@ export default function RecommendedTeam({
           ================================================= */}
 
       {bestWinTeam && (
-        <div className="mb-6 rounded-2xl border border-amber-500/20 bg-amber-500/[0.03] p-4">
+        <div className="mt-8 mb-6 rounded-2xl border border-amber-500/20 bg-amber-500/[0.03] p-4">
 
           <h3 className="text-sm font-bold flex items-center gap-2 mb-3 text-amber-300">
 
