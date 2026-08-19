@@ -1,4 +1,5 @@
-﻿import {
+﻿
+import {
   Hero,
   HEROES,
   CLASS_BEATS,
@@ -45,24 +46,29 @@ const ROLE_WEIGHT = 1;
 const PRIOR_RATE = 0.419;
 const PRIOR_GAMES = 3;
 
-/* -----------------------------------------------------------
- * CONTRES THÉORIQUES
- * ---------------------------------------------------------
+/*
+ * Une équipe exacte qui a déjà perdu plusieurs fois
+ * sans aucune victoire contre exactement la même
+ * composition ennemie ne doit pas être reproposée.
  *
  * IMPORTANT :
- *
- * Les types Infantry / Cavalry / Ranged ne sont PAS utilisés
- * dans l'arène.
- *
- * Le moteur de contre repose donc uniquement sur :
- *
- *   STR / AGI / INT
- *
- * via CLASS_BEATS.
+ * Cela ne désactive PAS les héros.
+ * Cela ne supprime PAS les combats.
+ * Cela concerne uniquement la recommandation
+ * automatique de cette composition exacte.
+ */
+const MIN_EXACT_LOSSES_TO_AVOID = 2;
+
+/* -----------------------------------------------------------
+ * CONTRES THÉORIQUES
  * --------------------------------------------------------- */
 
-function scorePair(c: Hero, e: Hero): CounterTarget {
-  const cls = CLASS_BEATS[c.cls] === e.cls;
+function scorePair(
+  c: Hero,
+  e: Hero
+): CounterTarget {
+  const cls =
+    CLASS_BEATS[c.cls] === e.cls;
 
   return {
     id: e.id,
@@ -71,8 +77,11 @@ function scorePair(c: Hero, e: Hero): CounterTarget {
   };
 }
 
-function getEnemies(enemyIds: string[]): Hero[] {
-  const set = new Set(enemyIds);
+function getEnemies(
+  enemyIds: string[]
+): Hero[] {
+  const set =
+    new Set(enemyIds);
 
   return HEROES.filter((h) =>
     set.has(h.id)
@@ -131,7 +140,8 @@ function historyStats(
 
     const overlap =
       combat.enemy_heroes.filter(
-        (id) => enemySet.has(id)
+        (id) =>
+          enemySet.has(id)
       ).length;
 
     if (overlap === 0) {
@@ -139,7 +149,8 @@ function historyStats(
     }
 
     const weight =
-      overlap / enemyIds.length;
+      overlap /
+      enemyIds.length;
 
     weightedGames += weight;
 
@@ -148,7 +159,8 @@ function historyStats(
     }
 
     if (
-      overlap === enemyIds.length
+      overlap ===
+      enemyIds.length
     ) {
       exactGames++;
 
@@ -169,7 +181,8 @@ function historyStats(
 
     exactRate:
       exactGames > 0
-        ? exactWins / exactGames
+        ? exactWins /
+          exactGames
         : null,
 
     exactGames,
@@ -183,8 +196,110 @@ function smoothedRate(
   prior = PRIOR_RATE
 ): number {
   return (
-    (wins + prior * PRIOR_GAMES) /
-    (games + PRIOR_GAMES)
+    (wins +
+      prior *
+        PRIOR_GAMES) /
+    (games +
+      PRIOR_GAMES)
+  );
+}
+
+/* -----------------------------------------------------------
+ * HISTORIQUE EXACT D'UNE ÉQUIPE
+ * --------------------------------------------------------- */
+
+function getExactTeamRecord(
+  team: Hero[],
+  enemyIds: string[],
+  combats: Combat[]
+) {
+  const teamKey =
+    team
+      .map((h) => h.id)
+      .sort()
+      .join(",");
+
+  const enemyKey =
+    [...enemyIds]
+      .sort()
+      .join(",");
+
+  let wins = 0;
+  let losses = 0;
+
+  for (const combat of combats) {
+    const combatTeamKey =
+      [...combat.my_heroes]
+        .sort()
+        .join(",");
+
+    if (
+      combatTeamKey !==
+      teamKey
+    ) {
+      continue;
+    }
+
+    const combatEnemyKey =
+      [...combat.enemy_heroes]
+        .sort()
+        .join(",");
+
+    if (
+      combatEnemyKey !==
+      enemyKey
+    ) {
+      continue;
+    }
+
+    if (combat.won) {
+      wins++;
+    } else {
+      losses++;
+    }
+  }
+
+  return {
+    wins,
+    losses,
+    games:
+      wins + losses,
+  };
+}
+
+/*
+ * Équipe à éviter automatiquement.
+ *
+ * Exemple :
+ *
+ *   0 victoire / 3 défaites
+ *
+ * => cette composition exacte ne sera plus choisie
+ * automatiquement.
+ *
+ * En revanche :
+ *
+ *   1 victoire / 3 défaites
+ *
+ * reste disponible, car elle a au moins démontré
+ * qu'elle pouvait gagner.
+ */
+function shouldAvoidExactTeam(
+  team: Hero[],
+  enemyIds: string[],
+  combats: Combat[]
+): boolean {
+  const record =
+    getExactTeamRecord(
+      team,
+      enemyIds,
+      combats
+    );
+
+  return (
+    record.wins === 0 &&
+    record.losses >=
+      MIN_EXACT_LOSSES_TO_AVOID
   );
 }
 
@@ -215,7 +330,8 @@ function teamHistoryScore(
   for (const combat of combats) {
     const enemyOverlap =
       combat.enemy_heroes.filter(
-        (id) => enemySet.has(id)
+        (id) =>
+          enemySet.has(id)
       ).length;
 
     if (enemyOverlap < 2) {
@@ -224,7 +340,8 @@ function teamHistoryScore(
 
     const myOverlap =
       combat.my_heroes.filter(
-        (id) => teamIds.has(id)
+        (id) =>
+          teamIds.has(id)
       ).length;
 
     if (myOverlap < 2) {
@@ -236,10 +353,12 @@ function teamHistoryScore(
       enemyIds.length;
 
     const teamWeight =
-      myOverlap / TEAM_SIZE;
+      myOverlap /
+      TEAM_SIZE;
 
     const weight =
-      enemyWeight * teamWeight;
+      enemyWeight *
+      teamWeight;
 
     totalWeight += weight;
 
@@ -253,16 +372,19 @@ function teamHistoryScore(
   }
 
   const observed =
-    weighted / totalWeight;
+    weighted /
+    totalWeight;
 
   const rate =
     smoothedRate(
-      observed * totalWeight,
+      observed *
+        totalWeight,
       totalWeight
     );
 
   return (
-    rate - PRIOR_RATE
+    rate -
+    PRIOR_RATE
   ) * 20;
 }
 
@@ -275,55 +397,36 @@ function exactTeamHistoryScore(
   enemyIds: string[],
   combats: Combat[]
 ): number {
-  const teamKey =
-    team
-      .map((h) => h.id)
-      .sort()
-      .join(",");
+  const record =
+    getExactTeamRecord(
+      team,
+      enemyIds,
+      combats
+    );
 
-  const enemyKey =
-    [...enemyIds]
-      .sort()
-      .join(",");
-
-  let wins = 0;
-  let losses = 0;
-
-  for (const combat of combats) {
-    const combatTeamKey =
-      [...combat.my_heroes]
-        .sort()
-        .join(",");
-
-    if (
-      combatTeamKey !== teamKey
-    ) {
-      continue;
-    }
-
-    const combatEnemyKey =
-      [...combat.enemy_heroes]
-        .sort()
-        .join(",");
-
-    if (
-      combatEnemyKey !== enemyKey
-    ) {
-      continue;
-    }
-
-    if (combat.won) {
-      wins++;
-    } else {
-      losses++;
-    }
-  }
-
-  const games =
-    wins + losses;
+  const {
+    wins,
+    losses,
+    games,
+  } = record;
 
   if (games === 0) {
     return 0;
+  }
+
+  /*
+   * Une équipe qui a 0 victoire et plusieurs
+   * défaites reçoit un score fortement négatif.
+   *
+   * Le filtre final l'empêchera également
+   * d'être choisie automatiquement.
+   */
+  if (
+    wins === 0 &&
+    losses >=
+      MIN_EXACT_LOSSES_TO_AVOID
+  ) {
+    return -1000;
   }
 
   const rate =
@@ -339,7 +442,8 @@ function exactTeamHistoryScore(
     );
 
   return (
-    (rate - PRIOR_RATE) *
+    (rate -
+      PRIOR_RATE) *
     55 *
     confidence
   );
@@ -370,7 +474,8 @@ function heroHistoryBonus(
 
     const overlap =
       combat.enemy_heroes.filter(
-        (id) => enemySet.has(id)
+        (id) =>
+          enemySet.has(id)
       ).length;
 
     if (overlap < 3) {
@@ -378,7 +483,8 @@ function heroHistoryBonus(
     }
 
     const enemyWeight =
-      overlap / enemyIds.length;
+      overlap /
+      enemyIds.length;
 
     if (combat.won) {
       score +=
@@ -411,39 +517,39 @@ function roleBalance(
 
     roles.set(
       role,
-      (roles.get(role) ?? 0) + 1
+      (roles.get(role) ?? 0) +
+        1
     );
   }
 
   let score = 0;
 
   if (
-    (roles.get("Tank") ?? 0) >= 1
+    (roles.get("Tank") ?? 0) >=
+    1
   ) {
     score += 2;
   }
 
   if (
-    (roles.get("Support") ?? 0) >= 1
+    (roles.get("Support") ?? 0) >=
+    1
   ) {
     score += 2;
   }
 
   if (
-    (roles.get("Damage") ?? 0) >= 2
+    (roles.get("Damage") ?? 0) >=
+    2
   ) {
     score += 2;
   }
-
-  /*
-   * Les types Infantry / Cavalry / Ranged
-   * ne sont volontairement plus pris
-   * en compte dans l'arène.
-   */
 
   if (
     new Set(
-      team.map((h) => h.cls)
+      team.map(
+        (h) => h.cls
+      )
     ).size >= 2
   ) {
     score += 1;
@@ -472,12 +578,6 @@ function synergyScore(
       j < team.length;
       j++
     ) {
-      /*
-       * Diversité des classes uniquement.
-       *
-       * Les types Infantry / Cavalry /
-       * Ranged sont ignorés.
-       */
       if (
         team[i].cls !==
         team[j].cls
@@ -506,7 +606,8 @@ function synergyScore(
   }
 
   score +=
-    covered.size * 0.35;
+    covered.size *
+    0.35;
 
   return score;
 }
@@ -534,7 +635,8 @@ function counterScore(
             )
           )
           .sort(
-            (a, b) => b - a
+            (a, b) =>
+              b - a
           );
 
       return (
@@ -545,7 +647,8 @@ function counterScore(
     });
 
   return perEnemy.reduce(
-    (a, b) => a + b,
+    (a, b) =>
+      a + b,
     0
   );
 }
@@ -610,10 +713,18 @@ function analyzeTeam(
       role *
         ROLE_WEIGHT,
 
-    counterScore: counter,
-    historyScore: history,
-    synergyScore: synergy,
-    roleScore: role,
+    counterScore:
+      counter,
+
+    historyScore:
+      history,
+
+    synergyScore:
+      synergy,
+
+    roleScore:
+      role,
+
     coverage,
   };
 }
@@ -696,6 +807,7 @@ function buildCandidates(
       return {
         hero,
         targets,
+
         seedScore:
           counter * 3 +
           history +
@@ -747,24 +859,9 @@ export function recommendTeam(
     },
   ];
 
-  /*
-   * ---------------------------------------------------------
-   * BEAM SEARCH OPTIMISÉ
-   * ---------------------------------------------------------
-   *
-   * Pendant la construction :
-   *
-   *   - contre théorique basé sur STR / AGI / INT
-   *   - synergie de classes
-   *   - rôles
-   *   - seedScore historique
-   *
-   * sont utilisés.
-   *
-   * L'historique complet est réservé
-   * à l'évaluation finale.
-   * ---------------------------------------------------------
-   */
+  /* ---------------------------------------------------------
+   * BEAM SEARCH
+   * --------------------------------------------------------- */
 
   for (
     let depth = 0;
@@ -822,7 +919,8 @@ export function recommendTeam(
 
     next.sort(
       (a, b) =>
-        b.score - a.score
+        b.score -
+        a.score
     );
 
     const seen =
@@ -833,7 +931,9 @@ export function recommendTeam(
     for (const state of next) {
       const key =
         state.team
-          .map((h) => h.id)
+          .map(
+            (h) => h.id
+          )
           .sort()
           .join(",");
 
@@ -842,6 +942,7 @@ export function recommendTeam(
       }
 
       seen.add(key);
+
       states.push(state);
 
       if (
@@ -853,21 +954,79 @@ export function recommendTeam(
     }
   }
 
-  /*
-   * ---------------------------------------------------------
+  /* ---------------------------------------------------------
    * ÉVALUATION FINALE
-   * ---------------------------------------------------------
+   * --------------------------------------------------------- */
+
+  /*
+   * On cherche d'abord parmi les équipes
+   * qui ne sont PAS des équipes déjà perdues
+   * plusieurs fois sans victoire.
    */
+  const validStates =
+    states.filter(
+      (state) =>
+        !shouldAvoidExactTeam(
+          state.team,
+          enemyIds,
+          combats
+        )
+    );
 
-  let best =
-    states[0]?.team ??
+  /*
+   * Si on possède au moins une équipe valide,
+   * elle devient notre espace de recherche.
+   *
+   * Cela évite précisément de reproposer :
+   *
+   *   même équipe
+   *   0 victoire
+   *   3 défaites
+   */
+  const statesToEvaluate =
+    validStates.length > 0
+      ? validStates
+      : states;
+
+  let best: Hero[] =
+    statesToEvaluate[0]?.team ??
     candidates
-      .slice(0, TEAM_SIZE)
-      .map((x) => x.hero);
+      .slice(
+        0,
+        TEAM_SIZE
+      )
+      .map(
+        (x) => x.hero
+      );
 
-  let bestScore = -Infinity;
+  let bestScore =
+    -Infinity;
 
-  for (const state of states) {
+  for (
+    const state of statesToEvaluate
+  ) {
+    /*
+     * Protection supplémentaire :
+     * même si une équipe perdante
+     * arrive ici en fallback, elle
+     * ne peut pas gagner contre une
+     * équipe valide simplement grâce
+     * au score historique.
+     */
+    const avoid =
+      shouldAvoidExactTeam(
+        state.team,
+        enemyIds,
+        combats
+      );
+
+    if (
+      avoid &&
+      validStates.length > 0
+    ) {
+      continue;
+    }
+
     const analysis =
       analyzeTeam(
         state.team,
@@ -958,6 +1117,7 @@ export function balancedTeam(
 
         return {
           hero,
+
           score:
             counter * 4 +
             history +
@@ -978,8 +1138,9 @@ export function balancedTeam(
     const candidate =
       ranked.find(
         (x) =>
-          heroRole(x.hero) ===
-            role &&
+          heroRole(
+            x.hero
+          ) === role &&
           !team.some(
             (h) =>
               h.id ===
@@ -1053,12 +1214,14 @@ export function coverageReport(
 
     return {
       hero,
+
       score:
         targets.reduce(
           (sum, t) =>
             sum + t.score,
           0
         ),
+
       targets,
     };
   });
@@ -1080,3 +1243,4 @@ export function analyzeRecommendedTeam(
     combats
   );
 }
+
