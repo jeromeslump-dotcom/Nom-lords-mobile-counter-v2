@@ -12,6 +12,7 @@ import {
 } from "./utils/combatStats";
 
 import HeroRoster from "./components/HeroRoster";
+import HeroFilters from "./components/HeroFilters";
 
 import { useHeroPreferences } from "./hooks/useHeroPreferences";
 import { useHeroSelection } from "./hooks/useHeroSelection";
@@ -854,78 +855,18 @@ const [sortBy, setSortBy] =
         {/* =================================================
             RESULT
             ================================================= */}
+{/* =================================================
+    FILTERS
+    ================================================= */}
 
-     
-
-      {/* =================================================
-          FILTERS
-          ================================================= */}
-<div className="flex flex-col gap-3 mb-5">
-
-  {/* Recherche */}
-  <div className="relative">
-    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
-
-    <input
-      value={query}
-      onChange={(e) =>
-        setQuery(e.target.value)
-      }
-      placeholder="Rechercher par nom ou alias..."
-      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-400/50 focus:ring-1 focus:ring-amber-400/30"
-    />
-  </div>
-
-  {/* Classement */}
-  <div className="flex flex-wrap gap-2">
-    {(
-      [
-        ["played", "Plus joués"],
-        ["hp", "PV"],
-        ["atk", "ATQ"],
-        ["matk", "ATQ MAG"],
-        ["def", "DEF"],
-        ["mdef", "MDEF"],
-      ] as const
-    ).map(([value, label]) => (
-      <button
-        key={value}
-        onClick={() => setSortBy(value)}
-        className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-          sortBy === value
-            ? "bg-amber-400 text-black"
-            : "bg-white/5 text-white/60 hover:bg-white/10"
-        }`}
-      >
-        {label}
-      </button>
-    ))}
-  </div>
-
-  {/* Classes */}
-  <div className="flex flex-wrap gap-2">
-    {(
-      ["All", ...CLASSES] as const
-    ).map((c) => (
-      <button
-        key={c}
-        onClick={() =>
-          setActiveClass(c)
-        }
-        className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-          activeClass === c
-            ? "bg-white text-black"
-            : "bg-white/5 text-white/60 hover:bg-white/10"
-        }`}
-      >
-        {c === "All"
-          ? "Toutes classes"
-          : c}
-      </button>
-    ))}
-  </div>
-
-</div>
+<HeroFilters
+  query={query}
+  setQuery={setQuery}
+  sortBy={sortBy}
+  setSortBy={setSortBy}
+  activeClass={activeClass}
+  setActiveClass={setActiveClass}
+/>
 
 
 {/* =================================================
