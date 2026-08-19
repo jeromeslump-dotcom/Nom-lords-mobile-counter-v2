@@ -1,277 +1,191 @@
-import {
-  filterAndSortHeroes,
-  type HeroSort,
-} from "./utils/heroRanking";
-
-import { reorderArray } from "./utils/selectionUtils";
-
-import {
-  calculateHeroUsage,
-  findBestHistoricalTeam,
-  calculateWinRate,
-} from "./utils/combatStats";
-
-import HeroManager from "./components/HeroManager";
-import ManualCombatModal from "./components/ManualCombatModal";
-import CombatHistory from "./components/CombatHistory";
-import HeroSlots from "./components/HeroSlots";
-import HeroGridPicker from "./components/HeroGridPicker";
+import AppHeader from "./components/AppHeader";
 import LoginModal from "./components/LoginModal";
 import EnemySlots from "./components/EnemySlots";
-import AppHeader from "./components/AppHeader";
+import HeroRoster from "./components/HeroRoster";
+import HeroManager from "./components/HeroManager";
+import HeroFilters from "./components/HeroFilters";
+import CombatHistory from "./components/CombatHistory";
+import RecommendedTeam from "./components/RecommendedTeam";
+import ManualCombatModal from "./components/ManualCombatModal";
 
-import { useHeroPreferences } from "./hooks/useHeroPreferences";
-import { useHeroSelection } from "./hooks/useHeroSelection";
-import { useCombatAnalytics } from "./hooks/useCombatAnalytics";
 import { useAuth } from "./hooks/useAuth";
-import { useCombatHistory } from "./hooks/useCombatHistory";
+import { useAppUI } from "./hooks/useAppUI";
 import { useManualCombat } from "./hooks/useManualCombat";
-
-import { useEffect, useState } from "react";
-import {
-  RotateCcw,
-  Search,
-  Swords,
-  Target,
-  X,
-  History,
-  Trophy,
-  Plus,
-  Trash2,
-  BookOpen,
-  ArrowLeftRight,
-  Crown,
-  Shield,
-  Scale,
-  Settings,
-  Check,
-  CheckSquare,
-  Square,
-} from "lucide-react";
+import { useHeroSelection } from "./hooks/useHeroSelection";
+import { useCombatHistory } from "./hooks/useCombatHistory";
+import { useHeroManagement } from "./hooks/useHeroManagement";
+import { useHeroPreferences } from "./hooks/useHeroPreferences";
+import { useCombatAnalytics } from "./hooks/useCombatAnalytics";
 
 import {
   HEROES,
-  CLASSES,
-  HeroClass,
-  TYPE_TEXT,
-  CLASS_TEXT,
   formatStat,
 } from "./heroes";
 
 import {
-  coverageReport,
-  recommendTeam,
-} from "./counter";
-
-import type { Combat } from "./storage";
-
-import {
-  loadHeroPreferences,
-  saveHeroPreferences,
-} from "./storage";
+  RotateCcw,
+  Swords,
+  X,
+  ArrowLeftRight,
+} from "lucide-react";
 
 import "./App.css";
-import HeroManager from "./components/HeroManager";
-import ManualCombatModal from "./components/ManualCombatModal";
-import HeroSlots from "./components/HeroSlots";
-import HeroGridPicker from "./components/HeroGridPicker";
-import LoginModal from "./components/LoginModal";
 
 const MAX_PICKS = 5;
 const APP_VERSION = "2.1.0";
-
-const TYPE_GRADIENT: Record<string, string> = {
-  Infantry: "from-red-900 via-red-700 to-orange-900",
-  Cavalry: "from-blue-900 via-blue-700 to-cyan-900",
-  Ranged: "from-emerald-900 via-green-700 to-teal-900",
-  "Siege Engine": "from-purple-900 via-violet-700 to-indigo-900",
-};
-
-
-/* =========================================================
-   HERO GRID PICKER
-   ========================================================= */
-
-/* =========================================================
-   HERO SLOTS
-   ========================================================= */
-
-/* =========================================================
-   HERO MANAGEMENT MODAL
-   ========================================================= */
 
 /* =========================================================
    APP
    ========================================================= */
 
 export default function App() {
-  const [query, setQuery] =
-    useState("");
+
+  /* =======================================================
+     HERO SELECTION
+     ======================================================= */
+
+const {
+  picks,
+  setPicks,
+  editedTeam,
+  setEditedTeam,
+
+  swapIndex,
+  setSwapIndex,
+  swapQuery,
+  setSwapQuery,
+
+  dragIndex,
+  setDragIndex,
+  dragOverIndex,
+  setDragOverIndex,
+
+  toggle,
+  reorderPicks,
+  reorderManual,
+  resetSelection,
+} = useHeroSelection();
+
+  /* =======================================================
+     APP UI
+     ======================================================= */
 
   const {
-    picks,
-    setPicks,
-    editedTeam,
-    setEditedTeam,
-    swapIndex,
-    setSwapIndex,
-    swapQuery,
-    setSwapQuery,
-    dragIndex,
-    setDragIndex,
-    dragOverIndex,
-    setDragOverIndex,
-    toggle,
-    reorderPicks,
-    reorderManual,
-    resetSelection,
-  } = useHeroSelection();
-const {
-  user,
-  loginEmail,
-  setLoginEmail,
-  loginPassword,
-  setLoginPassword,
-  loginError,
-  setLoginError,
-  showLogin,
-  setShowLogin,
-  loggingIn,
-  handleLogin,
-  handleLogout,
-} = useAuth(() => {
-  setCombats([]);
-});
-
-const {
-  combats,
-  setCombats,
-  loadingHistory,
-  recording,
-  recordCombat,
-  deleteCombat,
-} = useCombatHistory({
-  user,
-  picks,
-  editedTeam,
-});
-
-const {
-  enabledHeroIds,
-  setEnabledHeroIds,
-  heroPreferencesLoaded,
-  toggleHeroEnabled,
-  enableAllHeroes,
- } = useHeroPreferences(user);
-
-const {
-  mEnemies,
-  setMEnemies,
-  mMine,
-  setMMine,
-  mWon,
-  setMWon,
-  savingManual,
-  toggleManual,
-  saveManual,
-  mReady,
-} = useManualCombat({
-  user,
-  enabledHeroIds,
-  onCombatSaved: (combat) => {
-    setCombats((prev) => [
-      combat,
-      ...prev,
-    ]);
-  },
-});
-
-  const [activeClass, setActiveClass] =
-    useState<HeroClass | "All">("All");
-	
-const [sortBy, setSortBy] =
-  useState<HeroSort>("played");
-
-  const [showResult, setShowResult] =
-    useState(false);
-
-  const [showHistory, setShowHistory] =
-    useState(false);
-
-  const [showManual, setShowManual] =
-    useState(false);
-
-  const [showHeroManager, setShowHeroManager] =
-    useState(false);
-
-
-
-  const [
+    query,
+    setQuery,
+    activeClass,
+    setActiveClass,
+    sortBy,
+    setSortBy,
+    showResult,
+    setShowResult,
+    showHistory,
+    setShowHistory,
+    showManual,
+    setShowManual,
+    showHeroManager,
+    setShowHeroManager,
     hiddenRecommendedIds,
     setHiddenRecommendedIds,
-  ] = useState<Set<string>>(new Set());
-
-  const hideRecommendedHero = (heroId: string) => {
-    setHiddenRecommendedIds((previous) => {
-      const next = new Set(previous);
-      next.add(heroId);
-      return next;
-    });
-  };
-
-
+    hideRecommendedHero,
+    reset,
+  } = useAppUI(resetSelection);
 
   /* =======================================================
-     ENABLED HEROES — SUPABASE
+     AUTH
      ======================================================= */
 
+  const {
+    user,
+    loginEmail,
+    setLoginEmail,
+    loginPassword,
+    setLoginPassword,
+    loginError,
+    setLoginError,
+    showLogin,
+    setShowLogin,
+    loggingIn,
+    handleLogin,
+    handleLogout,
+  } = useAuth(() => {
+    setCombats([]);
+  });
 
   /* =======================================================
-     USER
+     COMBAT HISTORY
      ======================================================= */
+
+  const {
+    combats,
+    setCombats,
+    loadingHistory,
+    recording,
+    recordCombat,
+    deleteCombat,
+  } = useCombatHistory({
+    user,
+    picks,
+    editedTeam,
+  });
 
   /* =======================================================
-     CLEAN DISABLED HEROES FROM CURRENT SELECTIONS
+     HERO PREFERENCES
      ======================================================= */
 
-  useEffect(() => {
-    setPicks((prev) =>
-      prev.filter((id) =>
-        enabledHeroIds.has(id)
-      )
-    );
+  const {
+    enabledHeroIds,
+    setEnabledHeroIds,
+    heroPreferencesLoaded,
+    toggleHeroEnabled,
+    enableAllHeroes,
+  } = useHeroPreferences(user);
 
-    setEditedTeam((prev) =>
-      prev.filter((id) =>
-        enabledHeroIds.has(id)
-      )
-    );
+  /* =======================================================
+     MANUAL COMBAT
+     ======================================================= */
 
-    setMEnemies((prev) =>
-      prev.filter((id) =>
-        enabledHeroIds.has(id)
-      )
-    );
-
-    setMMine((prev) =>
-      prev.filter((id) =>
-        enabledHeroIds.has(id)
-      )
-    );
-  }, [enabledHeroIds]);
+  const {
+    mEnemies,
+    setMEnemies,
+    mMine,
+    setMMine,
+    mWon,
+    setMWon,
+    savingManual,
+    toggleManual,
+    saveManual,
+    mReady,
+  } = useManualCombat({
+    user,
+    enabledHeroIds,
+    onCombatSaved: (combat) => {
+      setCombats((prev) => [
+        combat,
+        ...prev,
+      ]);
+    },
+  });
 
   /* =======================================================
      HERO MANAGEMENT
      ======================================================= */
 
-  function disableAllHeroes() {
-    setEnabledHeroIds(new Set());
-    setPicks([]);
-    setEditedTeam([]);
-    setMEnemies([]);
-    setMMine([]);
-    setShowResult(false);
-  }
+  const {
+    disableAllHeroes,
+  } = useHeroManagement({
+    enabledHeroIds,
+    setEnabledHeroIds,
+    setPicks,
+    setEditedTeam,
+    setMEnemies,
+    setMMine,
+    setShowResult,
+  });
+
+  /* =======================================================
+     COMBAT ANALYTICS
+     ======================================================= */
 
   const {
     pickSet,
@@ -296,22 +210,7 @@ const [sortBy, setSortBy] =
   });
 
   /* =======================================================
-     LOGIN
-     ======================================================= */
-	 
-  function reset() {
-    resetSelection();
-    setQuery("");
-    setActiveClass("All");
-    setShowResult(false);
-  }
-
-  /* =======================================================
-     COMBAT RECORDING
-     ======================================================= */
-
-  /* =======================================================
-     MANUAL COMBAT
+     OTHER
      ======================================================= */
 
   const winCount =
@@ -324,7 +223,7 @@ const [sortBy, setSortBy] =
      ======================================================= */
 
   return (
-   <div className="lmac-app relative overflow-hidden">
+    <div className="lmac-app relative overflow-hidden">
 
       {/* =================================================
           HERO MANAGER
@@ -332,19 +231,11 @@ const [sortBy, setSortBy] =
 
       {showHeroManager && (
         <HeroManager
-          enabledIds={
-            enabledHeroIds
-          }
-		  usage={usage}
-          onToggleHero={
-            toggleHeroEnabled
-          }
-          onEnableAll={
-            enableAllHeroes
-          }
-          onDisableAll={
-            disableAllHeroes
-          }
+          enabledIds={enabledHeroIds}
+          usage={usage}
+          onToggleHero={toggleHeroEnabled}
+          onEnableAll={enableAllHeroes}
+          onDisableAll={disableAllHeroes}
           onClose={() =>
             setShowHeroManager(false)
           }
@@ -379,145 +270,160 @@ const [sortBy, setSortBy] =
 
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
-{/* =================================================
-    HEADER
-    ================================================= */}
+        {/* =================================================
+            HEADER
+            ================================================= */}
 
-<AppHeader
-  appVersion={APP_VERSION}
-  user={user}
-  combats={combats}
-  winCount={winCount}
-  enabledHeroIds={enabledHeroIds}
-  loginError={loginError}
-  setLoginError={setLoginError}
-  setShowLogin={setShowLogin}
-  setShowHeroManager={setShowHeroManager}
-  setShowHistory={setShowHistory}
-  setShowManual={setShowManual}
-  handleLogout={handleLogout}
-/>
+        <AppHeader
+          appVersion={APP_VERSION}
+          user={user}
+          combats={combats}
+          winCount={winCount}
+          enabledHeroIds={enabledHeroIds}
+          loginError={loginError}
+          setLoginError={setLoginError}
+          setShowLogin={setShowLogin}
+          setShowHeroManager={setShowHeroManager}
+          setShowHistory={setShowHistory}
+          setShowManual={setShowManual}
+          handleLogout={handleLogout}
+        />
 
-{/* =================================================
-    HISTORY
-    ================================================= */}
+        {/* =================================================
+            HISTORY
+            ================================================= */}
 
-{user && (
-  <CombatHistory
-    combats={combats}
-    loadingHistory={loadingHistory}
-    showHistory={showHistory}
-    setShowHistory={setShowHistory}
-    deleteCombat={deleteCombat}
-  />
-)}
+        {user && (
+          <CombatHistory
+            combats={combats}
+            loadingHistory={loadingHistory}
+            showHistory={showHistory}
+            setShowHistory={setShowHistory}
+            deleteCombat={deleteCombat}
+          />
+        )}
 
         {/* =================================================
             MANUAL COMBAT MODAL
             ================================================= */}
 
-{showManual && (
-<ManualCombatModal
-  mEnemies={mEnemies}
-  mMine={mMine}
-  mWon={mWon}
-  savingManual={savingManual}
-  setShowManual={setShowManual}
-  saveManual={saveManual}
-  mReady={mReady}
-  setMEnemies={setMEnemies}
-  setMMine={setMMine}
-  setMWon={setMWon}
-  usage={usage}
-  enabledHeroIds={enabledHeroIds}
-/>
-)}
+        {showManual && (
+          <ManualCombatModal
+            mEnemies={mEnemies}
+            mMine={mMine}
+            mWon={mWon}
+            savingManual={savingManual}
+            setShowManual={setShowManual}
+            saveManual={saveManual}
+            mReady={mReady}
+            setMEnemies={setMEnemies}
+            setMMine={setMMine}
+            setMWon={setMWon}
+            usage={usage}
+            enabledHeroIds={enabledHeroIds}
+          />
+        )}
 
-{/* =================================================
-    PICKS
-    ================================================= */}
+        {/* =================================================
+            ENEMY SLOTS
+            ================================================= */}
 
-<EnemySlots
-  picks={picks}
-  maxPicks={MAX_PICKS}
-  dragIndex={dragIndex}
-  dragOverIndex={dragOverIndex}
-  setDragIndex={setDragIndex}
-  setDragOverIndex={setDragOverIndex}
-  reorderPicks={reorderPicks}
-  toggle={toggle}
-  enabledHeroIds={enabledHeroIds}
-  reset={reset}
-/>
+        <EnemySlots
+          picks={picks}
+          maxPicks={MAX_PICKS}
+          dragIndex={dragIndex}
+          dragOverIndex={dragOverIndex}
+          setDragIndex={setDragIndex}
+          setDragOverIndex={setDragOverIndex}
+          reorderPicks={reorderPicks}
+          toggle={toggle}
+          enabledHeroIds={enabledHeroIds}
+          reset={reset}
+        />
 
         {/* =================================================
             FIND TEAM
             ================================================= */}
 
-        {full &&
-          !showResult && (
-            <div className="flex justify-center mb-8">
-              <button
-                onClick={() => {
-                  setEditedTeam(
-                    team
-                      .map(
-                        (h) =>
-                          h.id
-                      )
-                      .filter(
-                        (id) =>
-                          enabledHeroIds.has(
-                            id
-                          )
-                      )
-                  );
+        {full && !showResult && (
+          <div className="flex justify-center mb-8">
+            <button
+              onClick={() => {
+                setEditedTeam(
+                  team
+                    .map((h) => h.id)
+                    .filter((id) =>
+                      enabledHeroIds.has(id)
+                    )
+                );
 
-                  setHiddenRecommendedIds(
-                    new Set()
-                  );
+                setHiddenRecommendedIds(
+                  new Set()
+                );
 
-                  setShowResult(
-                    true
-                  );
-                }}
-                className="px-8 py-3 rounded-xl bg-amber-400 text-black font-bold shadow-lg shadow-amber-500/20 hover:scale-105 transition-transform"
-              >
-                Trouver la meilleure contre
-              </button>
-            </div>
-          )}
+                setShowResult(true);
+              }}
+              className="px-8 py-3 rounded-xl bg-amber-400 text-black font-bold shadow-lg shadow-amber-500/20 hover:scale-105 transition-transform"
+            >
+              Trouver la meilleure contre
+            </button>
+          </div>
+        )}
+		
+{showResult && editedHeroes.length > 0 && (
+  <RecommendedTeam
+    report={report}
+    editedHeroes={editedHeroes}
+    editedTeam={editedTeam}
+    setEditedTeam={setEditedTeam}
+
+    hiddenRecommendedIds={hiddenRecommendedIds}
+    hideRecommendedHero={hideRecommendedHero}
+    setHiddenRecommendedIds={setHiddenRecommendedIds}
+
+    swapIndex={swapIndex}
+    setSwapIndex={setSwapIndex}
+    swapQuery={swapQuery}
+    setSwapQuery={setSwapQuery}
+
+    usage={usage}
+    enabledHeroIds={enabledHeroIds}
+
+    winRate={winRate}
+    bestWinTeam={bestWinTeam}
+
+    recordCombat={recordCombat}
+    recording={recording}
+
+    reset={reset}
+  />
+)}
 
         {/* =================================================
-            RESULT
+            FILTERS
             ================================================= */}
-{/* =================================================
-    FILTERS
-    ================================================= */}
 
-<HeroFilters
-  query={query}
-  setQuery={setQuery}
-  sortBy={sortBy}
-  setSortBy={setSortBy}
-  activeClass={activeClass}
-  setActiveClass={setActiveClass}
-/>
+        <HeroFilters
+          query={query}
+          setQuery={setQuery}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          activeClass={activeClass}
+          setActiveClass={setActiveClass}
+        />
 
+        {/* =================================================
+            HERO ROSTER
+            ================================================= */}
 
-{/* =================================================
-    ROSTER
-    ================================================= */}
-
-<HeroRoster
-  filtered={filtered}
-  pickSet={pickSet}
-  picks={picks}
-  full={full}
-  enabledHeroIds={enabledHeroIds}
-  toggle={toggle}
-/>
-      
+        <HeroRoster
+          filtered={filtered}
+          pickSet={pickSet}
+          picks={picks}
+          full={full}
+          enabledHeroIds={enabledHeroIds}
+          toggle={toggle}
+        />
 
         {/* =================================================
             FOOTER
@@ -528,6 +434,7 @@ const [sortBy, setSortBy] =
           (Fandom). Les recommandations apprennent
           de tes combats enregistrés.
         </footer>
+
       </div>
     </div>
   );
