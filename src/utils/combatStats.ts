@@ -37,41 +37,42 @@ export function calculateWinRate(
   enemyIds: string[],
   teamIds: string[]
 ): WinRateResult | null {
-  const teamMatched = combats.filter((combat) => {
-    const enemyOverlap = combat.enemy_heroes.filter((id) =>
-      enemyIds.includes(id)
-    ).length;
+  const enemyKey = [...enemyIds]
+    .sort()
+    .join(",");
 
-    const myOverlap = combat.my_heroes.filter((id) =>
-      teamIds.includes(id)
-    ).length;
+  const teamKey = [...teamIds]
+    .sort()
+    .join(",");
 
-    return enemyOverlap >= 4 && myOverlap >= 4;
+  const matched = combats.filter((combat) => {
+    const combatEnemyKey = [...combat.enemy_heroes]
+      .sort()
+      .join(",");
+
+    const combatTeamKey = [...combat.my_heroes]
+      .sort()
+      .join(",");
+
+    return (
+      combatEnemyKey === enemyKey &&
+      combatTeamKey === teamKey
+    );
   });
 
-  if (teamMatched.length > 0) {
-    const wins = teamMatched.filter((combat) => combat.won).length;
-
-    return {
-      rate: Math.round((wins / teamMatched.length) * 100),
-      count: teamMatched.length,
-    };
-  }
-
-  const enemyMatched = combats.filter(
-    (combat) =>
-      combat.enemy_heroes.filter((id) => enemyIds.includes(id)).length >= 4
-  );
-
-  if (enemyMatched.length === 0) {
+  if (matched.length === 0) {
     return null;
   }
 
-  const wins = enemyMatched.filter((combat) => combat.won).length;
+  const wins = matched.filter(
+    (combat) => combat.won
+  ).length;
 
   return {
-    rate: Math.round((wins / enemyMatched.length) * 100),
-    count: enemyMatched.length,
+    rate: Math.round(
+      (wins / matched.length) * 100
+    ),
+    count: matched.length,
   };
 }
 
