@@ -1,12 +1,14 @@
 import type { Hero, HeroClass } from "../heroes";
 
-export type HeroSort =
+export type HeroRanking =
   | "played"
   | "hp"
   | "atk"
   | "matk"
+  | "totalAtk"
   | "def"
-  | "mdef";
+  | "mdef"
+  | "totalDef";
 
 export interface HeroRankingOptions {
   enabledHeroIds: Set<string>;
@@ -66,10 +68,22 @@ export function filterAndSortHeroes(
           return b.stats.atk - a.stats.atk;
         case "matk":
           return b.stats.matk - a.stats.matk;
+		 case "totalAtk":
+  return (
+    b.stats.atk +
+    b.stats.matk -
+    (a.stats.atk + a.stats.matk)
+  );
         case "def":
           return b.stats.def - a.stats.def;
         case "mdef":
           return b.stats.mdef - a.stats.mdef;
+		  case "totalDef":
+  return (
+    b.stats.def +
+    b.stats.mdef -
+    (a.stats.def + a.stats.mdef)
+  );
         case "played":
         default:
           return (usage[b.id] ?? 0) - (usage[a.id] ?? 0);

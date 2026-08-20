@@ -46,13 +46,6 @@ export function useHeroPreferences(
         return;
       }
 
-      if (loadedPreferences === null) {
-        console.error(
-          "Impossible de charger la configuration des héros depuis Supabase."
-        );
-        return;
-      }
-
       const disabledSet =
         new Set(loadedPreferences);
 

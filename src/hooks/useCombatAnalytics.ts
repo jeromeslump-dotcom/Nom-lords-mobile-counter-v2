@@ -63,29 +63,29 @@ export function useCombatAnalytics({
     [picks, full, combats]
   );
 
-  const editedHeroes = useMemo(
-    () =>
-      editedTeam
-        .map((id) => HEROES.find((h) => h.id === id))
-        .filter(Boolean),
-    [editedTeam]
-  );
+const editedHeroes = useMemo(
+  () =>
+    editedTeam
+      .map((id) => HEROES.find((h) => h.id === id))
+      .filter((hero): hero is (typeof HEROES)[number] => Boolean(hero)),
+  [editedTeam]
+);
   
-  const enemyHeroes = useMemo(
+const enemyHeroes = useMemo(
   () =>
     picks
       .map((id) => HEROES.find((h) => h.id === id))
-      .filter(Boolean),
+      .filter((hero): hero is (typeof HEROES)[number] => Boolean(hero)),
   [picks]
 );
 
 const enemyStats = useMemo(
-  () => calculateTeamStats(enemyHeroes as any),
+  () => calculateTeamStats(enemyHeroes),
   [enemyHeroes]
 );
 
 const teamStats = useMemo(
-  () => calculateTeamStats(editedHeroes as any),
+  () => calculateTeamStats(editedHeroes),
   [editedHeroes]
 );
 
@@ -117,7 +117,7 @@ const statComparisons = useMemo(
   const report = useMemo(
     () =>
       full && showResult && editedHeroes.length === MAX_PICKS
-        ? coverageReport(editedHeroes as any, picks)
+        ? coverageReport(editedHeroes, picks)
         : [],
     [editedHeroes, picks, full, showResult]
   );

@@ -18,14 +18,16 @@ export default function HeroFilters({
   activeClass,
   setActiveClass,
 }: HeroFiltersProps) {
-  const sortOptions = [
-    ["played", "Plus joués"],
-    ["hp", "PV"],
-    ["atk", "ATQ"],
-    ["matk", "ATQ MAG"],
-    ["def", "DEF"],
-    ["mdef", "MDEF"],
-  ] as const;
+const sortOptions = [
+  ["played", "Plus joués"],
+  ["hp", "PV"],
+  ["atk", "ATQ"],
+  ["matk", "ATQ MAG"],
+  ["totalAtk", "ATQ totale"],
+  ["def", "DEF"],
+  ["mdef", "MDEF"],
+  ["totalDef", "DEF totale"],
+] as const;
 
   const classOptions: (HeroClass | "All")[] = [
     "All",
@@ -59,39 +61,55 @@ export default function HeroFilters({
         />
       </div>
 
-      {/* CLASSEMENT */}
-      <div className="flex flex-wrap gap-2">
-        {sortOptions.map(([value, label]) => (
-          <button
-            key={value}
-            onClick={() => setSortBy(value)}
-            className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-              sortBy === value
-                ? "bg-amber-400 text-black"
-                : "bg-white/5 text-white/60 hover:bg-white/10"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+{/* CLASSEMENT */}
+<div className="border border-white/10 rounded-xl p-2">
+  <div className="flex items-center gap-2 mb-1">
+    <span className="px-2 text-xs font-bold text-white/70 whitespace-nowrap">
+      Trier par
+    </span>
 
-      {/* CLASSES */}
-      <div className="flex flex-wrap gap-2">
-        {classOptions.map((value) => (
-          <button
-            key={value}
-            onClick={() => setActiveClass(value)}
-            className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors ${
-              activeClass === value
-                ? "bg-white text-black"
-                : "bg-white/5 text-white/60 hover:bg-white/10"
-            }`}
-          >
-            {value === "All" ? "Toutes classes" : value}
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-nowrap gap-2">
+      {sortOptions.map(([value, label]) => (
+        <button
+          key={value}
+          onClick={() => setSortBy(value)}
+          className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors shrink-0 ${
+            sortBy === value
+              ? "bg-amber-400 text-black"
+              : "bg-white/5 text-white/60 hover:bg-white/10"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
+
+{/* CLASSES */}
+<div className="border border-white/10 rounded-xl p-2">
+  <div className="flex items-center gap-2">
+    <span className="px-2 text-xs font-bold text-white/70 whitespace-nowrap">
+      Classe
+    </span>
+
+    <div className="flex flex-nowrap gap-2">
+      {classOptions.map((value) => (
+        <button
+          key={value}
+          onClick={() => setActiveClass(value)}
+          className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-colors shrink-0 ${
+            activeClass === value
+              ? "bg-white text-black"
+              : "bg-white/5 text-white/60 hover:bg-white/10"
+          }`}
+        >
+          {value === "All" ? "Toutes classes" : value}
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
 
     </div>
   );

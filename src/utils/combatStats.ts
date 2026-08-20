@@ -28,9 +28,11 @@ export interface WinRateResult {
 }
 
 /**
- * Calculates the win rate using the same matching rules as App.tsx:
- * first try a >=4 enemy / >=4 own-team match, then fall back to
- * combats matching at least 4 enemy heroes.
+ * Calculates the exact win rate for the selected enemy team
+ * and the selected/recommended team.
+ *
+ * A combat is counted only when the 5 enemy heroes and the
+ * 5 heroes of our team match exactly, regardless of order.
  */
 export function calculateWinRate(
   combats: Combat[],
@@ -68,12 +70,10 @@ export function calculateWinRate(
     (combat) => combat.won
   ).length;
 
-  return {
-    rate: Math.round(
-      (wins / matched.length) * 100
-    ),
-    count: matched.length,
-  };
+return {
+  rate: (wins / matched.length) * 100,
+  count: matched.length,
+};
 }
 
 export interface BestWinTeamResult {
@@ -87,12 +87,17 @@ export function findBestHistoricalTeam(
   enemyIds: string[],
   currentTeamIds: string[]
 ): BestWinTeamResult | null {
-  const relevant = combats.filter(
-    (combat) =>
-      combat.enemy_heroes.filter((id) =>
-        enemyIds.includes(id)
-      ).length === 5
-  );
+const enemyKey = [...enemyIds]
+  .sort()
+  .join(",");
+
+const relevant = combats.filter((combat) => {
+  const combatEnemyKey = [...combat.enemy_heroes]
+    .sort()
+    .join(",");
+
+  return combatEnemyKey === enemyKey;
+});
 
   if (relevant.length === 0) {
     return null;

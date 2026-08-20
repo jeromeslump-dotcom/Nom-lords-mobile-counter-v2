@@ -128,7 +128,10 @@ export default function RecommendedTeam({
             >
               <Trophy className="h-3.5 w-3.5" />
 
-              {winRate.rate}%
+{Number.isInteger(winRate.rate)
+  ? winRate.rate.toString()
+  : winRate.rate.toFixed(1)}
+%
               de victoire
 
               <span className="text-[10px] font-normal opacity-60">

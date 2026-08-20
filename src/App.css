@@ -93,37 +93,7 @@ body:not(.lmac-role-contributor):not(.lmac-role-admin) div:has(> div > svg.lucid
   display: none !important;
 }
 
-/* =========================================================
-   COMPACT HERO FILTER BAR
-   Search text is smaller and ranking/class filters share one row.
-   ========================================================= */
-div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) {
-  flex-direction: row !important;
-  flex-wrap: nowrap !important;
-  align-items: center !important;
-  gap: 8px !important;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
 
-div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) > div:first-child {
-  flex: 0 0 220px;
-}
-
-div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) > div:nth-child(2),
-div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) > div:nth-child(3) {
-  flex: 0 0 auto;
-  flex-wrap: nowrap !important;
-}
-
-div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) input[placeholder="Rechercher par nom ou alias..."] {
-  font-size: 12px !important;
-}
-
-div:has(> div > input[placeholder="Rechercher par nom ou alias..."]) button {
-  font-size: 11px !important;
-  padding: 6px 9px !important;
-}
 
 /* =========================================================
    VISITOR LOGIN BUTTON
