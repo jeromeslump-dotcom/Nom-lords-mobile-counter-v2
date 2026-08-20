@@ -10,6 +10,11 @@ import { HEROES, type HeroClass } from "../heroes";
 import { coverageReport, recommendTeam } from "../counter";
 import type { Combat } from "../storage";
 
+import {
+  calculateTeamStats,
+  compareStat,
+} from "../utils/teamStats";
+
 const MAX_PICKS = 5;
 
 interface UseCombatAnalyticsOptions {
@@ -65,6 +70,49 @@ export function useCombatAnalytics({
         .filter(Boolean),
     [editedTeam]
   );
+  
+  const enemyHeroes = useMemo(
+  () =>
+    picks
+      .map((id) => HEROES.find((h) => h.id === id))
+      .filter(Boolean),
+  [picks]
+);
+
+const enemyStats = useMemo(
+  () => calculateTeamStats(enemyHeroes as any),
+  [enemyHeroes]
+);
+
+const teamStats = useMemo(
+  () => calculateTeamStats(editedHeroes as any),
+  [editedHeroes]
+);
+
+const statComparisons = useMemo(
+  () => ({
+    hp: compareStat(enemyStats.hp, teamStats.hp),
+
+    atk: compareStat(enemyStats.atk, teamStats.atk),
+
+    def: compareStat(enemyStats.def, teamStats.def),
+
+    matk: compareStat(enemyStats.matk, teamStats.matk),
+
+    mdef: compareStat(enemyStats.mdef, teamStats.mdef),
+
+    totalAtk: compareStat(
+      enemyStats.totalAtk,
+      teamStats.totalAtk
+    ),
+
+    totalDef: compareStat(
+      enemyStats.totalDef,
+      teamStats.totalDef
+    ),
+  }),
+  [enemyStats, teamStats]
+);
 
   const report = useMemo(
     () =>
@@ -105,16 +153,20 @@ export function useCombatAnalytics({
     return calculateWinRate(combats, picks, teamIds);
   }, [combats, picks, full, showResult, editedTeam, team]);
 
-  return {
-    pickSet,
-    full,
-    usage,
-    filtered,
-    team,
-    editedHeroes,
-    report,
-    totalCoverage,
-    bestWinTeam,
-    winRate,
-  };
+return {
+  pickSet,
+  full,
+  usage,
+  filtered,
+  team,
+  editedHeroes,
+  report,
+  totalCoverage,
+  bestWinTeam,
+  winRate,
+
+  enemyStats,
+  teamStats,
+  statComparisons,
+};
 }

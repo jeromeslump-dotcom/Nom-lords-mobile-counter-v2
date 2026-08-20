@@ -8,6 +8,8 @@ import {
 
 import type { Hero } from "../heroes";
 
+import type { TeamStats, TeamStatComparison,} from "../utils/teamStats";
+
 const TYPE_GRADIENT: Record<string, string> = {
   Infantry: "from-red-900 via-red-700 to-orange-900",
   Cavalry: "from-blue-900 via-blue-700 to-cyan-900",
@@ -36,6 +38,18 @@ type RecommendedTeamProps = {
   editedHeroes: Hero[];
   editedTeam: string[];
   setEditedTeam: React.Dispatch<React.SetStateAction<string[]>>;
+   enemyStats: TeamStats;
+  teamStats: TeamStats;
+
+  statComparisons: {
+    hp: TeamStatComparison;
+    atk: TeamStatComparison;
+    def: TeamStatComparison;
+    matk: TeamStatComparison;
+    mdef: TeamStatComparison;
+    totalAtk: TeamStatComparison;
+    totalDef: TeamStatComparison;
+  };
 
   hiddenRecommendedIds: Set<string>;
   hideRecommendedHero: (heroId: string) => void;
@@ -65,6 +79,9 @@ export default function RecommendedTeam({
   editedHeroes,
   editedTeam,
   setEditedTeam,
+    enemyStats,
+  teamStats,
+  statComparisons,
 
   hiddenRecommendedIds,
   hideRecommendedHero,
@@ -455,6 +472,149 @@ export default function RecommendedTeam({
 
         </div>
       )}
+	  
+ {/* =================================================
+    TEAM STATS COMPARISON
+    ================================================= */}
+
+<div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+
+<h3 className="text-sm font-bold text-white/80 mb-4 text-center">
+  Comparaison des statistiques
+</h3>
+
+  {/* EN-TÊTE */}
+
+<div className="flex justify-center">
+  <div className="grid grid-cols-[115px_72px_58px_88px] items-center gap-x-2 px-2">
+
+    <span />
+
+    <span className="text-[9px] uppercase tracking-wider font-bold text-white/30 text-right whitespace-nowrap">
+      Ennemi
+    </span>
+
+    <span className="text-[9px] uppercase tracking-wider font-bold text-white/30 text-right whitespace-nowrap">
+      Écart
+    </span>
+
+    <span className="text-[9px] uppercase tracking-wider font-bold text-white/30 text-right whitespace-nowrap">
+      Recommandée
+    </span>
+
+  </div>
+  </div>
+
+  {/* STATISTIQUES */}
+
+  {[
+    {
+      key: "hp",
+      label: "❤️ PV",
+      enemy: enemyStats.hp,
+      team: teamStats.hp,
+      comparison: statComparisons.hp,
+    },
+    {
+      key: "atk",
+      label: "⚔️ ATQ",
+      enemy: enemyStats.atk,
+      team: teamStats.atk,
+      comparison: statComparisons.atk,
+    },
+    {
+      key: "matk",
+      label: "✨ ATQ MAG",
+      enemy: enemyStats.matk,
+      team: teamStats.matk,
+      comparison: statComparisons.matk,
+    },
+    {
+      key: "totalAtk",
+      label: "⚔️ ATQ totale",
+      enemy: enemyStats.totalAtk,
+      team: teamStats.totalAtk,
+      comparison: statComparisons.totalAtk,
+    },
+    {
+      key: "def",
+      label: "🛡️ DEF",
+      enemy: enemyStats.def,
+      team: teamStats.def,
+      comparison: statComparisons.def,
+    },
+    {
+      key: "mdef",
+      label: "🛡️ MDEF",
+      enemy: enemyStats.mdef,
+      team: teamStats.mdef,
+      comparison: statComparisons.mdef,
+    },
+    {
+      key: "totalDef",
+      label: "🛡️ DEF totale",
+      enemy: enemyStats.totalDef,
+      team: teamStats.totalDef,
+      comparison: statComparisons.totalDef,
+    },
+  ].map((stat) => {
+
+    const positive =
+      stat.comparison.difference >= 0;
+
+    const separator =
+      stat.key === "def";
+
+    return (
+
+<div className="flex justify-center">
+  <div
+    key={stat.key}
+    className={`grid grid-cols-[115px_72px_58px_88px] items-center gap-x-2 px-2 py-1.5 rounded-lg ${
+      separator
+        ? "mt-3 pt-3 border-t border-white/10"
+        : ""
+    }`}
+  >
+
+        {/* STAT */}
+
+        <span className="text-xs font-semibold text-white/65 whitespace-nowrap">
+          {stat.label}
+        </span>
+
+        {/* ENNEMI */}
+
+        <span className="text-xs tabular-nums text-white/45 text-right whitespace-nowrap">
+          {stat.enemy.toLocaleString("fr-FR")}
+        </span>
+
+        {/* ÉCART */}
+
+        <span
+          className={`text-xs font-bold tabular-nums text-right whitespace-nowrap ${
+            positive
+              ? "text-emerald-400"
+              : "text-rose-400"
+          }`}
+        >
+          {positive ? "+" : ""}
+          {stat.comparison.percentage.toFixed(1)}%
+        </span>
+
+        {/* RECOMMANDÉE */}
+
+        <span className="text-xs font-bold tabular-nums text-white text-right whitespace-nowrap">
+          {stat.team.toLocaleString("fr-FR")}
+        </span>
+
+      </div>
+	  </div>
+    );
+  })}
+
+</div>
+	  
 
       {/* =================================================
           BEST WIN TEAM

@@ -187,18 +187,21 @@ const {
      COMBAT ANALYTICS
      ======================================================= */
 
-  const {
-    pickSet,
-    full,
-    usage,
-    filtered,
-    team,
-    editedHeroes,
-    report,
-    totalCoverage,
-    bestWinTeam,
-    winRate,
-  } = useCombatAnalytics({
+ const {
+  pickSet,
+  full,
+  usage,
+  filtered,
+  team,
+  editedHeroes,
+  report,
+  totalCoverage,
+  bestWinTeam,
+  winRate,
+  enemyStats,
+  teamStats,
+  statComparisons,
+} = useCombatAnalytics({
     combats,
     picks,
     editedTeam,
@@ -376,6 +379,9 @@ const {
     editedHeroes={editedHeroes}
     editedTeam={editedTeam}
     setEditedTeam={setEditedTeam}
+	  enemyStats={enemyStats}
+  teamStats={teamStats}
+  statComparisons={statComparisons}
 
     hiddenRecommendedIds={hiddenRecommendedIds}
     hideRecommendedHero={hideRecommendedHero}
