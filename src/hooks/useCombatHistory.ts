@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 
-import {
-  loadCombats,
-  addCombat,
-  removeCombat,
-} from "../storage";
+import { loadCombats, addCombat, removeCombat } from "../storage";
 
 import type { Combat } from "../storage";
 
@@ -19,14 +15,11 @@ export function useCombatHistory({
   picks,
   editedTeam,
 }: UseCombatHistoryOptions) {
-  const [combats, setCombats] =
-    useState<Combat[]>([]);
+  const [combats, setCombats] = useState<Combat[]>([]);
 
-  const [loadingHistory, setLoadingHistory] =
-    useState(true);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
-  const [recording, setRecording] =
-    useState(false);
+  const [recording, setRecording] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -38,17 +31,10 @@ export function useCombatHistory({
         const data = await loadCombats();
 
         if (!cancelled) {
-          setCombats(
-            Array.isArray(data)
-              ? data
-              : []
-          );
+          setCombats(Array.isArray(data) ? data : []);
         }
       } catch (error) {
-        console.error(
-          "Erreur lors du chargement de l'historique :",
-          error
-        );
+        console.error("Erreur lors du chargement de l'historique :", error);
 
         if (!cancelled) {
           setCombats([]);
@@ -67,15 +53,8 @@ export function useCombatHistory({
     };
   }, [user]);
 
-  async function recordCombat(
-    won: boolean
-  ) {
-    if (
-      !user ||
-      picks.length !== 5 ||
-      editedTeam.length !== 5 ||
-      recording
-    ) {
+  async function recordCombat(won: boolean) {
+    if (!user || picks.length !== 5 || editedTeam.length !== 5 || recording) {
       return;
     }
 
@@ -89,34 +68,20 @@ export function useCombatHistory({
       });
 
       if (combat) {
-        setCombats((prev) => [
-          combat,
-          ...prev,
-        ]);
+        setCombats((prev) => [combat, ...prev]);
       }
     } catch (error) {
-      console.error(
-        "Erreur lors de l'enregistrement du combat :",
-        error
-      );
+      console.error("Erreur lors de l'enregistrement du combat :", error);
     } finally {
       setRecording(false);
     }
   }
 
-  async function deleteCombat(
-    id: string
-  ) {
-    const success =
-      await removeCombat(id);
+  async function deleteCombat(id: string) {
+    const success = await removeCombat(id);
 
     if (success) {
-      setCombats((prev) =>
-        prev.filter(
-          (combat) =>
-            combat.id !== id
-        )
-      );
+      setCombats((prev) => prev.filter((combat) => combat.id !== id));
     }
   }
 

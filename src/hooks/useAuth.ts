@@ -1,30 +1,19 @@
 import { useEffect, useState } from "react";
 
-import {
-  getCurrentUser,
-  signIn,
-  signOut,
-} from "../storage";
+import { getCurrentUser, signIn, signOut } from "../storage";
 
-export function useAuth(
-  onLogout?: () => void
-) {
+export function useAuth(onLogout?: () => void) {
   const [user, setUser] = useState<any>(null);
 
-  const [loginEmail, setLoginEmail] =
-    useState("");
+  const [loginEmail, setLoginEmail] = useState("");
 
-  const [loginPassword, setLoginPassword] =
-    useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
-  const [loginError, setLoginError] =
-    useState("");
+  const [loginError, setLoginError] = useState("");
 
-  const [showLogin, setShowLogin] =
-    useState(false);
+  const [showLogin, setShowLogin] = useState(false);
 
-  const [loggingIn, setLoggingIn] =
-    useState(false);
+  const [loggingIn, setLoggingIn] = useState(false);
 
   useEffect(() => {
     getCurrentUser().then(setUser);
@@ -32,27 +21,17 @@ export function useAuth(
 
   async function handleLogin() {
     if (!loginEmail || !loginPassword) {
-      setLoginError(
-        "Veuillez saisir votre email et votre mot de passe."
-      );
+      setLoginError("Veuillez saisir votre email et votre mot de passe.");
       return;
     }
 
     setLoggingIn(true);
     setLoginError("");
 
-    const {
-      data,
-      error,
-    } = await signIn(
-      loginEmail,
-      loginPassword
-    );
+    const { data, error } = await signIn(loginEmail, loginPassword);
 
     if (error) {
-      setLoginError(
-        "Email ou mot de passe incorrect."
-      );
+      setLoginError("Email ou mot de passe incorrect.");
       setLoggingIn(false);
       return;
     }

@@ -93,7 +93,10 @@ function normalizeCombats(data: unknown): Combat[] {
   return data.flatMap((row) => {
     const combat = normalizeCombat(row);
     if (!combat) {
-      console.warn("Combat Supabase ignoré car ses données sont invalides :", row);
+      console.warn(
+        "Combat Supabase ignoré car ses données sont invalides :",
+        row
+      );
       return [];
     }
     return [combat];
@@ -155,7 +158,10 @@ async function syncRoleClass(userId: string): Promise<void> {
 
 export async function getCurrentUser() {
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
     if (error) {
       clearRoleClass();
       // Une absence de session est normale pour un visiteur.
@@ -246,7 +252,8 @@ export async function signOut() {
     clearRoleClass();
     console.error("Erreur inattendue lors de la déconnexion :", error);
     return {
-      error: error instanceof Error ? error : new Error("Erreur de déconnexion"),
+      error:
+        error instanceof Error ? error : new Error("Erreur de déconnexion"),
     };
   }
 }
@@ -331,7 +338,10 @@ export async function addCombat(
 
     return normalizeCombat(data);
   } catch (error) {
-    console.error("Erreur inattendue lors de l'enregistrement du combat :", error);
+    console.error(
+      "Erreur inattendue lors de l'enregistrement du combat :",
+      error
+    );
     return null;
   }
 }
@@ -346,10 +356,7 @@ export async function removeCombat(id: string): Promise<boolean> {
   }
 
   try {
-    const { error } = await supabase
-      .from("combats")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabase.from("combats").delete().eq("id", id);
 
     if (error) {
       console.error("Erreur lors de la suppression du combat :", error);
@@ -358,7 +365,10 @@ export async function removeCombat(id: string): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error("Erreur inattendue lors de la suppression du combat :", error);
+    console.error(
+      "Erreur inattendue lors de la suppression du combat :",
+      error
+    );
     return false;
   }
 }
@@ -381,12 +391,17 @@ export async function loadHeroPreferences(): Promise<string[]> {
 
     return data ? normalizeHeroArray(data.excluded_hero_ids) : [];
   } catch (error) {
-    console.error("Erreur inattendue lors du chargement des préférences héros :", error);
+    console.error(
+      "Erreur inattendue lors du chargement des préférences héros :",
+      error
+    );
     return [];
   }
 }
 
-export async function saveHeroPreferences(disabledHeroes: string[]): Promise<boolean> {
+export async function saveHeroPreferences(
+  disabledHeroes: string[]
+): Promise<boolean> {
   const user = await getCurrentUser();
   if (!user) return false;
 
@@ -401,13 +416,19 @@ export async function saveHeroPreferences(disabledHeroes: string[]): Promise<boo
       );
 
     if (error) {
-      console.error("Erreur lors de la sauvegarde des préférences héros :", error);
+      console.error(
+        "Erreur lors de la sauvegarde des préférences héros :",
+        error
+      );
       return false;
     }
 
     return true;
   } catch (error) {
-    console.error("Erreur inattendue lors de la sauvegarde des préférences héros :", error);
+    console.error(
+      "Erreur inattendue lors de la sauvegarde des préférences héros :",
+      error
+    );
     return false;
   }
 }

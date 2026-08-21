@@ -1,25 +1,15 @@
 import { useEffect, useState } from "react";
 
-import {
-  HEROES,
-  type Hero,
-} from "../heroes";
+import { HEROES, type Hero } from "../heroes";
 
-import {
-  loadHeroPreferences,
-  saveHeroPreferences,
-} from "../storage";
+import { loadHeroPreferences, saveHeroPreferences } from "../storage";
 
-export function useHeroPreferences(
-  user: any
-) {
-  const [enabledHeroIds, setEnabledHeroIds] =
-    useState<Set<string>>(
-      () => new Set(HEROES.map((hero) => hero.id))
-    );
+export function useHeroPreferences(user: any) {
+  const [enabledHeroIds, setEnabledHeroIds] = useState<Set<string>>(
+    () => new Set(HEROES.map((hero) => hero.id))
+  );
 
-  const [heroPreferencesLoaded, setHeroPreferencesLoaded] =
-    useState(false);
+  const [heroPreferencesLoaded, setHeroPreferencesLoaded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -28,37 +18,26 @@ export function useHeroPreferences(
       if (!user) {
         setHeroPreferencesLoaded(false);
 
-        setEnabledHeroIds(
-          new Set(
-            HEROES.map((hero) => hero.id)
-          )
-        );
+        setEnabledHeroIds(new Set(HEROES.map((hero) => hero.id)));
 
         return;
       }
 
       setHeroPreferencesLoaded(false);
 
-      const loadedPreferences =
-        await loadHeroPreferences();
+      const loadedPreferences = await loadHeroPreferences();
 
       if (cancelled) {
         return;
       }
 
-      const disabledSet =
-        new Set(loadedPreferences);
+      const disabledSet = new Set(loadedPreferences);
 
-      const enabled = HEROES
-        .filter(
-          (hero) =>
-            !disabledSet.has(hero.id)
-        )
-        .map((hero) => hero.id);
-
-      setEnabledHeroIds(
-        new Set(enabled)
+      const enabled = HEROES.filter((hero) => !disabledSet.has(hero.id)).map(
+        (hero) => hero.id
       );
+
+      setEnabledHeroIds(new Set(enabled));
 
       setHeroPreferencesLoaded(true);
     }
@@ -71,39 +50,24 @@ export function useHeroPreferences(
   }, [user]);
 
   useEffect(() => {
-    if (
-      !user ||
-      !heroPreferencesLoaded
-    ) {
+    if (!user || !heroPreferencesLoaded) {
       return;
     }
 
-    const disabledHeroes =
-      HEROES
-        .filter(
-          (hero) =>
-            !enabledHeroIds.has(hero.id)
-        )
-        .map((hero) => hero.id);
+    const disabledHeroes = HEROES.filter(
+      (hero) => !enabledHeroIds.has(hero.id)
+    ).map((hero) => hero.id);
 
-    saveHeroPreferences(
-      disabledHeroes
-    ).then((success) => {
+    saveHeroPreferences(disabledHeroes).then((success) => {
       if (!success) {
         console.error(
           "Impossible de sauvegarder la configuration des héros dans Supabase."
         );
       }
     });
-  }, [
-    enabledHeroIds,
-    user,
-    heroPreferencesLoaded,
-  ]);
+  }, [enabledHeroIds, user, heroPreferencesLoaded]);
 
-  function toggleHeroEnabled(
-    id: string
-  ) {
+  function toggleHeroEnabled(id: string) {
     setEnabledHeroIds((prev) => {
       const next = new Set(prev);
 
@@ -118,19 +82,11 @@ export function useHeroPreferences(
   }
 
   function enableAllHeroes() {
-    setEnabledHeroIds(
-      new Set(
-        HEROES.map(
-          (hero) => hero.id
-        )
-      )
-    );
+    setEnabledHeroIds(new Set(HEROES.map((hero) => hero.id)));
   }
 
   function disableAllHeroes() {
-    setEnabledHeroIds(
-      new Set()
-    );
+    setEnabledHeroIds(new Set());
   }
 
   return {

@@ -1,14 +1,10 @@
 import { RotateCcw, Swords, Trophy, X, Crown, Plus } from "lucide-react";
 
-import {
-  HEROES,
-  TYPE_TEXT,
-  CLASS_TEXT,
-} from "../heroes";
+import { HEROES, TYPE_TEXT, CLASS_TEXT } from "../heroes";
 
 import type { Hero } from "../heroes";
 
-import type { TeamStats, TeamStatComparison,} from "../utils/teamStats";
+import type { TeamStats, TeamStatComparison } from "../utils/teamStats";
 
 const TYPE_GRADIENT: Record<string, string> = {
   Infantry: "from-red-900 via-red-700 to-orange-900",
@@ -38,7 +34,7 @@ type RecommendedTeamProps = {
   editedHeroes: Hero[];
   editedTeam: string[];
   setEditedTeam: React.Dispatch<React.SetStateAction<string[]>>;
-   enemyStats: TeamStats;
+  enemyStats: TeamStats;
   teamStats: TeamStats;
 
   statComparisons: {
@@ -53,9 +49,7 @@ type RecommendedTeamProps = {
 
   hiddenRecommendedIds: Set<string>;
   hideRecommendedHero: (heroId: string) => void;
-  setHiddenRecommendedIds: React.Dispatch<
-    React.SetStateAction<Set<string>>
-  >;
+  setHiddenRecommendedIds: React.Dispatch<React.SetStateAction<Set<string>>>;
 
   swapIndex: number | null;
   setSwapIndex: React.Dispatch<React.SetStateAction<number | null>>;
@@ -79,7 +73,7 @@ export default function RecommendedTeam({
   editedHeroes,
   editedTeam,
   setEditedTeam,
-    enemyStats,
+  enemyStats,
   teamStats,
   statComparisons,
 
@@ -105,19 +99,14 @@ export default function RecommendedTeam({
 }: RecommendedTeamProps) {
   return (
     <div className="mb-8">
-
       {/* =================================================
           HEADER
           ================================================= */}
 
       <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
-
         <h2 className="text-xl font-bold flex items-center gap-2 flex-wrap">
-
           <Swords className="h-5 w-5 text-amber-400" />
-
           Équipe recommandée
-
           {winRate !== null ? (
             <span
               className={`inline-flex items-center gap-1 text-sm font-semibold px-2.5 py-1 rounded-lg ${
@@ -127,18 +116,13 @@ export default function RecommendedTeam({
               }`}
             >
               <Trophy className="h-3.5 w-3.5" />
-
-{Number.isInteger(winRate.rate)
-  ? winRate.rate.toString()
-  : winRate.rate.toFixed(1)}
-%
-              de victoire
-
+              {Number.isInteger(winRate.rate)
+                ? winRate.rate.toString()
+                : winRate.rate.toFixed(1)}
+              % de victoire
               <span className="text-[10px] font-normal opacity-60">
-                (
-                {winRate.count} combat
-                {winRate.count > 1 ? "s" : ""}
-                )
+                ({winRate.count} combat
+                {winRate.count > 1 ? "s" : ""})
               </span>
             </span>
           ) : (
@@ -146,11 +130,9 @@ export default function RecommendedTeam({
               Pas encore de données
             </span>
           )}
-
         </h2>
 
         <div className="flex items-center gap-3">
-
           <button
             type="button"
             onClick={() => {
@@ -161,41 +143,26 @@ export default function RecommendedTeam({
             <RotateCcw className="h-3.5 w-3.5" />
             Réinitialiser
           </button>
-
         </div>
-
       </div>
 
       {/* =================================================
           TEAM CARDS
           ================================================= */}
 
-            <div className="grid grid-cols-5 gap-2 sm:gap-3 max-w-[720px] mx-auto mb-6">
-
+      <div className="grid grid-cols-5 gap-2 sm:gap-3 max-w-[720px] mx-auto mb-6">
         {report.map(({ hero, targets }, idx) => {
-
-          const hidden =
-            hiddenRecommendedIds.has(hero.id);
+          const hidden = hiddenRecommendedIds.has(hero.id);
 
           return (
-            <div
-              key={hero.id}
-              className="transition-all"
-            >
-
+            <div key={hero.id} className="transition-all">
               {hidden ? (
-
                 /* =================================================
                    HERO MASQUÉ
                    ================================================= */
 
-                <div
-                  className="aspect-square rounded-2xl border border-dashed border-amber-400/30 bg-white/[0.02] flex flex-col items-center justify-center gap-2"
-                >
-
-                  <span className="text-white/20 text-3xl">
-                    +
-                  </span>
+                <div className="aspect-square rounded-2xl border border-dashed border-amber-400/30 bg-white/[0.02] flex flex-col items-center justify-center gap-2">
+                  <span className="text-white/20 text-3xl">+</span>
 
                   <span className="text-[10px] text-white/40 text-center px-2">
                     Héros retiré
@@ -212,36 +179,30 @@ export default function RecommendedTeam({
                   >
                     Changer
                   </button>
-
                 </div>
-
               ) : (
-
                 /* =================================================
                    CARTE RECOMMANDATION
                    ================================================= */
 
                 <>
-
-                  <div
-                    className="aspect-square rounded-2xl border border-white/10 overflow-hidden relative bg-[#11151c]"
-                  >
-
+                  <div className="aspect-square rounded-2xl border border-white/10 overflow-hidden relative bg-[#11151c]">
                     {/* CROIX */}
 
-<button
-  type="button"
-  onClick={(e) => {
-    e.preventDefault();
-    e.stopPropagation();
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
 
-    hideRecommendedHero(hero.id);
-  }}
-  className="hero-remove-button absolute top-1 right-1 h-5 w-5 rounded-full bg-black/70 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"  title="Retirer ce héros"
-  aria-label={`Retirer ${hero.name}`}
->
-  <X className="h-3 w-3 text-white" />
-</button>
+                        hideRecommendedHero(hero.id);
+                      }}
+                      className="hero-remove-button absolute top-1 right-1 h-5 w-5 rounded-full bg-black/70 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"
+                      title="Retirer ce héros"
+                      aria-label={`Retirer ${hero.name}`}
+                    >
+                      <X className="h-3 w-3 text-white" />
+                    </button>
 
                     <img
                       src={hero.img}
@@ -257,7 +218,6 @@ export default function RecommendedTeam({
                     <span className="absolute bottom-2 left-2 right-2 text-xs sm:text-sm font-bold text-center drop-shadow-lg line-clamp-1">
                       {hero.name}
                     </span>
-
                   </div>
 
                   {/* PSEUDO */}
@@ -269,7 +229,6 @@ export default function RecommendedTeam({
                   {/* TYPE + CLASSE */}
 
                   <div className="mt-0.5 flex items-center justify-center gap-1">
-
                     <span
                       className={`inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-md bg-black/70 border border-white/20 text-[10px] font-black ${TYPE_TEXT[hero.type]}`}
                       title={hero.type}
@@ -277,10 +236,10 @@ export default function RecommendedTeam({
                       {hero.type === "Infantry"
                         ? "🛡️"
                         : hero.type === "Cavalry"
-                        ? "🐎"
-                        : hero.type === "Ranged"
-                        ? "🏹"
-                        : "⚙️"}
+                          ? "🐎"
+                          : hero.type === "Ranged"
+                            ? "🏹"
+                            : "⚙️"}
                     </span>
 
                     <span
@@ -289,21 +248,14 @@ export default function RecommendedTeam({
                     >
                       {hero.cls}
                     </span>
-
                   </div>
 
                   {/* ENNEMIS COUVERTS */}
 
                   <div className="mt-2 text-center">
-
                     <div className="flex flex-wrap items-center justify-center gap-1">
-
                       {targets.map((target) => {
-
-                        const enemy =
-                          HEROES.find(
-                            (h) => h.id === target.id
-                          );
+                        const enemy = HEROES.find((h) => h.id === target.id);
 
                         if (!enemy) {
                           return null;
@@ -315,7 +267,6 @@ export default function RecommendedTeam({
                             title={`Contre ${enemy.name}`}
                             className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-200 border border-rose-500/20"
                           >
-
                             <img
                               src={enemy.img}
                               alt=""
@@ -323,23 +274,16 @@ export default function RecommendedTeam({
                             />
 
                             {enemy.name}
-
                           </span>
                         );
                       })}
-
                     </div>
-
                   </div>
-
                 </>
-
               )}
-
             </div>
           );
         })}
-
       </div>
 
       {/* =================================================
@@ -354,17 +298,13 @@ export default function RecommendedTeam({
             setSwapQuery("");
           }}
         >
-
           <div
             className="w-full max-w-2xl rounded-3xl border border-white/10 bg-zinc-900 p-5 max-h-[80vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-
             <div className="flex items-center justify-between mb-4">
-
               <h3 className="text-sm font-bold text-white/80">
-                Remplacer{" "}
-                {editedHeroes[swapIndex]?.name}
+                Remplacer {editedHeroes[swapIndex]?.name}
               </h3>
 
               <button
@@ -376,67 +316,46 @@ export default function RecommendedTeam({
               >
                 <X className="h-4 w-4 text-white" />
               </button>
-
             </div>
 
             <input
               autoFocus
               value={swapQuery}
-              onChange={(e) =>
-                setSwapQuery(e.target.value)
-              }
+              onChange={(e) => setSwapQuery(e.target.value)}
               placeholder="Rechercher..."
               className="w-full mb-3 px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-400/50"
             />
 
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-
-              {HEROES
-                .filter((h) =>
-                  enabledHeroIds.has(h.id)
-                )
+              {HEROES.filter((h) => enabledHeroIds.has(h.id))
                 .filter(
                   (h) =>
-                    h.id !== editedTeam[swapIndex] &&
-                    !editedTeam.includes(h.id)
+                    h.id !== editedTeam[swapIndex] && !editedTeam.includes(h.id)
                 )
                 .filter(
                   (h) =>
                     !swapQuery ||
-                    h.name
-                      .toLowerCase()
-                      .includes(swapQuery.toLowerCase()) ||
-                    h.alias
-                      .toLowerCase()
-                      .includes(swapQuery.toLowerCase())
+                    h.name.toLowerCase().includes(swapQuery.toLowerCase()) ||
+                    h.alias.toLowerCase().includes(swapQuery.toLowerCase())
                 )
                 .sort(
                   (a, b) =>
-                    (usage[b.id] ?? 0) -
-                      (usage[a.id] ?? 0) ||
+                    (usage[b.id] ?? 0) - (usage[a.id] ?? 0) ||
                     a.name.localeCompare(b.name)
                 )
                 .map((h) => (
-
                   <button
                     key={h.id}
                     onClick={() => {
-
                       setEditedTeam((prev) =>
-                        prev.map((id, i) =>
-                          i === swapIndex
-                            ? h.id
-                            : id
-                        )
+                        prev.map((id, i) => (i === swapIndex ? h.id : id))
                       );
 
                       setSwapIndex(null);
                       setSwapQuery("");
-
                     }}
                     className="group relative w-full overflow-hidden rounded-xl border border-white/10 hover:border-amber-400/50 hover:scale-[1.03] transition-all"
                   >
-
                     <div
                       className={`absolute inset-0 bg-gradient-to-br ${TYPE_GRADIENT[h.type]} opacity-80`}
                     />
@@ -444,7 +363,6 @@ export default function RecommendedTeam({
                     <div className="absolute inset-0 bg-black/35 group-hover:bg-black/20 transition-colors" />
 
                     <div className="relative p-2 flex flex-col items-center gap-1">
-
                       <img
                         src={h.img}
                         alt={h.name}
@@ -461,162 +379,141 @@ export default function RecommendedTeam({
                       >
                         {h.cls}
                       </span>
-
                     </div>
-
                   </button>
-
                 ))}
-
             </div>
-
           </div>
-
         </div>
       )}
-	  
- {/* =================================================
+
+      {/* =================================================
     TEAM STATS COMPARISON
     ================================================= */}
 
-<div className="mb-6 w-full max-w-[720px] mx-auto rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+      <div className="mb-6 w-full max-w-[720px] mx-auto rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+        <h3 className="text-sm font-bold text-white/80 mb-4 text-center">
+          Comparaison des statistiques
+        </h3>
 
-<h3 className="text-sm font-bold text-white/80 mb-4 text-center">
-  Comparaison des statistiques
-</h3>
+        {/* EN-TÊTE */}
 
-  {/* EN-TÊTE */}
+        <div className="flex justify-center">
+          <div className="grid grid-cols-[90px_58px_55px_78px] sm:grid-cols-[115px_72px_58px_88px] items-center gap-x-3 px-2">
+            <span />
 
-<div className="flex justify-center">
-  <div className="grid grid-cols-[90px_58px_55px_78px] sm:grid-cols-[115px_72px_58px_88px] items-center gap-x-3 px-2">   
-  <span />
+            <span className="text-[9px] uppercase tracking-wider font-bold text-white/30 text-right whitespace-nowrap">
+              Ennemi
+            </span>
 
-    <span className="text-[9px] uppercase tracking-wider font-bold text-white/30 text-right whitespace-nowrap">
-      Ennemi
-    </span>
+            <span className="text-[9px] uppercase tracking-wider font-bold text-white/30 text-right whitespace-nowrap">
+              Écart
+            </span>
 
-    <span className="text-[9px] uppercase tracking-wider font-bold text-white/30 text-right whitespace-nowrap">
-      Écart
-    </span>
+            <span className="text-[9px] uppercase tracking-wider font-bold text-white/30 text-right whitespace-nowrap">
+              Recommandée
+            </span>
+          </div>
+        </div>
 
-    <span className="text-[9px] uppercase tracking-wider font-bold text-white/30 text-right whitespace-nowrap">
-      Recommandée
-    </span>
+        {/* STATISTIQUES */}
 
-  </div>
-  </div>
+        {[
+          {
+            key: "hp",
+            label: "❤️ PV",
+            enemy: enemyStats.hp,
+            team: teamStats.hp,
+            comparison: statComparisons.hp,
+          },
+          {
+            key: "atk",
+            label: "⚔️ ATQ",
+            enemy: enemyStats.atk,
+            team: teamStats.atk,
+            comparison: statComparisons.atk,
+          },
+          {
+            key: "matk",
+            label: "✨ ATQ MAG",
+            enemy: enemyStats.matk,
+            team: teamStats.matk,
+            comparison: statComparisons.matk,
+          },
+          {
+            key: "totalAtk",
+            label: "⚔️ ATQ totale",
+            enemy: enemyStats.totalAtk,
+            team: teamStats.totalAtk,
+            comparison: statComparisons.totalAtk,
+          },
+          {
+            key: "def",
+            label: "🛡️ DEF",
+            enemy: enemyStats.def,
+            team: teamStats.def,
+            comparison: statComparisons.def,
+          },
+          {
+            key: "mdef",
+            label: "🛡️ MDEF",
+            enemy: enemyStats.mdef,
+            team: teamStats.mdef,
+            comparison: statComparisons.mdef,
+          },
+          {
+            key: "totalDef",
+            label: "🛡️ DEF totale",
+            enemy: enemyStats.totalDef,
+            team: teamStats.totalDef,
+            comparison: statComparisons.totalDef,
+          },
+        ].map((stat) => {
+          const positive = stat.comparison.difference >= 0;
 
-  {/* STATISTIQUES */}
+          const separator = stat.key === "def";
 
-  {[
-    {
-      key: "hp",
-      label: "❤️ PV",
-      enemy: enemyStats.hp,
-      team: teamStats.hp,
-      comparison: statComparisons.hp,
-    },
-    {
-      key: "atk",
-      label: "⚔️ ATQ",
-      enemy: enemyStats.atk,
-      team: teamStats.atk,
-      comparison: statComparisons.atk,
-    },
-    {
-      key: "matk",
-      label: "✨ ATQ MAG",
-      enemy: enemyStats.matk,
-      team: teamStats.matk,
-      comparison: statComparisons.matk,
-    },
-    {
-      key: "totalAtk",
-      label: "⚔️ ATQ totale",
-      enemy: enemyStats.totalAtk,
-      team: teamStats.totalAtk,
-      comparison: statComparisons.totalAtk,
-    },
-    {
-      key: "def",
-      label: "🛡️ DEF",
-      enemy: enemyStats.def,
-      team: teamStats.def,
-      comparison: statComparisons.def,
-    },
-    {
-      key: "mdef",
-      label: "🛡️ MDEF",
-      enemy: enemyStats.mdef,
-      team: teamStats.mdef,
-      comparison: statComparisons.mdef,
-    },
-    {
-      key: "totalDef",
-      label: "🛡️ DEF totale",
-      enemy: enemyStats.totalDef,
-      team: teamStats.totalDef,
-      comparison: statComparisons.totalDef,
-    },
-  ].map((stat) => {
+          return (
+            <div className="flex justify-center">
+              <div
+                key={stat.key}
+                className={`grid grid-cols-[90px_58px_55px_78px] sm:grid-cols-[115px_72px_58px_88px] items-center gap-x-3 px-2 py-1.5 rounded-lg ${
+                  separator ? "mt-3 pt-3 border-t border-white/10" : ""
+                }`}
+              >
+                {/* STAT */}
 
-    const positive =
-      stat.comparison.difference >= 0;
+                <span className="text-xs font-semibold text-white/65 whitespace-nowrap">
+                  {stat.label}
+                </span>
 
-    const separator =
-      stat.key === "def";
+                {/* ENNEMI */}
 
-    return (
+                <span className="text-xs tabular-nums text-white/45 text-right whitespace-nowrap">
+                  {stat.enemy.toLocaleString("fr-FR")}
+                </span>
 
-<div className="flex justify-center">
-  <div
-    key={stat.key}
-    className={`grid grid-cols-[90px_58px_55px_78px] sm:grid-cols-[115px_72px_58px_88px] items-center gap-x-3 px-2 py-1.5 rounded-lg ${      
-	
-	separator
-        ? "mt-3 pt-3 border-t border-white/10"
-        : ""
-    }`}
-  >
+                {/* ÉCART */}
 
-        {/* STAT */}
+                <span
+                  className={`text-xs font-bold tabular-nums text-right whitespace-nowrap ${
+                    positive ? "text-emerald-400" : "text-rose-400"
+                  }`}
+                >
+                  {positive ? "+" : ""}
+                  {stat.comparison.percentage.toFixed(1)}%
+                </span>
 
-        <span className="text-xs font-semibold text-white/65 whitespace-nowrap">
-          {stat.label}
-        </span>
+                {/* RECOMMANDÉE */}
 
-        {/* ENNEMI */}
-
-        <span className="text-xs tabular-nums text-white/45 text-right whitespace-nowrap">
-          {stat.enemy.toLocaleString("fr-FR")}
-        </span>
-
-        {/* ÉCART */}
-
-        <span
-          className={`text-xs font-bold tabular-nums text-right whitespace-nowrap ${
-            positive
-              ? "text-emerald-400"
-              : "text-rose-400"
-          }`}
-        >
-          {positive ? "+" : ""}
-          {stat.comparison.percentage.toFixed(1)}%
-        </span>
-
-        {/* RECOMMANDÉE */}
-
-        <span className="text-xs font-bold tabular-nums text-white text-right whitespace-nowrap">
-          {stat.team.toLocaleString("fr-FR")}
-        </span>
-
+                <span className="text-xs font-bold tabular-nums text-white text-right whitespace-nowrap">
+                  {stat.team.toLocaleString("fr-FR")}
+                </span>
+              </div>
+            </div>
+          );
+        })}
       </div>
-	  </div>
-    );
-  })}
-
-</div>
-	  
 
       {/* =================================================
           BEST WIN TEAM
@@ -624,37 +521,21 @@ export default function RecommendedTeam({
 
       {bestWinTeam && (
         <div className="mt-8 mb-6 rounded-2xl border border-amber-500/20 bg-amber-500/[0.03] p-4">
-
           <h3 className="text-sm font-bold flex items-center gap-2 mb-3 text-amber-300">
-
             <Crown className="h-4 w-4" />
-
             Équipe de contre ayant le plus gagné
-
             <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-
-              {bestWinTeam.rate}%
-              de victoire
-
+              {bestWinTeam.rate}% de victoire
               <span className="text-[10px] font-normal opacity-60">
-                (
-                {bestWinTeam.count} combat
-                {bestWinTeam.count > 1 ? "s" : ""}
-                )
+                ({bestWinTeam.count} combat
+                {bestWinTeam.count > 1 ? "s" : ""})
               </span>
-
             </span>
-
           </h3>
 
           <div className="grid grid-cols-5 gap-2">
-
             {bestWinTeam.ids.map((id) => {
-
-              const h =
-                HEROES.find(
-                  (x) => x.id === id
-                );
+              const h = HEROES.find((x) => x.id === id);
 
               if (!h) {
                 return null;
@@ -663,12 +544,9 @@ export default function RecommendedTeam({
               return (
                 <button
                   key={id}
-                  onClick={() =>
-                    setEditedTeam(bestWinTeam.ids)
-                  }
+                  onClick={() => setEditedTeam(bestWinTeam.ids)}
                   className="group relative rounded-xl overflow-hidden border border-amber-500/30 hover:border-amber-400/60 hover:scale-[1.03] transition-all"
                 >
-
                   <div
                     className={`absolute inset-0 bg-gradient-to-br ${TYPE_GRADIENT[h.type]} opacity-70`}
                   />
@@ -676,7 +554,6 @@ export default function RecommendedTeam({
                   <div className="absolute inset-0 bg-black/30" />
 
                   <div className="relative p-2 flex flex-col items-center gap-1">
-
                     <img
                       src={h.img}
                       alt={h.name}
@@ -693,22 +570,16 @@ export default function RecommendedTeam({
                     >
                       {h.cls}
                     </span>
-
                   </div>
-
                 </button>
               );
             })}
-
           </div>
 
           <p className="mt-3 text-[11px] text-white/40">
-            Clique sur l'équipe pour
-            l'utiliser. Basé sur tes combats
-            passés contre une composition
-            ennemie similaire.
+            Clique sur l'équipe pour l'utiliser. Basé sur tes combats passés
+            contre une composition ennemie similaire.
           </p>
-
         </div>
       )}
 
@@ -717,19 +588,15 @@ export default function RecommendedTeam({
           ================================================= */}
 
       <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
-
         <div className="flex items-center gap-2 mb-3">
-
           <Plus className="h-4 w-4 text-amber-400" />
 
           <span className="text-sm font-medium text-white/80">
             Enregistrer le résultat de ce combat
           </span>
-
         </div>
 
         <div className="flex gap-2">
-
           <button
             onClick={() => recordCombat(true)}
             disabled={recording}
@@ -746,9 +613,7 @@ export default function RecommendedTeam({
           >
             Défaite
           </button>
-
         </div>
-
       </div>
 
       {/* =================================================
@@ -756,7 +621,6 @@ export default function RecommendedTeam({
           ================================================= */}
 
       <div className="mt-5 flex justify-center">
-
         <button
           onClick={reset}
           className="inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors"
@@ -764,9 +628,7 @@ export default function RecommendedTeam({
           <RotateCcw className="h-4 w-4" />
           Effacer tout
         </button>
-
       </div>
-
     </div>
   );
 }

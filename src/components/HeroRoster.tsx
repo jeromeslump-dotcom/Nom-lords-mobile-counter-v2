@@ -1,8 +1,4 @@
-import {
-  TYPE_TEXT,
-  CLASS_TEXT,
-  formatStat,
-} from "../heroes";
+import { TYPE_TEXT, CLASS_TEXT, formatStat } from "../heroes";
 
 import type { Hero } from "../heroes";
 
@@ -31,7 +27,9 @@ export default function HeroRoster({
   toggle,
 }: HeroRosterProps) {
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2.5 sm:gap-3">      {filtered.map((hero) => (
+    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8 gap-2.5 sm:gap-3">
+      {" "}
+      {filtered.map((hero) => (
         <button
           key={hero.id}
           onClick={() => toggle(hero.id, enabledHeroIds)}
@@ -40,8 +38,8 @@ export default function HeroRoster({
             pickSet.has(hero.id)
               ? "border-amber-400/80 ring-1 ring-amber-400/50 scale-[1.02] shadow-lg"
               : full
-              ? "border-white/10 opacity-30 cursor-not-allowed"
-              : "border-white/10 hover:border-white/25 hover:bg-white/[0.025] hover:scale-[1.02] cursor-pointer"
+                ? "border-white/10 opacity-30 cursor-not-allowed"
+                : "border-white/10 hover:border-white/25 hover:bg-white/[0.025] hover:scale-[1.02] cursor-pointer"
           }`}
         >
           <div
@@ -51,7 +49,6 @@ export default function HeroRoster({
           <div className="absolute inset-0 bg-black/40 group-hover:bg-black/25 transition-colors" />
 
           <div className="relative p-2.5 flex flex-col items-center">
-
             {/* NUMERO DE SELECTION */}
             {pickSet.has(hero.id) && (
               <div className="absolute top-2 left-2 z-20 h-7 w-7 rounded-full bg-amber-400 text-black text-xs font-black flex items-center justify-center shadow-lg ring-2 ring-black/50">
@@ -79,7 +76,6 @@ export default function HeroRoster({
 
             {/* TYPE + CLASSE */}
             <div className="mt-1.5 flex items-center justify-center gap-1.5">
-
               <span
                 className={`inline-flex items-center justify-center h-5 min-w-5 px-1.5 rounded-md bg-black/70 border border-white/20 text-[9px] font-black ${TYPE_TEXT[hero.type]}`}
                 title={hero.type}
@@ -87,10 +83,10 @@ export default function HeroRoster({
                 {hero.type === "Infantry"
                   ? "🛡️"
                   : hero.type === "Cavalry"
-                  ? "🐎"
-                  : hero.type === "Ranged"
-                  ? "🏹"
-                  : "⚙️"}
+                    ? "🐎"
+                    : hero.type === "Ranged"
+                      ? "🏹"
+                      : "⚙️"}
               </span>
 
               <span
@@ -99,70 +95,54 @@ export default function HeroRoster({
               >
                 {hero.cls}
               </span>
-
             </div>
 
-{/* STATS */}
-<div className="mt-2 w-full rounded-lg bg-black/35 border border-white/5 px-1.5 sm:px-2 py-1 sm:py-1.5 text-[8px] sm:text-[9px]">
+            {/* STATS */}
+            <div className="mt-2 w-full rounded-lg bg-black/35 border border-white/5 px-1.5 sm:px-2 py-1 sm:py-1.5 text-[8px] sm:text-[9px]">
+              {/* ATK / DEF */}
+              <div className="grid grid-cols-2 gap-x-1 sm:gap-x-3 gap-y-1">
+                {/* GAUCHE */}
+                <div className="flex items-center justify-between gap-0.5 min-w-0">
+                  <span className="text-amber-300/90 font-bold">ATK</span>
+                  <span className="font-bold text-white/80">
+                    {formatStat(hero.stats.atk)}
+                  </span>
+                </div>
 
-  {/* ATK / DEF */}
-  <div className="grid grid-cols-2 gap-x-1 sm:gap-x-3 gap-y-1">
+                {/* DROITE */}
+                <div className="flex items-center justify-between gap-0.5 min-w-0">
+                  <span className="text-emerald-300/90 font-bold">DEF</span>
+                  <span className="font-bold text-white/80">
+                    {formatStat(hero.stats.def)}
+                  </span>
+                </div>
 
-    {/* GAUCHE */}
-    <div className="flex items-center justify-between gap-0.5 min-w-0">
-      <span className="text-amber-300/90 font-bold">
-        ATK
-      </span>
-      <span className="font-bold text-white/80">
-        {formatStat(hero.stats.atk)}
-      </span>
-    </div>
+                {/* GAUCHE */}
+                <div className="flex items-center justify-between gap-0.5 min-w-0">
+                  <span className="text-sky-300/90 font-bold">MATK</span>
+                  <span className="font-bold text-white/80">
+                    {formatStat(hero.stats.matk)}
+                  </span>
+                </div>
 
-    {/* DROITE */}
-    <div className="flex items-center justify-between gap-0.5 min-w-0">
-      <span className="text-emerald-300/90 font-bold">
-        DEF
-      </span>
-      <span className="font-bold text-white/80">
-        {formatStat(hero.stats.def)}
-      </span>
-    </div>
+                {/* DROITE */}
+                <div className="flex items-center justify-between gap-0.5 min-w-0">
+                  <span className="text-indigo-300/90 font-bold">MDEF</span>
+                  <span className="font-bold text-white/80">
+                    {formatStat(hero.stats.mdef)}
+                  </span>
+                </div>
+              </div>
 
-    {/* GAUCHE */}
-    <div className="flex items-center justify-between gap-0.5 min-w-0">
-      <span className="text-sky-300/90 font-bold">
-        MATK
-      </span>
-      <span className="font-bold text-white/80">
-        {formatStat(hero.stats.matk)}
-      </span>
-    </div>
+              {/* PV — SEUL EN BAS */}
+              <div className="mt-1 pt-1 border-t border-white/5 flex items-center justify-center gap-2">
+                <span className="text-rose-300/90 font-bold">PV</span>
 
-    {/* DROITE */}
-    <div className="flex items-center justify-between gap-0.5 min-w-0">
-      <span className="text-indigo-300/90 font-bold">
-        MDEF
-      </span>
-      <span className="font-bold text-white/80">
-        {formatStat(hero.stats.mdef)}
-      </span>
-    </div>
-
-  </div>
-
-  {/* PV — SEUL EN BAS */}
-  <div className="mt-1 pt-1 border-t border-white/5 flex items-center justify-center gap-2">
-    <span className="text-rose-300/90 font-bold">
-      PV
-    </span>
-
-    <span className="font-bold text-white/80">
-      {formatStat(hero.stats.hp)}
-    </span>
-  </div>
-
-</div>
-
+                <span className="font-bold text-white/80">
+                  {formatStat(hero.stats.hp)}
+                </span>
+              </div>
+            </div>
           </div>
         </button>
       ))}

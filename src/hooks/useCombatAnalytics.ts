@@ -10,10 +10,7 @@ import { HEROES, type HeroClass } from "../heroes";
 import { coverageReport, recommendTeam } from "../counter";
 import type { Combat } from "../storage";
 
-import {
-  calculateTeamStats,
-  compareStat,
-} from "../utils/teamStats";
+import { calculateTeamStats, compareStat } from "../utils/teamStats";
 
 const MAX_PICKS = 5;
 
@@ -41,10 +38,7 @@ export function useCombatAnalytics({
   const pickSet = useMemo(() => new Set(picks), [picks]);
   const full = picks.length === MAX_PICKS;
 
-  const usage = useMemo(
-    () => calculateHeroUsage(combats),
-    [combats]
-  );
+  const usage = useMemo(() => calculateHeroUsage(combats), [combats]);
 
   const filtered = useMemo(
     () =>
@@ -63,56 +57,50 @@ export function useCombatAnalytics({
     [picks, full, combats]
   );
 
-const editedHeroes = useMemo(
-  () =>
-    editedTeam
-      .map((id) => HEROES.find((h) => h.id === id))
-      .filter((hero): hero is (typeof HEROES)[number] => Boolean(hero)),
-  [editedTeam]
-);
-  
-const enemyHeroes = useMemo(
-  () =>
-    picks
-      .map((id) => HEROES.find((h) => h.id === id))
-      .filter((hero): hero is (typeof HEROES)[number] => Boolean(hero)),
-  [picks]
-);
+  const editedHeroes = useMemo(
+    () =>
+      editedTeam
+        .map((id) => HEROES.find((h) => h.id === id))
+        .filter((hero): hero is (typeof HEROES)[number] => Boolean(hero)),
+    [editedTeam]
+  );
 
-const enemyStats = useMemo(
-  () => calculateTeamStats(enemyHeroes),
-  [enemyHeroes]
-);
+  const enemyHeroes = useMemo(
+    () =>
+      picks
+        .map((id) => HEROES.find((h) => h.id === id))
+        .filter((hero): hero is (typeof HEROES)[number] => Boolean(hero)),
+    [picks]
+  );
 
-const teamStats = useMemo(
-  () => calculateTeamStats(editedHeroes),
-  [editedHeroes]
-);
+  const enemyStats = useMemo(
+    () => calculateTeamStats(enemyHeroes),
+    [enemyHeroes]
+  );
 
-const statComparisons = useMemo(
-  () => ({
-    hp: compareStat(enemyStats.hp, teamStats.hp),
+  const teamStats = useMemo(
+    () => calculateTeamStats(editedHeroes),
+    [editedHeroes]
+  );
 
-    atk: compareStat(enemyStats.atk, teamStats.atk),
+  const statComparisons = useMemo(
+    () => ({
+      hp: compareStat(enemyStats.hp, teamStats.hp),
 
-    def: compareStat(enemyStats.def, teamStats.def),
+      atk: compareStat(enemyStats.atk, teamStats.atk),
 
-    matk: compareStat(enemyStats.matk, teamStats.matk),
+      def: compareStat(enemyStats.def, teamStats.def),
 
-    mdef: compareStat(enemyStats.mdef, teamStats.mdef),
+      matk: compareStat(enemyStats.matk, teamStats.matk),
 
-    totalAtk: compareStat(
-      enemyStats.totalAtk,
-      teamStats.totalAtk
-    ),
+      mdef: compareStat(enemyStats.mdef, teamStats.mdef),
 
-    totalDef: compareStat(
-      enemyStats.totalDef,
-      teamStats.totalDef
-    ),
-  }),
-  [enemyStats, teamStats]
-);
+      totalAtk: compareStat(enemyStats.totalAtk, teamStats.totalAtk),
+
+      totalDef: compareStat(enemyStats.totalDef, teamStats.totalDef),
+    }),
+    [enemyStats, teamStats]
+  );
 
   const report = useMemo(
     () =>
@@ -153,20 +141,20 @@ const statComparisons = useMemo(
     return calculateWinRate(combats, picks, teamIds);
   }, [combats, picks, full, showResult, editedTeam, team]);
 
-return {
-  pickSet,
-  full,
-  usage,
-  filtered,
-  team,
-  editedHeroes,
-  report,
-  totalCoverage,
-  bestWinTeam,
-  winRate,
+  return {
+    pickSet,
+    full,
+    usage,
+    filtered,
+    team,
+    editedHeroes,
+    report,
+    totalCoverage,
+    bestWinTeam,
+    winRate,
 
-  enemyStats,
-  teamStats,
-  statComparisons,
-};
+    enemyStats,
+    teamStats,
+    statComparisons,
+  };
 }

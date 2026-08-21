@@ -24,14 +24,10 @@ export function calculateTeamStats(team: Hero[]): TeamStats {
       mdef: total.mdef + (hero.stats?.mdef ?? 0),
 
       totalAtk:
-        total.totalAtk +
-        (hero.stats?.atk ?? 0) +
-        (hero.stats?.matk ?? 0),
+        total.totalAtk + (hero.stats?.atk ?? 0) + (hero.stats?.matk ?? 0),
 
       totalDef:
-        total.totalDef +
-        (hero.stats?.def ?? 0) +
-        (hero.stats?.mdef ?? 0),
+        total.totalDef + (hero.stats?.def ?? 0) + (hero.stats?.mdef ?? 0),
     }),
     {
       hp: 0,
@@ -41,7 +37,7 @@ export function calculateTeamStats(team: Hero[]): TeamStats {
       mdef: 0,
       totalAtk: 0,
       totalDef: 0,
-    },
+    }
   );
 }
 
@@ -52,18 +48,11 @@ export type TeamStatComparison = {
   percentage: number;
 };
 
-export function compareStat(
-  enemy: number,
-  mine: number,
-): TeamStatComparison {
+export function compareStat(enemy: number, mine: number): TeamStatComparison {
   const difference = mine - enemy;
 
   const percentage =
-    enemy === 0
-      ? mine > 0
-        ? 100
-        : 0
-      : (difference / enemy) * 100;
+    enemy === 0 ? (mine > 0 ? 100 : 0) : (difference / enemy) * 100;
 
   return {
     enemy,

@@ -27,12 +27,7 @@ export default function HeroSlots({
   const [overIdx, setOverIdx] = useState<number | null>(null);
 
   function handleDrop(to: number) {
-    if (
-      dragIdx !== null &&
-      dragIdx !== to &&
-      onReorder &&
-      picks[dragIdx]
-    ) {
+    if (dragIdx !== null && dragIdx !== to && onReorder && picks[dragIdx]) {
       onReorder(dragIdx, to);
     }
 
@@ -49,9 +44,7 @@ export default function HeroSlots({
       <div className="grid grid-cols-5 gap-1.5">
         {Array.from({ length: MAX_PICKS }).map((_, i) => {
           const id = picks[i];
-          const hero = id
-            ? HEROES.find((h) => h.id === id)
-            : null;
+          const hero = id ? HEROES.find((h) => h.id === id) : null;
 
           const draggable = !!hero && !!onReorder;
 
@@ -73,21 +66,11 @@ export default function HeroSlots({
                 hero
                   ? "border-amber-400/40"
                   : "border-dashed border-white/15 bg-white/[0.02]"
-              } ${
-                draggable
-                  ? "cursor-grab active:cursor-grabbing"
-                  : ""
-              } ${
-                overIdx === i &&
-                dragIdx !== null &&
-                dragIdx !== i
+              } ${draggable ? "cursor-grab active:cursor-grabbing" : ""} ${
+                overIdx === i && dragIdx !== null && dragIdx !== i
                   ? "ring-2 ring-cyan-400/60 scale-105"
                   : ""
-              } ${
-                dragIdx === i
-                  ? "opacity-40"
-                  : ""
-              }`}
+              } ${dragIdx === i ? "opacity-40" : ""}`}
             >
               {hero ? (
                 <>
@@ -119,9 +102,7 @@ export default function HeroSlots({
                   </div>
                 </>
               ) : (
-                <span className={`text-sm ${color}`}>
-                  {i + 1}
-                </span>
+                <span className={`text-sm ${color}`}>{i + 1}</span>
               )}
             </div>
           );

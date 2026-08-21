@@ -1,8 +1,6 @@
 import { useState } from "react";
 
-import {
-  addCombat,
-} from "../storage";
+import { addCombat } from "../storage";
 
 const MAX_PICKS = 5;
 
@@ -17,23 +15,17 @@ export function useManualCombat({
   enabledHeroIds,
   onCombatSaved,
 }: UseManualCombatOptions) {
-  const [mEnemies, setMEnemies] =
-    useState<string[]>([]);
+  const [mEnemies, setMEnemies] = useState<string[]>([]);
 
-  const [mMine, setMMine] =
-    useState<string[]>([]);
+  const [mMine, setMMine] = useState<string[]>([]);
 
-  const [mWon, setMWon] =
-    useState<boolean | null>(null);
+  const [mWon, setMWon] = useState<boolean | null>(null);
 
-  const [savingManual, setSavingManual] =
-    useState(false);
+  const [savingManual, setSavingManual] = useState(false);
 
   function toggleManual(
     arr: string[],
-    setArr: (
-      value: string[]
-    ) => void,
+    setArr: (value: string[]) => void,
     id: string
   ) {
     if (!enabledHeroIds.has(id)) {
@@ -41,18 +33,9 @@ export function useManualCombat({
     }
 
     if (arr.includes(id)) {
-      setArr(
-        arr.filter(
-          (heroId) => heroId !== id
-        )
-      );
-    } else if (
-      arr.length < MAX_PICKS
-    ) {
-      setArr([
-        ...arr,
-        id,
-      ]);
+      setArr(arr.filter((heroId) => heroId !== id));
+    } else if (arr.length < MAX_PICKS) {
+      setArr([...arr, id]);
     }
   }
 

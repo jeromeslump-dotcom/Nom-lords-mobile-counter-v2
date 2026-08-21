@@ -1,8 +1,4 @@
-export function reorderArray<T>(
-  arr: T[],
-  from: number,
-  to: number
-): T[] {
+export function reorderArray<T>(arr: T[], from: number, to: number): T[] {
   const next = [...arr];
 
   const [moved] = next.splice(from, 1);

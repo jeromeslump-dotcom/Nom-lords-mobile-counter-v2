@@ -1,10 +1,6 @@
 import { RotateCcw, Swords, X } from "lucide-react";
 
-import {
-  HEROES,
-  TYPE_TEXT,
-  CLASS_TEXT,
-} from "../heroes";
+import { HEROES, TYPE_TEXT, CLASS_TEXT } from "../heroes";
 
 type EnemySlotsProps = {
   picks: string[];
@@ -56,13 +52,11 @@ export default function EnemySlots({
         )}
       </div>
 
-<div className="grid grid-cols-5 gap-2 sm:gap-3 max-w-[720px] mx-auto">
+      <div className="grid grid-cols-5 gap-2 sm:gap-3 max-w-[720px] mx-auto">
         {Array.from({ length: maxPicks }).map((_, i) => {
           const id = picks[i];
 
-          const hero = id
-            ? HEROES.find((h) => h.id === id)
-            : null;
+          const hero = id ? HEROES.find((h) => h.id === id) : null;
 
           return (
             <div
@@ -78,11 +72,7 @@ export default function EnemySlots({
                 setDragOverIndex(i);
               }}
               onDrop={() => {
-                if (
-                  dragIndex !== null &&
-                  dragIndex !== i &&
-                  picks[dragIndex]
-                ) {
+                if (dragIndex !== null && dragIndex !== i && picks[dragIndex]) {
                   reorderPicks(dragIndex, i);
                 }
 
@@ -90,16 +80,10 @@ export default function EnemySlots({
                 setDragOverIndex(null);
               }}
               className={`transition-all ${
-                dragOverIndex === i &&
-                dragIndex !== null &&
-                dragIndex !== i
+                dragOverIndex === i && dragIndex !== null && dragIndex !== i
                   ? "ring-2 ring-cyan-400/60 scale-105 rounded-2xl"
                   : ""
-              } ${
-                dragIndex === i
-                  ? "opacity-40"
-                  : ""
-              }`}
+              } ${dragIndex === i ? "opacity-40" : ""}`}
             >
               {hero ? (
                 <>
@@ -114,9 +98,7 @@ export default function EnemySlots({
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/10" />
 
                     <button
-                      onClick={() =>
-                        toggle(hero.id, enabledHeroIds)
-                      }
+                      onClick={() => toggle(hero.id, enabledHeroIds)}
                       className="hero-remove-button absolute top-1 right-1 h-5 w-5 rounded-full bg-black/70 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"
                     >
                       <X className="h-3 w-3 text-white" />
@@ -139,10 +121,10 @@ export default function EnemySlots({
                       {hero.type === "Infantry"
                         ? "🛡️"
                         : hero.type === "Cavalry"
-                        ? "🐎"
-                        : hero.type === "Ranged"
-                        ? "🏹"
-                        : "⚙️"}
+                          ? "🐎"
+                          : hero.type === "Ranged"
+                            ? "🏹"
+                            : "⚙️"}
                     </span>
 
                     <span

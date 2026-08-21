@@ -1,14 +1,7 @@
 import type { Hero, HeroClass } from "../heroes";
 
 export type HeroRanking =
-  | "played"
-  | "hp"
-  | "atk"
-  | "matk"
-  | "totalAtk"
-  | "def"
-  | "mdef"
-  | "totalDef";
+  "played" | "hp" | "atk" | "matk" | "totalAtk" | "def" | "mdef" | "totalDef";
 
 export interface HeroRankingOptions {
   enabledHeroIds: Set<string>;
@@ -27,13 +20,7 @@ export function filterAndSortHeroes(
   heroes: Hero[],
   options: HeroRankingOptions
 ): Hero[] {
-  const {
-    enabledHeroIds,
-    activeClass,
-    query,
-    sortBy,
-    usage,
-  } = options;
+  const { enabledHeroIds, activeClass, query, sortBy, usage } = options;
 
   const normalizedQuery = query.trim().toLowerCase();
 
@@ -43,10 +30,7 @@ export function filterAndSortHeroes(
         return false;
       }
 
-      if (
-        activeClass !== "All" &&
-        hero.cls !== activeClass
-      ) {
+      if (activeClass !== "All" && hero.cls !== activeClass) {
         return false;
       }
 
@@ -63,27 +47,19 @@ export function filterAndSortHeroes(
     .sort((a, b) => {
       switch (sortBy) {
         case "hp":
-          return b.stats.hp - a.stats.hp;
+          return b.stats.hp - a.stats.hp || a.name.localeCompare(b.name);
         case "atk":
           return b.stats.atk - a.stats.atk;
         case "matk":
           return b.stats.matk - a.stats.matk;
-		 case "totalAtk":
-  return (
-    b.stats.atk +
-    b.stats.matk -
-    (a.stats.atk + a.stats.matk)
-  );
+        case "totalAtk":
+          return b.stats.atk + b.stats.matk - (a.stats.atk + a.stats.matk);
         case "def":
           return b.stats.def - a.stats.def;
         case "mdef":
           return b.stats.mdef - a.stats.mdef;
-		  case "totalDef":
-  return (
-    b.stats.def +
-    b.stats.mdef -
-    (a.stats.def + a.stats.mdef)
-  );
+        case "totalDef":
+          return b.stats.def + b.stats.mdef - (a.stats.def + a.stats.mdef);
         case "played":
         default:
           return (usage[b.id] ?? 0) - (usage[a.id] ?? 0);

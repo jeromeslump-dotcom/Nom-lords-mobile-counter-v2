@@ -1,4 +1,3 @@
-
 import { useMemo, useState } from "react";
 import { Search, X } from "lucide-react";
 import { HEROES } from "../heroes";
@@ -25,21 +24,14 @@ export default function HeroGridPicker({
 }) {
   const [q, setQ] = useState("");
 
-  const pickSet = useMemo(
-    () => new Set(picks),
-    [picks]
-  );
+  const pickSet = useMemo(() => new Set(picks), [picks]);
 
   /*
    * Si App.tsx ne fournit pas enabledIds,
    * tous les héros présents dans HEROES sont considérés actifs.
    */
   const activeIds = useMemo(
-    () =>
-      enabledIds ??
-      new Set(
-        HEROES.map((hero) => hero.id)
-      ),
+    () => enabledIds ?? new Set(HEROES.map((hero) => hero.id)),
     [enabledIds]
   );
 
@@ -66,16 +58,9 @@ export default function HeroGridPicker({
       return true;
     }).sort(
       (a, b) =>
-        (usage[b.id] ?? 0) -
-          (usage[a.id] ?? 0) ||
-        a.name.localeCompare(b.name)
+        (usage[b.id] ?? 0) - (usage[a.id] ?? 0) || a.name.localeCompare(b.name)
     );
-  }, [
-    q,
-    activeIds,
-    excludeIds,
-    usage,
-  ]);
+  }, [q, activeIds, excludeIds, usage]);
 
   return (
     <div>
@@ -85,9 +70,7 @@ export default function HeroGridPicker({
 
           <input
             value={q}
-            onChange={(e) =>
-              setQ(e.target.value)
-            }
+            onChange={(e) => setQ(e.target.value)}
             placeholder="Rechercher..."
             className="w-full pl-10 pr-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm placeholder:text-white/30 focus:outline-none focus:border-amber-400/50"
           />
@@ -97,8 +80,7 @@ export default function HeroGridPicker({
       <div className="grid grid-cols-4 sm:grid-cols-5 gap-2 max-h-64 overflow-y-auto pr-1">
         {filtered.map((h) => {
           const selected = pickSet.has(h.id);
-          const order =
-            picks.indexOf(h.id) + 1;
+          const order = picks.indexOf(h.id) + 1;
 
           return (
             <button
@@ -113,8 +95,7 @@ export default function HeroGridPicker({
             >
               <div
                 className={`absolute inset-0 bg-gradient-to-br ${
-                  TYPE_GRADIENT[h.type] ??
-                  "from-slate-900/80 to-slate-500/20"
+                  TYPE_GRADIENT[h.type] ?? "from-slate-900/80 to-slate-500/20"
                 } opacity-70`}
               />
 
@@ -144,10 +125,7 @@ export default function HeroGridPicker({
 
                   {/* Croix */}
                   <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-amber-400 flex items-center justify-center z-10">
-                    <X
-                      className="h-2.5 w-2.5 text-black"
-                      strokeWidth={3}
-                    />
+                    <X className="h-2.5 w-2.5 text-black" strokeWidth={3} />
                   </div>
 
                   {/* Contour sélection */}

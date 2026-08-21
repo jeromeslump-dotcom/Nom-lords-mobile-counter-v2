@@ -1,11 +1,4 @@
-﻿
-import {
-  Hero,
-  HEROES,
-  CLASS_BEATS,
-  heroRole,
-  HeroRole,
-} from "./heroes";
+﻿import { Hero, HEROES, CLASS_BEATS, heroRole, HeroRole } from "./heroes";
 import type { Combat } from "./storage";
 
 export interface CounterTarget {
@@ -63,12 +56,8 @@ const MIN_EXACT_LOSSES_TO_AVOID = 2;
  * CONTRES THÉORIQUES
  * --------------------------------------------------------- */
 
-function scorePair(
-  c: Hero,
-  e: Hero
-): CounterTarget {
-  const cls =
-    CLASS_BEATS[c.cls] === e.cls;
+function scorePair(c: Hero, e: Hero): CounterTarget {
+  const cls = CLASS_BEATS[c.cls] === e.cls;
 
   return {
     id: e.id,
@@ -77,36 +66,23 @@ function scorePair(
   };
 }
 
-function getEnemies(
-  enemyIds: string[]
-): Hero[] {
-  const set =
-    new Set(enemyIds);
+function getEnemies(enemyIds: string[]): Hero[] {
+  const set = new Set(enemyIds);
 
-  return HEROES.filter((h) =>
-    set.has(h.id)
-  );
+  return HEROES.filter((h) => set.has(h.id));
 }
 
-function pairScore(
-  c: Hero,
-  e: Hero
-): number {
-  const cls =
-    CLASS_BEATS[c.cls] === e.cls;
+function pairScore(c: Hero, e: Hero): number {
+  const cls = CLASS_BEATS[c.cls] === e.cls;
 
   return cls ? 1 : 0;
 }
 
-function buildHeroCounters(
-  enemies: Hero[]
-) {
+function buildHeroCounters(enemies: Hero[]) {
   return new Map(
     HEROES.map((hero) => [
       hero.id,
-      enemies.map((enemy) =>
-        scorePair(hero, enemy)
-      ),
+      enemies.map((enemy) => scorePair(hero, enemy)),
     ])
   );
 }
@@ -115,13 +91,8 @@ function buildHeroCounters(
  * HISTORIQUE INDIVIDUEL
  * --------------------------------------------------------- */
 
-function historyStats(
-  heroId: string,
-  enemyIds: string[],
-  combats: Combat[]
-) {
-  const enemySet =
-    new Set(enemyIds);
+function historyStats(heroId: string, enemyIds: string[], combats: Combat[]) {
+  const enemySet = new Set(enemyIds);
 
   let weightedWins = 0;
   let weightedGames = 0;
@@ -130,27 +101,17 @@ function historyStats(
   let exactGames = 0;
 
   for (const combat of combats) {
-    if (
-      !combat.my_heroes.includes(
-        heroId
-      )
-    ) {
+    if (!combat.my_heroes.includes(heroId)) {
       continue;
     }
 
-    const overlap =
-      combat.enemy_heroes.filter(
-        (id) =>
-          enemySet.has(id)
-      ).length;
+    const overlap = combat.enemy_heroes.filter((id) => enemySet.has(id)).length;
 
     if (overlap === 0) {
       continue;
     }
 
-    const weight =
-      overlap /
-      enemyIds.length;
+    const weight = overlap / enemyIds.length;
 
     weightedGames += weight;
 
@@ -158,10 +119,7 @@ function historyStats(
       weightedWins += weight;
     }
 
-    if (
-      overlap ===
-      enemyIds.length
-    ) {
+    if (overlap === enemyIds.length) {
       exactGames++;
 
       if (combat.won) {
@@ -171,37 +129,19 @@ function historyStats(
   }
 
   return {
-    rate:
-      weightedGames > 0
-        ? weightedWins /
-          weightedGames
-        : PRIOR_RATE,
+    rate: weightedGames > 0 ? weightedWins / weightedGames : PRIOR_RATE,
 
     games: weightedGames,
 
-    exactRate:
-      exactGames > 0
-        ? exactWins /
-          exactGames
-        : null,
+    exactRate: exactGames > 0 ? exactWins / exactGames : null,
 
     exactGames,
     exactWins,
   };
 }
 
-function smoothedRate(
-  wins: number,
-  games: number,
-  prior = PRIOR_RATE
-): number {
-  return (
-    (wins +
-      prior *
-        PRIOR_GAMES) /
-    (games +
-      PRIOR_GAMES)
-  );
+function smoothedRate(wins: number, games: number, prior = PRIOR_RATE): number {
+  return (wins + prior * PRIOR_GAMES) / (games + PRIOR_GAMES);
 }
 
 /* -----------------------------------------------------------
@@ -213,42 +153,26 @@ function getExactTeamRecord(
   enemyIds: string[],
   combats: Combat[]
 ) {
-  const teamKey =
-    team
-      .map((h) => h.id)
-      .sort()
-      .join(",");
+  const teamKey = team
+    .map((h) => h.id)
+    .sort()
+    .join(",");
 
-  const enemyKey =
-    [...enemyIds]
-      .sort()
-      .join(",");
+  const enemyKey = [...enemyIds].sort().join(",");
 
   let wins = 0;
   let losses = 0;
 
   for (const combat of combats) {
-    const combatTeamKey =
-      [...combat.my_heroes]
-        .sort()
-        .join(",");
+    const combatTeamKey = [...combat.my_heroes].sort().join(",");
 
-    if (
-      combatTeamKey !==
-      teamKey
-    ) {
+    if (combatTeamKey !== teamKey) {
       continue;
     }
 
-    const combatEnemyKey =
-      [...combat.enemy_heroes]
-        .sort()
-        .join(",");
+    const combatEnemyKey = [...combat.enemy_heroes].sort().join(",");
 
-    if (
-      combatEnemyKey !==
-      enemyKey
-    ) {
+    if (combatEnemyKey !== enemyKey) {
       continue;
     }
 
@@ -262,8 +186,7 @@ function getExactTeamRecord(
   return {
     wins,
     losses,
-    games:
-      wins + losses,
+    games: wins + losses,
   };
 }
 
@@ -289,18 +212,9 @@ function shouldAvoidExactTeam(
   enemyIds: string[],
   combats: Combat[]
 ): boolean {
-  const record =
-    getExactTeamRecord(
-      team,
-      enemyIds,
-      combats
-    );
+  const record = getExactTeamRecord(team, enemyIds, combats);
 
-  return (
-    record.wins === 0 &&
-    record.losses >=
-      MIN_EXACT_LOSSES_TO_AVOID
-  );
+  return record.wins === 0 && record.losses >= MIN_EXACT_LOSSES_TO_AVOID;
 }
 
 /* -----------------------------------------------------------
@@ -316,49 +230,33 @@ function teamHistoryScore(
     return 0;
   }
 
-  const enemySet =
-    new Set(enemyIds);
+  const enemySet = new Set(enemyIds);
 
-  const teamIds =
-    new Set(
-      team.map((h) => h.id)
-    );
+  const teamIds = new Set(team.map((h) => h.id));
 
   let weighted = 0;
   let totalWeight = 0;
 
   for (const combat of combats) {
-    const enemyOverlap =
-      combat.enemy_heroes.filter(
-        (id) =>
-          enemySet.has(id)
-      ).length;
+    const enemyOverlap = combat.enemy_heroes.filter((id) =>
+      enemySet.has(id)
+    ).length;
 
     if (enemyOverlap < 2) {
       continue;
     }
 
-    const myOverlap =
-      combat.my_heroes.filter(
-        (id) =>
-          teamIds.has(id)
-      ).length;
+    const myOverlap = combat.my_heroes.filter((id) => teamIds.has(id)).length;
 
     if (myOverlap < 2) {
       continue;
     }
 
-    const enemyWeight =
-      enemyOverlap /
-      enemyIds.length;
+    const enemyWeight = enemyOverlap / enemyIds.length;
 
-    const teamWeight =
-      myOverlap /
-      TEAM_SIZE;
+    const teamWeight = myOverlap / TEAM_SIZE;
 
-    const weight =
-      enemyWeight *
-      teamWeight;
+    const weight = enemyWeight * teamWeight;
 
     totalWeight += weight;
 
@@ -371,21 +269,11 @@ function teamHistoryScore(
     return 0;
   }
 
-  const observed =
-    weighted /
-    totalWeight;
+  const observed = weighted / totalWeight;
 
-  const rate =
-    smoothedRate(
-      observed *
-        totalWeight,
-      totalWeight
-    );
+  const rate = smoothedRate(observed * totalWeight, totalWeight);
 
-  return (
-    rate -
-    PRIOR_RATE
-  ) * 20;
+  return (rate - PRIOR_RATE) * 20;
 }
 
 /* -----------------------------------------------------------
@@ -397,18 +285,9 @@ function exactTeamHistoryScore(
   enemyIds: string[],
   combats: Combat[]
 ): number {
-  const record =
-    getExactTeamRecord(
-      team,
-      enemyIds,
-      combats
-    );
+  const record = getExactTeamRecord(team, enemyIds, combats);
 
-  const {
-    wins,
-    losses,
-    games,
-  } = record;
+  const { wins, losses, games } = record;
 
   if (games === 0) {
     return 0;
@@ -421,32 +300,15 @@ function exactTeamHistoryScore(
    * Le filtre final l'empêchera également
    * d'être choisie automatiquement.
    */
-  if (
-    wins === 0 &&
-    losses >=
-      MIN_EXACT_LOSSES_TO_AVOID
-  ) {
+  if (wins === 0 && losses >= MIN_EXACT_LOSSES_TO_AVOID) {
     return -1000;
   }
 
-  const rate =
-    smoothedRate(
-      wins,
-      games
-    );
+  const rate = smoothedRate(wins, games);
 
-  const confidence =
-    Math.min(
-      2.5,
-      Math.sqrt(games)
-    );
+  const confidence = Math.min(2.5, Math.sqrt(games));
 
-  return (
-    (rate -
-      PRIOR_RATE) *
-    55 *
-    confidence
-  );
+  return (rate - PRIOR_RATE) * 55 * confidence;
 }
 
 /* -----------------------------------------------------------
@@ -458,40 +320,27 @@ function heroHistoryBonus(
   enemyIds: string[],
   combats: Combat[]
 ): number {
-  const enemySet =
-    new Set(enemyIds);
+  const enemySet = new Set(enemyIds);
 
   let score = 0;
 
   for (const combat of combats) {
-    if (
-      !combat.my_heroes.includes(
-        heroId
-      )
-    ) {
+    if (!combat.my_heroes.includes(heroId)) {
       continue;
     }
 
-    const overlap =
-      combat.enemy_heroes.filter(
-        (id) =>
-          enemySet.has(id)
-      ).length;
+    const overlap = combat.enemy_heroes.filter((id) => enemySet.has(id)).length;
 
     if (overlap < 3) {
       continue;
     }
 
-    const enemyWeight =
-      overlap /
-      enemyIds.length;
+    const enemyWeight = overlap / enemyIds.length;
 
     if (combat.won) {
-      score +=
-        enemyWeight * 8;
+      score += enemyWeight * 8;
     } else {
-      score -=
-        enemyWeight * 3;
+      score -= enemyWeight * 3;
     }
   }
 
@@ -502,56 +351,30 @@ function heroHistoryBonus(
  * ÉQUILIBRE DES RÔLES
  * --------------------------------------------------------- */
 
-function roleBalance(
-  team: Hero[]
-): number {
-  const roles =
-    new Map<
-      HeroRole,
-      number
-    >();
+function roleBalance(team: Hero[]): number {
+  const roles = new Map<HeroRole, number>();
 
   for (const hero of team) {
-    const role =
-      heroRole(hero);
+    const role = heroRole(hero);
 
-    roles.set(
-      role,
-      (roles.get(role) ?? 0) +
-        1
-    );
+    roles.set(role, (roles.get(role) ?? 0) + 1);
   }
 
   let score = 0;
 
-  if (
-    (roles.get("Tank") ?? 0) >=
-    1
-  ) {
+  if ((roles.get("Tank") ?? 0) >= 1) {
     score += 2;
   }
 
-  if (
-    (roles.get("Support") ?? 0) >=
-    1
-  ) {
+  if ((roles.get("Support") ?? 0) >= 1) {
     score += 2;
   }
 
-  if (
-    (roles.get("Damage") ?? 0) >=
-    2
-  ) {
+  if ((roles.get("Damage") ?? 0) >= 2) {
     score += 2;
   }
 
-  if (
-    new Set(
-      team.map(
-        (h) => h.cls
-      )
-    ).size >= 2
-  ) {
+  if (new Set(team.map((h) => h.cls)).size >= 2) {
     score += 1;
   }
 
@@ -562,52 +385,28 @@ function roleBalance(
  * SYNERGIE
  * --------------------------------------------------------- */
 
-function synergyScore(
-  team: Hero[],
-  enemies: Hero[]
-): number {
+function synergyScore(team: Hero[], enemies: Hero[]): number {
   let score = 0;
 
-  for (
-    let i = 0;
-    i < team.length;
-    i++
-  ) {
-    for (
-      let j = i + 1;
-      j < team.length;
-      j++
-    ) {
-      if (
-        team[i].cls !==
-        team[j].cls
-      ) {
+  for (let i = 0; i < team.length; i++) {
+    for (let j = i + 1; j < team.length; j++) {
+      if (team[i].cls !== team[j].cls) {
         score += 0.25;
       }
     }
   }
 
-  const covered =
-    new Set<string>();
+  const covered = new Set<string>();
 
   for (const hero of team) {
     for (const enemy of enemies) {
-      if (
-        pairScore(
-          hero,
-          enemy
-        ) > 0
-      ) {
-        covered.add(
-          enemy.id
-        );
+      if (pairScore(hero, enemy) > 0) {
+        covered.add(enemy.id);
       }
     }
   }
 
-  score +=
-    covered.size *
-    0.35;
+  score += covered.size * 0.35;
 
   return score;
 }
@@ -616,41 +415,20 @@ function synergyScore(
  * SCORE DE CONTRE
  * --------------------------------------------------------- */
 
-function counterScore(
-  team: Hero[],
-  enemies: Hero[]
-): number {
+function counterScore(team: Hero[], enemies: Hero[]): number {
   if (enemies.length === 0) {
     return 0;
   }
 
-  const perEnemy =
-    enemies.map((enemy) => {
-      const scores =
-        team
-          .map((hero) =>
-            pairScore(
-              hero,
-              enemy
-            )
-          )
-          .sort(
-            (a, b) =>
-              b - a
-          );
+  const perEnemy = enemies.map((enemy) => {
+    const scores = team
+      .map((hero) => pairScore(hero, enemy))
+      .sort((a, b) => b - a);
 
-      return (
-        (scores[0] ?? 0) +
-        (scores[1] ?? 0) *
-          0.45
-      );
-    });
+    return (scores[0] ?? 0) + (scores[1] ?? 0) * 0.45;
+  });
 
-  return perEnemy.reduce(
-    (a, b) =>
-      a + b,
-    0
-  );
+  return perEnemy.reduce((a, b) => a + b, 0);
 }
 
 /* -----------------------------------------------------------
@@ -663,67 +441,34 @@ function analyzeTeam(
   enemyIds: string[],
   combats: Combat[]
 ): TeamAnalysis {
-  const counter =
-    counterScore(
-      team,
-      enemies
-    );
+  const counter = counterScore(team, enemies);
 
   const history =
-    teamHistoryScore(
-      team,
-      enemyIds,
-      combats
-    ) +
-    exactTeamHistoryScore(
-      team,
-      enemyIds,
-      combats
-    );
+    teamHistoryScore(team, enemyIds, combats) +
+    exactTeamHistoryScore(team, enemyIds, combats);
 
-  const synergy =
-    synergyScore(
-      team,
-      enemies
-    );
+  const synergy = synergyScore(team, enemies);
 
-  const role =
-    roleBalance(team);
+  const role = roleBalance(team);
 
-  const coverage =
-    enemies.filter(
-      (enemy) =>
-        team.some(
-          (hero) =>
-            pairScore(
-              hero,
-              enemy
-            ) > 0
-        )
-    ).length;
+  const coverage = enemies.filter((enemy) =>
+    team.some((hero) => pairScore(hero, enemy) > 0)
+  ).length;
 
   return {
     score:
-      counter *
-        COUNTER_WEIGHT +
-      history *
-        HISTORY_WEIGHT +
-      synergy *
-        SYNERGY_WEIGHT +
-      role *
-        ROLE_WEIGHT,
+      counter * COUNTER_WEIGHT +
+      history * HISTORY_WEIGHT +
+      synergy * SYNERGY_WEIGHT +
+      role * ROLE_WEIGHT,
 
-    counterScore:
-      counter,
+    counterScore: counter,
 
-    historyScore:
-      history,
+    historyScore: history,
 
-    synergyScore:
-      synergy,
+    synergyScore: synergy,
 
-    roleScore:
-      role,
+    roleScore: role,
 
     coverage,
   };
@@ -733,94 +478,40 @@ function analyzeTeam(
  * CANDIDATS
  * --------------------------------------------------------- */
 
-function buildCandidates(
-  enemyIds: string[],
-  combats: Combat[]
-) {
-  const enemies =
-    getEnemies(enemyIds);
+function buildCandidates(enemyIds: string[], combats: Combat[]) {
+  const enemies = getEnemies(enemyIds);
 
-  const enemySet =
-    new Set(enemyIds);
+  const enemySet = new Set(enemyIds);
 
-  const pool =
-    HEROES.filter(
-      (h) =>
-        !enemySet.has(h.id)
-    );
+  const pool = HEROES.filter((h) => !enemySet.has(h.id));
 
-  const counters =
-    buildHeroCounters(
-      enemies
-    );
+  const counters = buildHeroCounters(enemies);
 
-  const scored =
-    pool.map((hero) => {
-      const targets =
-        counters.get(
-          hero.id
-        ) ?? [];
+  const scored = pool.map((hero) => {
+    const targets = counters.get(hero.id) ?? [];
 
-      const counter =
-        targets.reduce(
-          (sum, t) =>
-            sum + t.score,
-          0
-        );
+    const counter = targets.reduce((sum, t) => sum + t.score, 0);
 
-      const hist =
-        historyStats(
-          hero.id,
-          enemyIds,
-          combats
-        );
+    const hist = historyStats(hero.id, enemyIds, combats);
 
-      const reliability =
-        Math.min(
-          1,
-          hist.games / 2
-        );
+    const reliability = Math.min(1, hist.games / 2);
 
-      const history =
-        (
-          (hist.rate -
-            PRIOR_RATE) *
-          12
-        ) *
-        reliability;
+    const history = (hist.rate - PRIOR_RATE) * 12 * reliability;
 
-      const exactHistory =
-        hist.exactRate !== null
-          ? (
-              hist.exactRate -
-              PRIOR_RATE
-            ) * 8
-          : 0;
+    const exactHistory =
+      hist.exactRate !== null ? (hist.exactRate - PRIOR_RATE) * 8 : 0;
 
-      const learnedBonus =
-        heroHistoryBonus(
-          hero.id,
-          enemyIds,
-          combats
-        );
+    const learnedBonus = heroHistoryBonus(hero.id, enemyIds, combats);
 
-      return {
-        hero,
-        targets,
+    return {
+      hero,
+      targets,
 
-        seedScore:
-          counter * 3 +
-          history +
-          exactHistory +
-          learnedBonus,
-      };
-    });
+      seedScore: counter * 3 + history + exactHistory + learnedBonus,
+    };
+  });
 
-  return scored.sort(
-    (a, b) =>
-      b.seedScore -
-      a.seedScore
-  );
+  return scored.sort((a, b) => b.seedScore - a.seedScore);
 }
 
 /* -----------------------------------------------------------
@@ -831,8 +522,7 @@ export function recommendTeam(
   enemyIds: string[],
   combats: Combat[] = []
 ): Hero[] {
-  const enemies =
-    getEnemies(enemyIds);
+  const enemies = getEnemies(enemyIds);
 
   if (enemies.length === 0) {
     return [];
@@ -841,11 +531,7 @@ export function recommendTeam(
   /*
    * 40 candidats.
    */
-  const candidates =
-    buildCandidates(
-      enemyIds,
-      combats
-    ).slice(0, 40);
+  const candidates = buildCandidates(enemyIds, combats).slice(0, 40);
 
   type State = {
     team: Hero[];
@@ -863,79 +549,46 @@ export function recommendTeam(
    * BEAM SEARCH
    * --------------------------------------------------------- */
 
-  for (
-    let depth = 0;
-    depth < TEAM_SIZE;
-    depth++
-  ) {
+  for (let depth = 0; depth < TEAM_SIZE; depth++) {
     const next: State[] = [];
 
     for (const state of states) {
       for (const candidate of candidates) {
-        if (
-          state.team.some(
-            (h) =>
-              h.id ===
-              candidate.hero.id
-          )
-        ) {
+        if (state.team.some((h) => h.id === candidate.hero.id)) {
           continue;
         }
 
-        const team = [
-          ...state.team,
-          candidate.hero,
-        ];
+        const team = [...state.team, candidate.hero];
 
-        const partialCounter =
-          counterScore(
-            team,
-            enemies
-          );
+        const partialCounter = counterScore(team, enemies);
 
-        const partialSynergy =
-          synergyScore(
-            team,
-            enemies
-          );
+        const partialSynergy = synergyScore(team, enemies);
 
-        const partialRole =
-          roleBalance(team);
+        const partialRole = roleBalance(team);
 
         next.push({
           team,
 
           score:
-            partialCounter *
-              COUNTER_WEIGHT +
-            partialSynergy *
-              SYNERGY_WEIGHT +
-            partialRole *
-              ROLE_WEIGHT +
+            partialCounter * COUNTER_WEIGHT +
+            partialSynergy * SYNERGY_WEIGHT +
+            partialRole * ROLE_WEIGHT +
             candidate.seedScore,
         });
       }
     }
 
-    next.sort(
-      (a, b) =>
-        b.score -
-        a.score
-    );
+    next.sort((a, b) => b.score - a.score);
 
-    const seen =
-      new Set<string>();
+    const seen = new Set<string>();
 
     states = [];
 
     for (const state of next) {
-      const key =
-        state.team
-          .map(
-            (h) => h.id
-          )
-          .sort()
-          .join(",");
+      const key = state.team
+        .map((h) => h.id)
+        .sort()
+        .join(",");
 
       if (seen.has(key)) {
         continue;
@@ -945,10 +598,7 @@ export function recommendTeam(
 
       states.push(state);
 
-      if (
-        states.length >=
-        BEAM_WIDTH
-      ) {
+      if (states.length >= BEAM_WIDTH) {
         break;
       }
     }
@@ -963,15 +613,9 @@ export function recommendTeam(
    * qui ne sont PAS des équipes déjà perdues
    * plusieurs fois sans victoire.
    */
-  const validStates =
-    states.filter(
-      (state) =>
-        !shouldAvoidExactTeam(
-          state.team,
-          enemyIds,
-          combats
-        )
-    );
+  const validStates = states.filter(
+    (state) => !shouldAvoidExactTeam(state.team, enemyIds, combats)
+  );
 
   /*
    * Si on possède au moins une équipe valide,
@@ -983,28 +627,15 @@ export function recommendTeam(
    *   0 victoire
    *   3 défaites
    */
-  const statesToEvaluate =
-    validStates.length > 0
-      ? validStates
-      : states;
+  const statesToEvaluate = validStates.length > 0 ? validStates : states;
 
   let best: Hero[] =
     statesToEvaluate[0]?.team ??
-    candidates
-      .slice(
-        0,
-        TEAM_SIZE
-      )
-      .map(
-        (x) => x.hero
-      );
+    candidates.slice(0, TEAM_SIZE).map((x) => x.hero);
 
-  let bestScore =
-    -Infinity;
+  let bestScore = -Infinity;
 
-  for (
-    const state of statesToEvaluate
-  ) {
+  for (const state of statesToEvaluate) {
     /*
      * Protection supplémentaire :
      * même si une équipe perdante
@@ -1013,44 +644,22 @@ export function recommendTeam(
      * équipe valide simplement grâce
      * au score historique.
      */
-    const avoid =
-      shouldAvoidExactTeam(
-        state.team,
-        enemyIds,
-        combats
-      );
+    const avoid = shouldAvoidExactTeam(state.team, enemyIds, combats);
 
-    if (
-      avoid &&
-      validStates.length > 0
-    ) {
+    if (avoid && validStates.length > 0) {
       continue;
     }
 
-    const analysis =
-      analyzeTeam(
-        state.team,
-        enemies,
-        enemyIds,
-        combats
-      );
+    const analysis = analyzeTeam(state.team, enemies, enemyIds, combats);
 
-    if (
-      analysis.score >
-      bestScore
-    ) {
-      bestScore =
-        analysis.score;
+    if (analysis.score > bestScore) {
+      bestScore = analysis.score;
 
-      best =
-        state.team;
+      best = state.team;
     }
   }
 
-  return best.slice(
-    0,
-    TEAM_SIZE
-  );
+  return best.slice(0, TEAM_SIZE);
 }
 
 /* -----------------------------------------------------------
@@ -1061,130 +670,64 @@ export function balancedTeam(
   enemyIds: string[],
   combats: Combat[] = []
 ): Hero[] {
-  const enemies =
-    getEnemies(enemyIds);
+  const enemies = getEnemies(enemyIds);
 
   if (enemies.length === 0) {
     return [];
   }
 
-  const enemySet =
-    new Set(enemyIds);
+  const enemySet = new Set(enemyIds);
 
-  const pool =
-    HEROES.filter(
-      (h) =>
-        !enemySet.has(h.id)
-    );
+  const pool = HEROES.filter((h) => !enemySet.has(h.id));
 
-  const ranked =
-    pool
-      .map((hero) => {
-        const counter =
-          enemies.reduce(
-            (sum, enemy) =>
-              sum +
-              pairScore(
-                hero,
-                enemy
-              ),
-            0
-          );
-
-        const hist =
-          historyStats(
-            hero.id,
-            enemyIds,
-            combats
-          );
-
-        const history =
-          (
-            smoothedRate(
-              hist.rate *
-                hist.games,
-              hist.games
-            ) -
-            PRIOR_RATE
-          ) * 8;
-
-        const learnedBonus =
-          heroHistoryBonus(
-            hero.id,
-            enemyIds,
-            combats
-          );
-
-        return {
-          hero,
-
-          score:
-            counter * 4 +
-            history +
-            learnedBonus,
-        };
-      })
-      .sort(
-        (a, b) =>
-          b.score -
-          a.score
+  const ranked = pool
+    .map((hero) => {
+      const counter = enemies.reduce(
+        (sum, enemy) => sum + pairScore(hero, enemy),
+        0
       );
+
+      const hist = historyStats(hero.id, enemyIds, combats);
+
+      const history =
+        (smoothedRate(hist.rate * hist.games, hist.games) - PRIOR_RATE) * 8;
+
+      const learnedBonus = heroHistoryBonus(hero.id, enemyIds, combats);
+
+      return {
+        hero,
+
+        score: counter * 4 + history + learnedBonus,
+      };
+    })
+    .sort((a, b) => b.score - a.score);
 
   const team: Hero[] = [];
 
-  const pickRole = (
-    role: HeroRole
-  ) => {
-    const candidate =
-      ranked.find(
-        (x) =>
-          heroRole(
-            x.hero
-          ) === role &&
-          !team.some(
-            (h) =>
-              h.id ===
-              x.hero.id
-          )
-      );
+  const pickRole = (role: HeroRole) => {
+    const candidate = ranked.find(
+      (x) => heroRole(x.hero) === role && !team.some((h) => h.id === x.hero.id)
+    );
 
     if (candidate) {
-      team.push(
-        candidate.hero
-      );
+      team.push(candidate.hero);
     }
   };
 
   pickRole("Tank");
   pickRole("Support");
 
-  while (
-    team.length <
-    TEAM_SIZE
-  ) {
-    const candidate =
-      ranked.find(
-        (x) =>
-          !team.some(
-            (h) =>
-              h.id ===
-              x.hero.id
-          )
-      );
+  while (team.length < TEAM_SIZE) {
+    const candidate = ranked.find((x) => !team.some((h) => h.id === x.hero.id));
 
     if (!candidate) {
       break;
     }
 
-    team.push(
-      candidate.hero
-    );
+    team.push(candidate.hero);
   }
 
-  return team.slice(
-    0,
-    TEAM_SIZE
-  );
+  return team.slice(0, TEAM_SIZE);
 }
 
 /* -----------------------------------------------------------
@@ -1195,32 +738,17 @@ export function coverageReport(
   team: Hero[],
   enemyIds: string[]
 ): CounterPick[] {
-  const enemies =
-    getEnemies(enemyIds);
+  const enemies = getEnemies(enemyIds);
 
   return team.map((hero) => {
-    const targets =
-      enemies
-        .map((enemy) =>
-          scorePair(
-            hero,
-            enemy
-          )
-        )
-        .filter(
-          (t) =>
-            t.score > 0
-        );
+    const targets = enemies
+      .map((enemy) => scorePair(hero, enemy))
+      .filter((t) => t.score > 0);
 
     return {
       hero,
 
-      score:
-        targets.reduce(
-          (sum, t) =>
-            sum + t.score,
-          0
-        ),
+      score: targets.reduce((sum, t) => sum + t.score, 0),
 
       targets,
     };
@@ -1236,11 +764,5 @@ export function analyzeRecommendedTeam(
   enemyIds: string[],
   combats: Combat[] = []
 ): TeamAnalysis {
-  return analyzeTeam(
-    team,
-    getEnemies(enemyIds),
-    enemyIds,
-    combats
-  );
+  return analyzeTeam(team, getEnemies(enemyIds), enemyIds, combats);
 }
-

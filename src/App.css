@@ -89,28 +89,36 @@ body.lmac-role-admin header span.text-emerald-300::after {
    Visitors and normal users may use the Counter, but must not
    see the Win/Lose recording panel. Contributor and Admin keep it.
    ========================================================= */
-body:not(.lmac-role-contributor):not(.lmac-role-admin) div:has(> div > svg.lucide-plus) {
+body:not(.lmac-role-contributor):not(.lmac-role-admin)
+  div:has(> div > svg.lucide-plus) {
   display: none !important;
 }
-
-
 
 /* =========================================================
    VISITOR LOGIN BUTTON
    Keep the visitor action the same size as the logout button,
    but label it clearly as Connexion instead of Admin.
    ========================================================= */
-body:not(.lmac-role-user):not(.lmac-role-contributor):not(.lmac-role-admin) header > div > div:last-child > div:first-child > button {
+body:not(.lmac-role-user):not(.lmac-role-contributor):not(.lmac-role-admin)
+  header
+  > div
+  > div:last-child
+  > div:first-child
+  > button {
   min-width: 110px;
   justify-content: center;
   font-size: 0 !important;
 }
 
-body:not(.lmac-role-user):not(.lmac-role-contributor):not(.lmac-role-admin) header > div > div:last-child > div:first-child > button::after {
+body:not(.lmac-role-user):not(.lmac-role-contributor):not(.lmac-role-admin)
+  header
+  > div
+  > div:last-child
+  > div:first-child
+  > button::after {
   content: "Connexion";
   font-size: 12px;
 }
-
 
 @media (max-width: 640px) {
   .hero-remove-button {

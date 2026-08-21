@@ -23,8 +23,8 @@ export function useHeroSelection() {
       prev.includes(id)
         ? prev.filter((p) => p !== id)
         : prev.length >= MAX_PICKS
-        ? prev
-        : [...prev, id]
+          ? prev
+          : [...prev, id]
     );
   }
 

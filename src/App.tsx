@@ -17,17 +17,9 @@ import { useHeroManagement } from "./hooks/useHeroManagement";
 import { useHeroPreferences } from "./hooks/useHeroPreferences";
 import { useCombatAnalytics } from "./hooks/useCombatAnalytics";
 
-import {
-  HEROES,
-  formatStat,
-} from "./heroes";
+import { HEROES, formatStat } from "./heroes";
 
-import {
-  RotateCcw,
-  Swords,
-  X,
-  ArrowLeftRight,
-} from "lucide-react";
+import { RotateCcw, Swords, X, ArrowLeftRight } from "lucide-react";
 
 import "./App.css";
 
@@ -39,32 +31,31 @@ const APP_VERSION = "2.1.0";
    ========================================================= */
 
 export default function App() {
-
   /* =======================================================
      HERO SELECTION
      ======================================================= */
 
-const {
-  picks,
-  setPicks,
-  editedTeam,
-  setEditedTeam,
+  const {
+    picks,
+    setPicks,
+    editedTeam,
+    setEditedTeam,
 
-  swapIndex,
-  setSwapIndex,
-  swapQuery,
-  setSwapQuery,
+    swapIndex,
+    setSwapIndex,
+    swapQuery,
+    setSwapQuery,
 
-  dragIndex,
-  setDragIndex,
-  dragOverIndex,
-  setDragOverIndex,
+    dragIndex,
+    setDragIndex,
+    dragOverIndex,
+    setDragOverIndex,
 
-  toggle,
-  reorderPicks,
-  reorderManual,
-  resetSelection,
-} = useHeroSelection();
+    toggle,
+    reorderPicks,
+    reorderManual,
+    resetSelection,
+  } = useHeroSelection();
 
   /* =======================================================
      APP UI
@@ -160,10 +151,7 @@ const {
     user,
     enabledHeroIds,
     onCombatSaved: (combat) => {
-      setCombats((prev) => [
-        combat,
-        ...prev,
-      ]);
+      setCombats((prev) => [combat, ...prev]);
     },
   });
 
@@ -171,9 +159,7 @@ const {
      HERO MANAGEMENT
      ======================================================= */
 
-  const {
-    disableAllHeroes,
-  } = useHeroManagement({
+  const { disableAllHeroes } = useHeroManagement({
     enabledHeroIds,
     setEnabledHeroIds,
     setPicks,
@@ -187,21 +173,21 @@ const {
      COMBAT ANALYTICS
      ======================================================= */
 
- const {
-  pickSet,
-  full,
-  usage,
-  filtered,
-  team,
-  editedHeroes,
-  report,
-  totalCoverage,
-  bestWinTeam,
-  winRate,
-  enemyStats,
-  teamStats,
-  statComparisons,
-} = useCombatAnalytics({
+  const {
+    pickSet,
+    full,
+    usage,
+    filtered,
+    team,
+    editedHeroes,
+    report,
+    totalCoverage,
+    bestWinTeam,
+    winRate,
+    enemyStats,
+    teamStats,
+    statComparisons,
+  } = useCombatAnalytics({
     combats,
     picks,
     editedTeam,
@@ -216,10 +202,7 @@ const {
      OTHER
      ======================================================= */
 
-  const winCount =
-    combats.filter(
-      (c) => c.won
-    ).length;
+  const winCount = combats.filter((c) => c.won).length;
 
   /* =======================================================
      RENDER
@@ -227,7 +210,6 @@ const {
 
   return (
     <div className="lmac-app relative overflow-hidden">
-
       {/* =================================================
           HERO MANAGER
           ================================================= */}
@@ -239,9 +221,7 @@ const {
           onToggleHero={toggleHeroEnabled}
           onEnableAll={enableAllHeroes}
           onDisableAll={disableAllHeroes}
-          onClose={() =>
-            setShowHeroManager(false)
-          }
+          onClose={() => setShowHeroManager(false)}
         />
       )}
 
@@ -272,7 +252,6 @@ const {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.045),transparent_38%)]" />
 
       <div className="relative w-full mx-auto px-4 sm:px-6 py-8 sm:py-12">
-
         {/* =================================================
             HEADER
             ================================================= */}
@@ -353,16 +332,10 @@ const {
             <button
               onClick={() => {
                 setEditedTeam(
-                  team
-                    .map((h) => h.id)
-                    .filter((id) =>
-                      enabledHeroIds.has(id)
-                    )
+                  team.map((h) => h.id).filter((id) => enabledHeroIds.has(id))
                 );
 
-                setHiddenRecommendedIds(
-                  new Set()
-                );
+                setHiddenRecommendedIds(new Set());
 
                 setShowResult(true);
               }}
@@ -372,38 +345,38 @@ const {
             </button>
           </div>
         )}
-		
-{showResult && editedHeroes.length > 0 && (
-  <RecommendedTeam
-    report={report}
-    editedHeroes={editedHeroes}
-    editedTeam={editedTeam}
-    setEditedTeam={setEditedTeam}
-	  enemyStats={enemyStats}
-  teamStats={teamStats}
-  statComparisons={statComparisons}
 
-    hiddenRecommendedIds={hiddenRecommendedIds}
-    hideRecommendedHero={hideRecommendedHero}
-    setHiddenRecommendedIds={setHiddenRecommendedIds}
+        {showResult && editedHeroes.length > 0 && (
+          <RecommendedTeam
+            report={report}
+            editedHeroes={editedHeroes}
+            editedTeam={editedTeam}
+            setEditedTeam={setEditedTeam}
+            enemyStats={enemyStats}
+            teamStats={teamStats}
+            statComparisons={statComparisons}
 
-    swapIndex={swapIndex}
-    setSwapIndex={setSwapIndex}
-    swapQuery={swapQuery}
-    setSwapQuery={setSwapQuery}
+            hiddenRecommendedIds={hiddenRecommendedIds}
+            hideRecommendedHero={hideRecommendedHero}
+            setHiddenRecommendedIds={setHiddenRecommendedIds}
 
-    usage={usage}
-    enabledHeroIds={enabledHeroIds}
+            swapIndex={swapIndex}
+            setSwapIndex={setSwapIndex}
+            swapQuery={swapQuery}
+            setSwapQuery={setSwapQuery}
 
-    winRate={winRate}
-    bestWinTeam={bestWinTeam}
+            usage={usage}
+            enabledHeroIds={enabledHeroIds}
 
-    recordCombat={recordCombat}
-    recording={recording}
+            winRate={winRate}
+            bestWinTeam={bestWinTeam}
 
-    reset={reset}
-  />
-)}
+            recordCombat={recordCombat}
+            recording={recording}
+
+            reset={reset}
+          />
+        )}
 
         {/* =================================================
             FILTERS
@@ -436,11 +409,9 @@ const {
             ================================================= */}
 
         <footer className="mt-12 text-center text-xs text-white/30">
-          Données des héros : Lords Mobile Wiki
-          (Fandom). Les recommandations apprennent
-          de tes combats enregistrés.
+          Données des héros : Lords Mobile Wiki (Fandom). Les recommandations
+          apprennent de tes combats enregistrés.
         </footer>
-
       </div>
     </div>
   );
