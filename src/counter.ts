@@ -1,6 +1,10 @@
 ﻿import { Hero, HEROES, CLASS_BEATS, heroRole, HeroRole } from "./heroes";
 import type { Combat } from "./storage";
 
+import { RECOMMENDATION_CONFIG } from "./utils/recommendation/recommendationConfig";
+import { calculateRecommendationScore } from "./utils/recommendation/recommendationScore";
+import { getBestFourHeroMatchupCandidate } from "./utils/recommendation/matchupAnalysis";
+
 export interface CounterTarget {
   id: string;
   score: number;
@@ -19,6 +23,7 @@ export interface TeamAnalysis {
   historyScore: number;
   synergyScore: number;
   roleScore: number;
+  matchupScore: number;
   coverage: number;
 }
 
@@ -28,29 +33,51 @@ const BEAM_WIDTH = 180;
 /*
  * Poids généraux du moteur.
  */
-const COUNTER_WEIGHT = 5;
-const HISTORY_WEIGHT = 7;
-const SYNERGY_WEIGHT = 2;
-const ROLE_WEIGHT = 1;
+const COUNTER_WEIGHT = RECOMMENDATION_CONFIG.counter;
+const HISTORY_WEIGHT = RECOMMENDATION_CONFIG.history;
+const SYNERGY_WEIGHT = RECOMMENDATION_CONFIG.synergy;
+const ROLE_WEIGHT = RECOMMENDATION_CONFIG.role;
 
 /*
  * Prior historique.
  */
-const PRIOR_RATE = 0.419;
-const PRIOR_GAMES = 3;
+const PRIOR_RATE = RECOMMENDATION_CONFIG.priorRate;
+const PRIOR_GAMES = RECOMMENDATION_CONFIG.priorGames;
 
 /*
  * Une équipe exacte qui a déjà perdu plusieurs fois
  * sans aucune victoire contre exactement la même
  * composition ennemie ne doit pas être reproposée.
- *
- * IMPORTANT :
- * Cela ne désactive PAS les héros.
- * Cela ne supprime PAS les combats.
- * Cela concerne uniquement la recommandation
- * automatique de cette composition exacte.
  */
 const MIN_EXACT_LOSSES_TO_AVOID = 2;
+
+/* -----------------------------------------------------------
+ * COMBATS ACTIFS
+ * --------------------------------------------------------- */
+
+/*
+ * Seuls les combats actifs doivent influencer le moteur.
+ *
+ * IMPORTANT :
+ * Les anciens combats peuvent ne pas posséder de champ
+ * status dans certaines anciennes données.
+ *
+ * Dans ce cas, ils restent utilisables.
+ *
+ * Un combat explicitement marqué "removed" est exclu.
+ */
+function getActiveCombats(combats: Combat[]): Combat[] {
+  /*
+   * Supabase ne fournit pas forcément de colonne `status`.
+   *
+   * Si status existe, seuls les combats explicitement
+   * retirés sont ignorés.
+   *
+   * Si status n'existe pas / vaut undefined,
+   * le combat reste actif et participe aux calculs.
+   */
+  return combats.filter((combat) => combat.status !== "removed");
+}
 
 /* -----------------------------------------------------------
  * CONTRES THÉORIQUES
@@ -190,23 +217,123 @@ function getExactTeamRecord(
   };
 }
 
-/*
- * Équipe à éviter automatiquement.
+/* -----------------------------------------------------------
+ * RECHERCHE D'UNE ÉQUIPE EXACTE HISTORIQUE
+ * --------------------------------------------------------- */
+
+/**
+ * Cherche toutes les équipes qui ont réellement été jouées
+ * contre exactement la même composition ennemie.
  *
- * Exemple :
+ * L'ordre des héros ne compte pas.
  *
- *   0 victoire / 3 défaites
+ * Une équipe avec au moins une victoire est prioritaire
+ * sur le moteur théorique.
  *
- * => cette composition exacte ne sera plus choisie
- * automatiquement.
+ * Classement :
  *
- * En revanche :
- *
- *   1 victoire / 3 défaites
- *
- * reste disponible, car elle a au moins démontré
- * qu'elle pouvait gagner.
+ * 1. taux de victoire réel
+ * 2. nombre de victoires
+ * 3. nombre de combats
  */
+function getBestExactHistoricalTeam(
+  enemyIds: string[],
+  combats: Combat[]
+): Hero[] | null {
+  if (enemyIds.length !== TEAM_SIZE) {
+    return null;
+  }
+
+  const enemyKey = [...enemyIds].sort().join(",");
+
+  const records = new Map<
+    string,
+    {
+      ids: string[];
+      wins: number;
+      losses: number;
+    }
+  >();
+
+  for (const combat of combats) {
+    if (combat.my_heroes.length !== TEAM_SIZE) {
+      continue;
+    }
+
+    if (combat.enemy_heroes.length !== TEAM_SIZE) {
+      continue;
+    }
+
+    const combatEnemyKey = [...combat.enemy_heroes].sort().join(",");
+
+    if (combatEnemyKey !== enemyKey) {
+      continue;
+    }
+
+    /*
+     * Sécurité contre les compositions invalides.
+     */
+    if (new Set(combat.my_heroes).size !== TEAM_SIZE) {
+      continue;
+    }
+
+    const teamIds = [...combat.my_heroes].sort();
+
+    const teamKey = teamIds.join(",");
+
+    const current = records.get(teamKey) ?? {
+      ids: teamIds,
+      wins: 0,
+      losses: 0,
+    };
+
+    if (combat.won) {
+      current.wins++;
+    } else {
+      current.losses++;
+    }
+
+    records.set(teamKey, current);
+  }
+
+  const valid = [...records.values()].filter((record) => record.wins > 0);
+
+  if (valid.length === 0) {
+    return null;
+  }
+
+  valid.sort((a, b) => {
+    const aGames = a.wins + a.losses;
+    const bGames = b.wins + b.losses;
+
+    const aRate = aGames > 0 ? a.wins / aGames : 0;
+    const bRate = bGames > 0 ? b.wins / bGames : 0;
+
+    return (
+      bRate - aRate ||
+      b.wins - a.wins ||
+      bGames - aGames ||
+      a.ids.join(",").localeCompare(b.ids.join(","), "fr")
+    );
+  });
+
+  const best = valid[0];
+
+  if (!best) {
+    return null;
+  }
+
+  const heroes = best.ids
+    .map((id) => HEROES.find((hero) => hero.id === id))
+    .filter((hero): hero is Hero => Boolean(hero));
+
+  return heroes.length === TEAM_SIZE ? heroes : null;
+}
+
+/* -----------------------------------------------------------
+ * ÉQUIPE À ÉVITER
+ * --------------------------------------------------------- */
+
 function shouldAvoidExactTeam(
   team: Hero[],
   enemyIds: string[],
@@ -253,7 +380,6 @@ function teamHistoryScore(
     }
 
     const enemyWeight = enemyOverlap / enemyIds.length;
-
     const teamWeight = myOverlap / TEAM_SIZE;
 
     const weight = enemyWeight * teamWeight;
@@ -293,13 +419,6 @@ function exactTeamHistoryScore(
     return 0;
   }
 
-  /*
-   * Une équipe qui a 0 victoire et plusieurs
-   * défaites reçoit un score fortement négatif.
-   *
-   * Le filtre final l'empêchera également
-   * d'être choisie automatiquement.
-   */
   if (wins === 0 && losses >= MIN_EXACT_LOSSES_TO_AVOID) {
     return -1000;
   }
@@ -435,6 +554,41 @@ function counterScore(team: Hero[], enemies: Hero[]): number {
  * ANALYSE D'ÉQUIPE
  * --------------------------------------------------------- */
 
+function matchupTeamScore(
+  team: Hero[],
+  enemyIds: string[],
+  combats: Combat[]
+): number {
+  if (RECOMMENDATION_CONFIG.matchup <= 0 || combats.length === 0) {
+    return 0;
+  }
+
+  let score = 0;
+
+  for (const hero of team) {
+    const matchup = getBestFourHeroMatchupCandidate(combats, enemyIds, 2);
+
+    if (!matchup) {
+      continue;
+    }
+
+    /*
+     * On ne veut ici utiliser le résultat que si le
+     * candidat correspond réellement au héros évalué.
+     */
+    if (matchup.heroId !== hero.id) {
+      continue;
+    }
+
+    const normalized =
+      (matchup.winRate / 100 - RECOMMENDATION_CONFIG.priorRate) * 20;
+
+    score += normalized;
+  }
+
+  return score;
+}
+
 function analyzeTeam(
   team: Hero[],
   enemies: Hero[],
@@ -451,25 +605,37 @@ function analyzeTeam(
 
   const role = roleBalance(team);
 
+  const matchup = matchupTeamScore(team, enemyIds, combats);
+
   const coverage = enemies.filter((enemy) =>
     team.some((hero) => pairScore(hero, enemy) > 0)
   ).length;
 
   return {
-    score:
-      counter * COUNTER_WEIGHT +
-      history * HISTORY_WEIGHT +
-      synergy * SYNERGY_WEIGHT +
-      role * ROLE_WEIGHT,
+    score: calculateRecommendationScore(
+      {
+        counterScore: counter,
+        historyScore: history,
+        synergyScore: synergy,
+        roleScore: role,
+        matchupScore: matchup,
+        teamHistoryScore: 0,
+      },
+      {
+        counter: RECOMMENDATION_CONFIG.counter,
+        history: RECOMMENDATION_CONFIG.history,
+        synergy: RECOMMENDATION_CONFIG.synergy,
+        role: RECOMMENDATION_CONFIG.role,
+        matchup: RECOMMENDATION_CONFIG.matchup,
+        teamHistory: RECOMMENDATION_CONFIG.teamHistory,
+      }
+    ).total,
 
     counterScore: counter,
-
     historyScore: history,
-
     synergyScore: synergy,
-
     roleScore: role,
-
+    matchupScore: matchup,
     coverage,
   };
 }
@@ -529,9 +695,48 @@ export function recommendTeam(
   }
 
   /*
-   * 40 candidats.
+   * Les combats explicitement "removed" sont ignorés.
+   *
+   * Les anciennes lignes qui n'ont pas de status
+   * restent utilisables.
    */
-  const candidates = buildCandidates(enemyIds, combats).slice(0, 40);
+  const activeCombats = getActiveCombats(combats);
+
+  /* ---------------------------------------------------------
+   * PRIORITÉ ABSOLUE À UNE ÉQUIPE EXACTE HISTORIQUE GAGNANTE
+   * --------------------------------------------------------- */
+
+  /*
+   * C'est volontairement AVANT le Beam Search.
+   *
+   * Le Beam Search peut éliminer un héros individuel
+   * pourtant indispensable à une équipe historique gagnante.
+   *
+   * Exemple :
+   *
+   * Tracker
+   * Snow Queen
+   * Rose Knight
+   * Lore Weaver
+   * Black Crow
+   *
+   * Si cette équipe existe réellement dans l'historique
+   * contre exactement les mêmes 5 ennemis et possède
+   * au moins une victoire, on la conserve telle quelle.
+   */
+  const exactHistoricalTeam = getBestExactHistoricalTeam(
+    enemyIds,
+    activeCombats
+  );
+
+  if (exactHistoricalTeam) {
+    return exactHistoricalTeam;
+  }
+
+  /*
+   * 40 candidats pour le moteur théorique.
+   */
+  const candidates = buildCandidates(enemyIds, activeCombats).slice(0, 40);
 
   type State = {
     team: Hero[];
@@ -608,25 +813,10 @@ export function recommendTeam(
    * ÉVALUATION FINALE
    * --------------------------------------------------------- */
 
-  /*
-   * On cherche d'abord parmi les équipes
-   * qui ne sont PAS des équipes déjà perdues
-   * plusieurs fois sans victoire.
-   */
   const validStates = states.filter(
-    (state) => !shouldAvoidExactTeam(state.team, enemyIds, combats)
+    (state) => !shouldAvoidExactTeam(state.team, enemyIds, activeCombats)
   );
 
-  /*
-   * Si on possède au moins une équipe valide,
-   * elle devient notre espace de recherche.
-   *
-   * Cela évite précisément de reproposer :
-   *
-   *   même équipe
-   *   0 victoire
-   *   3 défaites
-   */
   const statesToEvaluate = validStates.length > 0 ? validStates : states;
 
   let best: Hero[] =
@@ -636,21 +826,13 @@ export function recommendTeam(
   let bestScore = -Infinity;
 
   for (const state of statesToEvaluate) {
-    /*
-     * Protection supplémentaire :
-     * même si une équipe perdante
-     * arrive ici en fallback, elle
-     * ne peut pas gagner contre une
-     * équipe valide simplement grâce
-     * au score historique.
-     */
-    const avoid = shouldAvoidExactTeam(state.team, enemyIds, combats);
+    const avoid = shouldAvoidExactTeam(state.team, enemyIds, activeCombats);
 
     if (avoid && validStates.length > 0) {
       continue;
     }
 
-    const analysis = analyzeTeam(state.team, enemies, enemyIds, combats);
+    const analysis = analyzeTeam(state.team, enemies, enemyIds, activeCombats);
 
     if (analysis.score > bestScore) {
       bestScore = analysis.score;
@@ -676,6 +858,8 @@ export function balancedTeam(
     return [];
   }
 
+  const activeCombats = getActiveCombats(combats);
+
   const enemySet = new Set(enemyIds);
 
   const pool = HEROES.filter((h) => !enemySet.has(h.id));
@@ -687,12 +871,12 @@ export function balancedTeam(
         0
       );
 
-      const hist = historyStats(hero.id, enemyIds, combats);
+      const hist = historyStats(hero.id, enemyIds, activeCombats);
 
       const history =
         (smoothedRate(hist.rate * hist.games, hist.games) - PRIOR_RATE) * 8;
 
-      const learnedBonus = heroHistoryBonus(hero.id, enemyIds, combats);
+      const learnedBonus = heroHistoryBonus(hero.id, enemyIds, activeCombats);
 
       return {
         hero,
@@ -764,5 +948,7 @@ export function analyzeRecommendedTeam(
   enemyIds: string[],
   combats: Combat[] = []
 ): TeamAnalysis {
-  return analyzeTeam(team, getEnemies(enemyIds), enemyIds, combats);
+  const activeCombats = getActiveCombats(combats);
+
+  return analyzeTeam(team, getEnemies(enemyIds), enemyIds, activeCombats);
 }
