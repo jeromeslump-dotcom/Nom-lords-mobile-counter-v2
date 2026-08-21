@@ -1,8 +1,8 @@
 import type { Combat } from "../storage";
 
 export interface MatchupRecord {
+  sharedHeroIds: string[];
   heroId: string;
-  opponentId: string;
   wins: number;
   losses: number;
   games: number;
@@ -13,37 +13,69 @@ function normalizeTeam(ids: string[]): string[] {
   return [...new Set(ids)].sort();
 }
 
+function combinationsOfFour(ids: string[]): string[][] {
+  const result: string[][] = [];
+
+  for (let i = 0; i < ids.length; i++) {
+    const group = ids.filter((_, index) => index !== i);
+    if (group.length === 4) {
+      result.push(group);
+    }
+  }
+
+  return result;
+}
+
 /**
- * Finds historical combats where at least `minSharedHeroes` enemy heroes
- * are the same, then compares the candidate fifth hero with the alternatives.
+ * Compare the fifth hero when four heroes of the player's team are shared.
  *
- * The current recommendation engine can use this later as a dedicated
- * historical signal instead of hiding the logic inside counter.ts.
+ * Example:
+ *   [A, B, C, D] + Tracker    -> 3 wins / 1 loss
+ *   [A, B, C, D] + Black Crow -> 1 win / 3 losses
+ *
+ * Only combats against a sufficiently similar enemy composition are used.
+ * Hero order is ignored.
  */
 export function findFiveHeroMatchups(
   enemyIds: string[],
   combats: Combat[],
-  minSharedHeroes = 4
+  minEnemyOverlap = 4
 ): MatchupRecord[] {
-  const target = normalizeTeam(enemyIds);
-  const results = new Map<string, { wins: number; losses: number }>();
+  const targetEnemies = normalizeTeam(enemyIds);
+  const results = new Map<
+    string,
+    { sharedHeroIds: string[]; heroId: string; wins: number; losses: number }
+  >();
 
   for (const combat of combats) {
-    const enemies = normalizeTeam(combat.enemy_heroes);
-    const shared = target.filter((id) => enemies.includes(id)).length;
+    const combatEnemies = normalizeTeam(combat.enemy_heroes);
+    const enemyOverlap = targetEnemies.filter((id) => combatEnemies.includes(id)).length;
 
-    if (shared < minSharedHeroes) {
+    if (enemyOverlap < minEnemyOverlap) {
       continue;
     }
 
-    const enemyOnly = new Set(target);
+    const team = normalizeTeam(combat.my_heroes);
 
-    for (const heroId of normalizeTeam(combat.my_heroes)) {
-      if (enemyOnly.has(heroId)) {
+    if (team.length !== 5) {
+      continue;
+    }
+
+    for (const sharedHeroIds of combinationsOfFour(team)) {
+      const sharedKey = sharedHeroIds.join(",");
+      const fifthHero = team.find((id) => !sharedHeroIds.includes(id));
+
+      if (!fifthHero) {
         continue;
       }
 
-      const current = results.get(heroId) ?? { wins: 0, losses: 0 };
+      const key = `${sharedKey}|${fifthHero}`;
+      const current = results.get(key) ?? {
+        sharedHeroIds,
+        heroId: fifthHero,
+        wins: 0,
+        losses: 0,
+      };
 
       if (combat.won) {
         current.wins += 1;
@@ -51,21 +83,24 @@ export function findFiveHeroMatchups(
         current.losses += 1;
       }
 
-      results.set(heroId, current);
+      results.set(key, current);
     }
   }
 
-  return [...results.entries()]
-    .map(([heroId, record]) => ({
-      heroId,
-      opponentId: "",
-      wins: record.wins,
-      losses: record.losses,
-      games: record.wins + record.losses,
-      winRate:
-        record.wins + record.losses > 0
-          ? record.wins / (record.wins + record.losses)
-          : 0,
-    }))
-    .sort((a, b) => b.winRate - a.winRate || b.games - a.games || a.heroId.localeCompare(b.heroId));
+  return [...results.values()]
+    .map((record) => {
+      const games = record.wins + record.losses;
+
+      return {
+        ...record,
+        games,
+        winRate: games > 0 ? record.wins / games : 0,
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.winRate - a.winRate ||
+        b.games - a.games ||
+        a.heroId.localeCompare(b.heroId)
+    );
 }
