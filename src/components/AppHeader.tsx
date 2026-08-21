@@ -74,10 +74,6 @@ export default function AppHeader({
             Colisée des héros
           </h1>
 
-          <p className="mt-3 text-white/60 max-w-xl mx-auto lg:mx-0">
-            Compose l'escouade adverse pour voir
-            une équipe recommandée.
-          </p>
         </div>
 
         <div className="flex flex-col items-center lg:items-end gap-3">
@@ -167,7 +163,7 @@ export default function AppHeader({
               </>
             ) : (
               <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/40">
-                🔒 Historique et enregistrement 🔒
+                🔒 Historique 🔒
               </span>
             )}
           </div>

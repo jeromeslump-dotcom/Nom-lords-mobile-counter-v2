@@ -1,4 +1,5 @@
-import { RotateCcw, X } from "lucide-react";
+import { RotateCcw, Swords, X } from "lucide-react";
+
 import {
   HEROES,
   TYPE_TEXT,
@@ -34,8 +35,10 @@ export default function EnemySlots({
     <div className="mb-8">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
+          <Swords className="h-5 w-5 text-amber-400" />
+
           <span className="text-xl font-bold text-white/80">
-            Ennemis choisis{" "}
+            Équipe ennemie{" "}
             <span className="text-white/40">
               ({picks.length}/{maxPicks})
             </span>
@@ -48,12 +51,12 @@ export default function EnemySlots({
             className="inline-flex items-center gap-1.5 text-xs text-white/50 hover:text-white transition-colors"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Réinitialiser
+            Effacer tout
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-5 gap-2 sm:gap-3">
+<div className="grid grid-cols-5 gap-2 sm:gap-3 max-w-[720px] mx-auto">
         {Array.from({ length: maxPicks }).map((_, i) => {
           const id = picks[i];
 
@@ -114,7 +117,7 @@ export default function EnemySlots({
                       onClick={() =>
                         toggle(hero.id, enabledHeroIds)
                       }
-                      className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/70 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"
+                      className="hero-remove-button absolute top-1 right-1 h-5 w-5 rounded-full bg-black/70 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"
                     >
                       <X className="h-3 w-3 text-white" />
                     </button>

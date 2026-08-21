@@ -170,7 +170,7 @@ export default function RecommendedTeam({
           TEAM CARDS
           ================================================= */}
 
-            <div className="grid grid-cols-5 gap-2 sm:gap-3 mb-6">
+            <div className="grid grid-cols-5 gap-2 sm:gap-3 max-w-[720px] mx-auto mb-6">
 
         {report.map(({ hero, targets }, idx) => {
 
@@ -229,20 +229,19 @@ export default function RecommendedTeam({
 
                     {/* CROIX */}
 
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
+<button
+  type="button"
+  onClick={(e) => {
+    e.preventDefault();
+    e.stopPropagation();
 
-                        hideRecommendedHero(hero.id);
-                      }}
-                      className="absolute top-2 right-2 z-50 h-8 w-8 rounded-full bg-black/85 border-2 border-white/70 text-white flex items-center justify-center shadow-lg hover:bg-rose-500 hover:border-rose-300 transition-all cursor-pointer"
-                      title="Retirer ce héros"
-                      aria-label={`Retirer ${hero.name}`}
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+    hideRecommendedHero(hero.id);
+  }}
+  className="hero-remove-button absolute top-1 right-1 h-5 w-5 rounded-full bg-black/70 hover:bg-rose-500 flex items-center justify-center transition-colors z-10"  title="Retirer ce héros"
+  aria-label={`Retirer ${hero.name}`}
+>
+  <X className="h-3 w-3 text-white" />
+</button>
 
                     <img
                       src={hero.img}
@@ -480,7 +479,7 @@ export default function RecommendedTeam({
     TEAM STATS COMPARISON
     ================================================= */}
 
-<div className="mb-6 rounded-2xl border border-white/10 bg-white/[0.025] p-4">
+<div className="mb-6 w-full max-w-[720px] mx-auto rounded-2xl border border-white/10 bg-white/[0.025] p-4">
 
 <h3 className="text-sm font-bold text-white/80 mb-4 text-center">
   Comparaison des statistiques
@@ -489,9 +488,8 @@ export default function RecommendedTeam({
   {/* EN-TÊTE */}
 
 <div className="flex justify-center">
-  <div className="grid grid-cols-[115px_72px_58px_88px] items-center gap-x-2 px-2">
-
-    <span />
+  <div className="grid grid-cols-[90px_58px_55px_78px] sm:grid-cols-[115px_72px_58px_88px] items-center gap-x-3 px-2">   
+  <span />
 
     <span className="text-[9px] uppercase tracking-wider font-bold text-white/30 text-right whitespace-nowrap">
       Ennemi
@@ -573,8 +571,9 @@ export default function RecommendedTeam({
 <div className="flex justify-center">
   <div
     key={stat.key}
-    className={`grid grid-cols-[115px_72px_58px_88px] items-center gap-x-2 px-2 py-1.5 rounded-lg ${
-      separator
+    className={`grid grid-cols-[90px_58px_55px_78px] sm:grid-cols-[115px_72px_58px_88px] items-center gap-x-3 px-2 py-1.5 rounded-lg ${      
+	
+	separator
         ? "mt-3 pt-3 border-t border-white/10"
         : ""
     }`}
@@ -729,11 +728,6 @@ export default function RecommendedTeam({
 
         </div>
 
-        <p className="text-xs text-white/50 mb-3">
-          Tes résultats influencent les futures
-          recommandations pour cette composition ennemie.
-        </p>
-
         <div className="flex gap-2">
 
           <button
@@ -768,7 +762,7 @@ export default function RecommendedTeam({
           className="inline-flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors"
         >
           <RotateCcw className="h-4 w-4" />
-          Recommencer
+          Effacer tout
         </button>
 
       </div>

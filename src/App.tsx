@@ -271,7 +271,7 @@ const {
 
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.045),transparent_38%)]" />
 
-      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="relative w-full mx-auto px-4 sm:px-6 py-8 sm:py-12">
 
         {/* =================================================
             HEADER
