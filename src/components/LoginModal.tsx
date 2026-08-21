@@ -25,17 +25,14 @@ export default function LoginModal({
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="text-xl font-bold text-white">🔒 Administration</h2>
-
             <p className="text-xs text-white/40 mt-1">
               Connexion réservée à l'administrateur
             </p>
           </div>
 
           <button
-            onClick={() => {
-              setShowLogin(false);
-              setLoginError("");
-            }}
+            onClick={onClose}
+            type="button"
             className="h-8 w-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center"
           >
             <X className="h-4 w-4" />
@@ -53,7 +50,6 @@ export default function LoginModal({
             <label className="block text-xs text-white/50 mb-1.5">
               Adresse e-mail
             </label>
-
             <input
               type="email"
               value={loginEmail}
@@ -68,7 +64,6 @@ export default function LoginModal({
             <label className="block text-xs text-white/50 mb-1.5">
               Mot de passe
             </label>
-
             <input
               type="password"
               value={loginPassword}
