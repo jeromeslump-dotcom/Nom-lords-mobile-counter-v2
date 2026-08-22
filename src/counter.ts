@@ -857,6 +857,8 @@ export function balancedTeam(
   }
 
   const activeCombats = getActiveCombats(combats);
+  
+  const enemySet = new Set(enemyIds);
 
   const pool = HEROES.filter((h) => !enemySet.has(h.id));
 
