@@ -35,7 +35,8 @@ function reliableWinRate(wins: number, games: number): number {
   }
 
   return (
-    (wins + RECOMMENDATION_CONFIG.priorRate * RECOMMENDATION_CONFIG.priorGames) /
+    (wins +
+      RECOMMENDATION_CONFIG.priorRate * RECOMMENDATION_CONFIG.priorGames) /
     (games + RECOMMENDATION_CONFIG.priorGames)
   );
 }

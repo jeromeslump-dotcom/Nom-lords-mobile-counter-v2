@@ -41,7 +41,8 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
    AUTH CACHE
    ========================================================= */
 
-let cachedUser: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] | undefined;
+let cachedUser:
+  Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] | undefined;
 let cachedProfile: UserProfile | null | undefined;
 let cachedProfileUserId: string | null = null;
 

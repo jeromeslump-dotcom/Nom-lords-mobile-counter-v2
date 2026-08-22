@@ -2,8 +2,11 @@ import { useEffect, useState } from "react";
 
 import { supabase, signIn, signOut } from "../storage";
 
+export type UserRole = "user" | "contributor" | "admin";
+
 export function useAuth(onLogout?: () => void) {
   const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState<UserRole | null>(null);
 
   const [loginEmail, setLoginEmail] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
@@ -11,8 +14,63 @@ export function useAuth(onLogout?: () => void) {
   const [showLogin, setShowLogin] = useState(false);
   const [loggingIn, setLoggingIn] = useState(false);
 
+  /* =========================================================
+     CHARGEMENT DU ROLE
+     ========================================================= */
+
+  async function loadRole(userId: string | null) {
+    if (!userId) {
+      setRole(null);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Erreur chargement rôle :", error);
+      setRole(null);
+      return;
+    }
+
+    const nextRole = data?.role;
+
+    if (
+      nextRole === "user" ||
+      nextRole === "contributor" ||
+      nextRole === "admin"
+    ) {
+      setRole(nextRole);
+    } else {
+      setRole(null);
+    }
+  }
+
+  /* =========================================================
+     AUTH STATE
+     ========================================================= */
+
   useEffect(() => {
     let cancelled = false;
+
+    async function initializeAuth() {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      if (cancelled) return;
+
+      const nextUser = session?.user ?? null;
+
+      setUser(nextUser);
+
+      await loadRole(nextUser?.id ?? null);
+    }
+
+    void initializeAuth();
 
     const {
       data: { subscription },
@@ -31,6 +89,8 @@ export function useAuth(onLogout?: () => void) {
 
         return nextUser;
       });
+
+      void loadRole(nextUser?.id ?? null);
     });
 
     return () => {
@@ -38,6 +98,10 @@ export function useAuth(onLogout?: () => void) {
       subscription.unsubscribe();
     };
   }, []);
+
+  /* =========================================================
+     LOGIN
+     ========================================================= */
 
   async function handleLogin() {
     if (!loginEmail.trim() || !loginPassword) {
@@ -56,6 +120,11 @@ export function useAuth(onLogout?: () => void) {
         return;
       }
 
+      /*
+       * Recharge immédiatement le rôle après connexion.
+       */
+      await loadRole(data.user.id);
+
       setLoginEmail("");
       setLoginPassword("");
       setShowLogin(false);
@@ -68,11 +137,16 @@ export function useAuth(onLogout?: () => void) {
     }
   }
 
+  /* =========================================================
+     LOGOUT
+     ========================================================= */
+
   async function handleLogout() {
     try {
       await signOut();
 
       setUser(null);
+      setRole(null);
 
       onLogout?.();
     } catch (error) {
@@ -80,8 +154,57 @@ export function useAuth(onLogout?: () => void) {
     }
   }
 
+  /* =========================================================
+     PERMISSIONS
+     ========================================================= */
+
+  /*
+   * ADMIN
+   *
+   * Accès complet à l'Admin Panel et aux fonctions
+   * réservées à l'administration.
+   */
+  const isAdmin = role === "admin";
+
+  /*
+   * CONTRIBUTEUR
+   *
+   * Un admin possède également les permissions
+   * du contributeur.
+   */
+  const isContributor = role === "contributor" || role === "admin";
+
+  /*
+   * GESTION DES HÉROS
+   *
+   * Les rôles user / contributor / admin peuvent gérer
+   * leurs propres héros actifs.
+   */
+  const canManageHeroes =
+    role === "user" || role === "contributor" || role === "admin";
+
+  /*
+   * AJOUT DE COMBATS
+   *
+   * Seuls contributor et admin peuvent alimenter
+   * l'historique commun.
+   */
+  const canAddCombat = isContributor;
+
+  /* =========================================================
+     RETURN
+     ========================================================= */
+
   return {
     user,
+
+    role,
+
+    isAdmin,
+    isContributor,
+
+    canManageHeroes,
+    canAddCombat,
 
     loginEmail,
     setLoginEmail,

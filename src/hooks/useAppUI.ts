@@ -17,6 +17,8 @@ export function useAppUI(resetSelection: () => void) {
 
   const [showHeroManager, setShowHeroManager] = useState(false);
 
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+
   const [hiddenRecommendedIds, setHiddenRecommendedIds] = useState<Set<string>>(
     new Set()
   );
@@ -57,6 +59,9 @@ export function useAppUI(resetSelection: () => void) {
 
     showHeroManager,
     setShowHeroManager,
+
+    showAdminPanel,
+    setShowAdminPanel,
 
     hiddenRecommendedIds,
     setHiddenRecommendedIds,

@@ -41,7 +41,10 @@ export function calculateWinRate(
     return null;
   }
 
-  const wins = matched.reduce((count, combat) => count + (combat.won ? 1 : 0), 0);
+  const wins = matched.reduce(
+    (count, combat) => count + (combat.won ? 1 : 0),
+    0
+  );
 
   return {
     rate: (wins / matched.length) * 100,
@@ -62,7 +65,8 @@ function reliableWinRate(wins: number, games: number): number {
   }
 
   return (
-    (wins + RECOMMENDATION_CONFIG.priorRate * RECOMMENDATION_CONFIG.priorGames) /
+    (wins +
+      RECOMMENDATION_CONFIG.priorRate * RECOMMENDATION_CONFIG.priorGames) /
     (games + RECOMMENDATION_CONFIG.priorGames)
   );
 }

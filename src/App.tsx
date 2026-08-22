@@ -7,6 +7,7 @@ import HeroFilters from "./components/HeroFilters";
 import CombatHistory from "./components/CombatHistory";
 import RecommendedTeam from "./components/RecommendedTeam";
 import ManualCombatModal from "./components/ManualCombatModal";
+import AdminPanel from "./components/AdminPanel";
 
 import { useAuth } from "./hooks/useAuth";
 import { useAppUI } from "./hooks/useAppUI";
@@ -17,18 +18,10 @@ import { useHeroManagement } from "./hooks/useHeroManagement";
 import { useHeroPreferences } from "./hooks/useHeroPreferences";
 import { useCombatAnalytics } from "./hooks/useCombatAnalytics";
 
-import { HEROES, formatStat } from "./heroes";
-
-import { RotateCcw, Swords, X, ArrowLeftRight } from "lucide-react";
-
 import "./App.css";
 
 const MAX_PICKS = 5;
 const APP_VERSION = "2.1.0";
-
-/* =========================================================
-   APP
-   ========================================================= */
 
 export default function App() {
   /* =======================================================
@@ -68,17 +61,26 @@ export default function App() {
     setActiveClass,
     sortBy,
     setSortBy,
+
     showResult,
     setShowResult,
+
     showHistory,
     setShowHistory,
+
     showManual,
     setShowManual,
+
     showHeroManager,
     setShowHeroManager,
+
+    showAdminPanel,
+    setShowAdminPanel,
+
     hiddenRecommendedIds,
     setHiddenRecommendedIds,
     hideRecommendedHero,
+
     reset,
   } = useAppUI(resetSelection);
 
@@ -88,19 +90,34 @@ export default function App() {
 
   const {
     user,
+    role,
+    isAdmin,
+    isContributor,
+    canManageHeroes,
+    canAddCombat,
+
     loginEmail,
     setLoginEmail,
+
     loginPassword,
     setLoginPassword,
+
     loginError,
     setLoginError,
+
     showLogin,
     setShowLogin,
+
     loggingIn,
+
     handleLogin,
     handleLogout,
   } = useAuth(() => {
     setCombats([]);
+    setShowAdminPanel(false);
+    setShowHeroManager(false);
+    setShowHistory(false);
+    setShowManual(false);
   });
 
   /* =======================================================
@@ -150,6 +167,7 @@ export default function App() {
   } = useManualCombat({
     user,
     enabledHeroIds,
+
     onCombatSaved: (combat) => {
       setCombats((prev) => [combat, ...prev]);
     },
@@ -212,9 +230,10 @@ export default function App() {
     <div className="lmac-app relative overflow-hidden">
       {/* =================================================
           HERO MANAGER
+          RESTE À L'ACCUEIL
           ================================================= */}
 
-      {showHeroManager && (
+      {showHeroManager && canManageHeroes && (
         <HeroManager
           enabledIds={enabledHeroIds}
           usage={usage}
@@ -222,6 +241,41 @@ export default function App() {
           onEnableAll={enableAllHeroes}
           onDisableAll={disableAllHeroes}
           onClose={() => setShowHeroManager(false)}
+        />
+      )}
+
+      {/* =================================================
+          ADMIN PANEL
+          GÈRE LUI-MÊME SES SOUS-FENÊTRES
+          ================================================= */}
+
+      {showAdminPanel && isAdmin && user && (
+        <AdminPanel
+          currentUserId={user.id}
+          onClose={() => setShowAdminPanel(false)}
+
+          /* MANUAL COMBAT */
+
+          mEnemies={mEnemies}
+          mMine={mMine}
+          mWon={mWon}
+
+          savingManual={savingManual}
+
+          setShowManual={setShowManual}
+
+          saveManual={saveManual}
+
+          mReady={mReady}
+
+          setMEnemies={setMEnemies}
+
+          setMMine={setMMine}
+
+          setMWon={setMWon}
+
+          usage={usage}
+          enabledHeroIds={enabledHeroIds}
         />
       )}
 
@@ -259,15 +313,25 @@ export default function App() {
         <AppHeader
           appVersion={APP_VERSION}
           user={user}
+
+          role={role}
+          isAdmin={isAdmin}
+          isContributor={isContributor}
+          canManageHeroes={canManageHeroes}
+          canAddCombat={canAddCombat}
+
           combats={combats}
           winCount={winCount}
           enabledHeroIds={enabledHeroIds}
+
           loginError={loginError}
           setLoginError={setLoginError}
+
           setShowLogin={setShowLogin}
           setShowHeroManager={setShowHeroManager}
           setShowHistory={setShowHistory}
-          setShowManual={setShowManual}
+          setShowAdminPanel={setShowAdminPanel}
+
           handleLogout={handleLogout}
         />
 
@@ -286,10 +350,14 @@ export default function App() {
         )}
 
         {/* =================================================
-            MANUAL COMBAT MODAL
+            MANUAL COMBAT
+            =================================================
+            L'accès principal est maintenant Admin Panel.
+            Ce bloc reste volontairement présent pour ne
+            pas casser le fonctionnement existant.
             ================================================= */}
 
-        {showManual && (
+        {showManual && canAddCombat && (
           <ManualCombatModal
             mEnemies={mEnemies}
             mMine={mMine}
@@ -332,7 +400,9 @@ export default function App() {
             <button
               onClick={() => {
                 setEditedTeam(team.map((h) => h.id));
+
                 setHiddenRecommendedIds(new Set());
+
                 setShowResult(true);
               }}
               className="px-8 py-3 rounded-xl bg-amber-400 text-black font-bold shadow-lg shadow-amber-500/20 hover:scale-105 transition-transform"
@@ -342,12 +412,17 @@ export default function App() {
           </div>
         )}
 
+        {/* =================================================
+            RECOMMENDED TEAM
+            ================================================= */}
+
         {showResult && editedHeroes.length > 0 && (
           <RecommendedTeam
             report={report}
             editedHeroes={editedHeroes}
             editedTeam={editedTeam}
             setEditedTeam={setEditedTeam}
+
             enemyStats={enemyStats}
             teamStats={teamStats}
             statComparisons={statComparisons}
