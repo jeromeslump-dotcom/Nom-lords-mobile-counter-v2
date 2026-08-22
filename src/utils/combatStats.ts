@@ -41,7 +41,7 @@ export function calculateWinRate(
     return null;
   }
 
-  const wins = matched.filter((combat) => combat.won).length;
+  const wins = matched.reduce((count, combat) => count + (combat.won ? 1 : 0), 0);
 
   return {
     rate: (wins / matched.length) * 100,
