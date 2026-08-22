@@ -468,32 +468,27 @@ export default function RecommendedTeam({
             team: teamStats.totalDef,
             comparison: statComparisons.totalDef,
           },
-        ].map((stat) => {
+         ].map((stat) => {
           const positive = stat.comparison.difference >= 0;
-
           const separator = stat.key === "def";
 
           return (
-            <div className="flex justify-center">
+            <div
+              key={stat.key}
+              className="flex justify-center"
+            >
               <div
-                key={stat.key}
                 className={`grid grid-cols-[90px_58px_55px_78px] sm:grid-cols-[115px_72px_58px_88px] items-center gap-x-3 px-2 py-1.5 rounded-lg ${
                   separator ? "mt-3 pt-3 border-t border-white/10" : ""
                 }`}
               >
-                {/* STAT */}
-
                 <span className="text-xs font-semibold text-white/65 whitespace-nowrap">
                   {stat.label}
                 </span>
 
-                {/* ENNEMI */}
-
                 <span className="text-xs tabular-nums text-white/45 text-right whitespace-nowrap">
                   {stat.enemy.toLocaleString("fr-FR")}
                 </span>
-
-                {/* ÉCART */}
 
                 <span
                   className={`text-xs font-bold tabular-nums text-right whitespace-nowrap ${
@@ -503,8 +498,6 @@ export default function RecommendedTeam({
                   {positive ? "+" : ""}
                   {stat.comparison.percentage.toFixed(1)}%
                 </span>
-
-                {/* RECOMMANDÉE */}
 
                 <span className="text-xs font-bold tabular-nums text-white text-right whitespace-nowrap">
                   {stat.team.toLocaleString("fr-FR")}

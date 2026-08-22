@@ -52,10 +52,20 @@ export function useCombatAnalytics({
     [enabledHeroIds, activeClass, query, sortBy, usage]
   );
 
-  const team = useMemo(
-    () => (full ? recommendTeam(picks, combats) : []),
-    [picks, full, combats]
-  );
+const team = useMemo(() => {
+  if (!full) {
+    return [];
+  }
+
+  try {
+    const result = recommendTeam(picks, combats);
+
+    return result;
+  } catch (error) {
+    console.error("RECOMMEND ERROR", error);
+    return [];
+  }
+}, [picks, full, combats]);
 
   const editedHeroes = useMemo(
     () =>
@@ -102,13 +112,29 @@ export function useCombatAnalytics({
     [enemyStats, teamStats]
   );
 
-  const report = useMemo(
-    () =>
-      full && showResult && editedHeroes.length === MAX_PICKS
-        ? coverageReport(editedHeroes, picks)
-        : [],
-    [editedHeroes, picks, full, showResult]
-  );
+const report = useMemo(() => {
+  if (!full || !showResult) {
+    return [];
+  }
+
+  const currentTeam =
+    editedTeam.length === MAX_PICKS
+      ? editedHeroes
+      : team;
+
+  if (currentTeam.length !== MAX_PICKS) {
+    return [];
+  }
+
+  return coverageReport(currentTeam, picks);
+}, [
+  full,
+  showResult,
+  editedTeam,
+  editedHeroes,
+  team,
+  picks,
+]);
 
   const totalCoverage = report.reduce(
     (acc, result) => acc + result.targets.length,

@@ -647,9 +647,7 @@ function analyzeTeam(
 function buildCandidates(enemyIds: string[], combats: Combat[]) {
   const enemies = getEnemies(enemyIds);
 
-  const enemySet = new Set(enemyIds);
-
-  const pool = HEROES.filter((h) => !enemySet.has(h.id));
+  const pool = HEROES;
 
   const counters = buildHeroCounters(enemies);
 
@@ -859,8 +857,6 @@ export function balancedTeam(
   }
 
   const activeCombats = getActiveCombats(combats);
-
-  const enemySet = new Set(enemyIds);
 
   const pool = HEROES.filter((h) => !enemySet.has(h.id));
 

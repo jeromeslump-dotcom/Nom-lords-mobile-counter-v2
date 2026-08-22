@@ -330,15 +330,11 @@ export default function App() {
         {full && !showResult && (
           <div className="flex justify-center mb-8">
             <button
-              onClick={() => {
-                setEditedTeam(
-                  team.map((h) => h.id).filter((id) => enabledHeroIds.has(id))
-                );
-
-                setHiddenRecommendedIds(new Set());
-
-                setShowResult(true);
-              }}
+onClick={() => {
+  setEditedTeam(team.map((h) => h.id));
+  setHiddenRecommendedIds(new Set());
+  setShowResult(true);
+}}
               className="px-8 py-3 rounded-xl bg-amber-400 text-black font-bold shadow-lg shadow-amber-500/20 hover:scale-105 transition-transform"
             >
               Trouver la meilleure contre
