@@ -5,6 +5,7 @@ import { RECOMMENDATION_CONFIG } from "./utils/recommendation/recommendationConf
 import { calculateRecommendationScore } from "./utils/recommendation/recommendationScore";
 import { getHeroFourHeroMatchupScore } from "./utils/recommendation/matchupAnalysis";
 import { analyzeHistoricalTeams } from "./utils/recommendation/teamHistory";
+import { teamKey } from "./utils/teamKey";
 
 export interface CounterTarget {
   id: string;
@@ -181,26 +182,22 @@ function getExactTeamRecord(
   enemyIds: string[],
   combats: Combat[]
 ) {
-  const teamKey = team
-    .map((h) => h.id)
-    .sort()
-    .join(",");
-
-  const enemyKey = [...enemyIds].sort().join(",");
+  const normalizedTeamKey = teamKey(team.map((h) => h.id));
+  const normalizedEnemyKey = teamKey(enemyIds);
 
   let wins = 0;
   let losses = 0;
 
   for (const combat of combats) {
-    const combatTeamKey = [...combat.my_heroes].sort().join(",");
+    const combatTeamKey = teamKey(combat.my_heroes);
 
-    if (combatTeamKey !== teamKey) {
+    if (combatTeamKey !== normalizedTeamKey) {
       continue;
     }
 
-    const combatEnemyKey = [...combat.enemy_heroes].sort().join(",");
+    const combatEnemyKey = teamKey(combat.enemy_heroes);
 
-    if (combatEnemyKey !== enemyKey) {
+    if (combatEnemyKey !== normalizedEnemyKey) {
       continue;
     }
 
@@ -245,7 +242,7 @@ function getBestExactHistoricalTeam(
     return null;
   }
 
-  const enemyKey = [...enemyIds].sort().join(",");
+  const normalizedEnemyKey = teamKey(enemyIds);
 
   const records = new Map<
     string,
@@ -265,9 +262,9 @@ function getBestExactHistoricalTeam(
       continue;
     }
 
-    const combatEnemyKey = [...combat.enemy_heroes].sort().join(",");
+    const combatEnemyKey = teamKey(combat.enemy_heroes);
 
-    if (combatEnemyKey !== enemyKey) {
+    if (combatEnemyKey !== normalizedEnemyKey) {
       continue;
     }
 
@@ -278,11 +275,10 @@ function getBestExactHistoricalTeam(
       continue;
     }
 
-    const teamIds = [...combat.my_heroes].sort();
+    const teamIds = teamKey(combat.my_heroes).split("|");
+    const normalizedTeamKey = teamKey(teamIds);
 
-    const teamKey = teamIds.join(",");
-
-    const current = records.get(teamKey) ?? {
+    const current = records.get(normalizedTeamKey) ?? {
       ids: teamIds,
       wins: 0,
       losses: 0,
@@ -294,7 +290,7 @@ function getBestExactHistoricalTeam(
       current.losses++;
     }
 
-    records.set(teamKey, current);
+    records.set(normalizedTeamKey, current);
   }
 
   const valid = [...records.values()].filter((record) => record.wins > 0);
@@ -314,7 +310,7 @@ function getBestExactHistoricalTeam(
       bRate - aRate ||
       b.wins - a.wins ||
       bGames - aGames ||
-      a.ids.join(",").localeCompare(b.ids.join(","), "fr")
+      teamKey(a.ids).localeCompare(teamKey(b.ids), "fr")
     );
   });
 
@@ -364,13 +360,10 @@ function teamHistoryScore(
     return 0;
   }
 
-  const teamKey = team
-    .map((hero) => hero.id)
-    .sort()
-    .join("|");
+  const normalizedTeamKey = teamKey(team.map((hero) => hero.id));
 
   const historicalTeam = historicalTeams.find(
-    (candidate) => candidate.ids.slice().sort().join("|") === teamKey
+    (candidate) => teamKey(candidate.ids) === normalizedTeamKey
   );
 
   if (!historicalTeam) {
@@ -571,9 +564,9 @@ function analyzeTeam(
 ): TeamAnalysis {
   const counter = counterScore(team, enemies);
 
-  const history =
-    teamHistoryScore(team, enemyIds, combats) +
-    exactTeamHistoryScore(team, enemyIds, combats);
+  const teamHistory = teamHistoryScore(team, enemyIds, combats);
+
+  const history = teamHistory + exactTeamHistoryScore(team, enemyIds, combats);
 
   const synergy = synergyScore(team, enemies);
 
@@ -593,7 +586,7 @@ function analyzeTeam(
         synergyScore: synergy,
         roleScore: role,
         matchupScore: matchup,
-        teamHistoryScore: teamHistoryScore(team, enemyIds, combats),
+        teamHistoryScore: teamHistory,
       },
       {
         counter: RECOMMENDATION_CONFIG.counter,
@@ -644,7 +637,6 @@ function buildCandidates(enemyIds: string[], combats: Combat[]) {
     return {
       hero,
       targets,
-
       seedScore: counter * 3 + history + exactHistory + learnedBonus,
     };
   });
@@ -745,7 +737,6 @@ export function recommendTeam(
 
         next.push({
           team,
-
           score:
             partialCounter * COUNTER_WEIGHT +
             partialSynergy * SYNERGY_WEIGHT +
@@ -762,10 +753,7 @@ export function recommendTeam(
     states = [];
 
     for (const state of next) {
-      const key = state.team
-        .map((h) => h.id)
-        .sort()
-        .join(",");
+      const key = teamKey(state.team.map((h) => h.id));
 
       if (seen.has(key)) {
         continue;
@@ -808,7 +796,6 @@ export function recommendTeam(
 
     if (analysis.score > bestScore) {
       bestScore = analysis.score;
-
       best = state.team;
     }
   }
@@ -852,7 +839,6 @@ export function balancedTeam(
 
       return {
         hero,
-
         score: counter * 4 + history + learnedBonus,
       };
     })
@@ -903,9 +889,7 @@ export function coverageReport(
 
     return {
       hero,
-
       score: targets.reduce((sum, t) => sum + t.score, 0),
-
       targets,
     };
   });
