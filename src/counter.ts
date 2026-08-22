@@ -3,7 +3,7 @@ import type { Combat } from "./storage";
 
 import { RECOMMENDATION_CONFIG } from "./utils/recommendation/recommendationConfig";
 import { calculateRecommendationScore } from "./utils/recommendation/recommendationScore";
-import { getBestFourHeroMatchupCandidate } from "./utils/recommendation/matchupAnalysis";
+import { getHeroFourHeroMatchupScore } from "./utils/recommendation/matchupAnalysis";
 import {
   analyzeHistoricalTeams,
 } from "./utils/recommendation/teamHistory";
@@ -561,22 +561,19 @@ function matchupTeamScore(
   let score = 0;
 
   for (const hero of team) {
-    const matchup = getBestFourHeroMatchupCandidate(combats, enemyIds, 2);
+    const matchup = getHeroFourHeroMatchupScore(
+      hero.id,
+      combats,
+      enemyIds,
+      2
+    );
 
     if (!matchup) {
       continue;
     }
 
-    /*
-     * On ne veut ici utiliser le résultat que si le
-     * candidat correspond réellement au héros évalué.
-     */
-    if (matchup.heroId !== hero.id) {
-      continue;
-    }
-
     const normalized =
-      (matchup.winRate / 100 - RECOMMENDATION_CONFIG.priorRate) * 20;
+      (matchup.smoothedWinRate / 100 - RECOMMENDATION_CONFIG.priorRate) * 20;
 
     score += normalized;
   }
