@@ -38,6 +38,29 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 /* =========================================================
+   AUTH CACHE
+   ========================================================= */
+
+let cachedUser: Awaited<ReturnType<typeof supabase.auth.getUser>>["data"]["user"] | undefined;
+let cachedProfile: UserProfile | null | undefined;
+let cachedProfileUserId: string | null = null;
+
+function clearAuthCache(): void {
+  cachedUser = undefined;
+  cachedProfile = undefined;
+  cachedProfileUserId = null;
+}
+
+function cacheUser(user: typeof cachedUser): void {
+  cachedUser = user;
+
+  if (!user || cachedProfileUserId !== user.id) {
+    cachedProfile = undefined;
+    cachedProfileUserId = user?.id ?? null;
+  }
+}
+
+/* =========================================================
    NORMALISATION
    ========================================================= */
 
@@ -142,33 +165,65 @@ function setDisplayName(displayName: string | null): void {
   }
 }
 
+async function loadProfile(userId: string): Promise<UserProfile | null> {
+  if (cachedProfileUserId === userId && cachedProfile !== undefined) {
+    return cachedProfile;
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id, display_name, role, active, created_at")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (error || !data) {
+      cachedProfileUserId = userId;
+      cachedProfile = null;
+      return null;
+    }
+
+    if (
+      data.role !== "user" &&
+      data.role !== "contributor" &&
+      data.role !== "admin"
+    ) {
+      cachedProfileUserId = userId;
+      cachedProfile = null;
+      return null;
+    }
+
+    const profile = data as UserProfile;
+    cachedProfileUserId = userId;
+    cachedProfile = profile;
+
+    return profile;
+  } catch (error) {
+    cachedProfileUserId = userId;
+    cachedProfile = null;
+
+    console.error("Erreur inattendue récupération profil :", error);
+
+    return null;
+  }
+}
+
 async function syncRoleClass(userId: string): Promise<void> {
   if (typeof document === "undefined") {
     return;
   }
 
   try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("role, active, display_name")
-      .eq("id", userId)
-      .maybeSingle();
+    const profile = await loadProfile(userId);
 
     clearRoleClass();
 
-    if (error || !data || data.active !== true) {
+    if (!profile || !profile.active) {
       return;
     }
 
-    setDisplayName(data.display_name);
-
-    if (
-      data.role === "user" ||
-      data.role === "contributor" ||
-      data.role === "admin"
-    ) {
-      document.body.classList.add(`lmac-role-${data.role}`);
-    }
+    setDisplayName(profile.display_name);
+    document.body.classList.add(`lmac-role-${profile.role}`);
   } catch {
     clearRoleClass();
   }
@@ -179,6 +234,10 @@ async function syncRoleClass(userId: string): Promise<void> {
    ========================================================= */
 
 export async function getCurrentUser() {
+  if (cachedUser !== undefined) {
+    return cachedUser;
+  }
+
   try {
     const {
       data: { user },
@@ -186,6 +245,7 @@ export async function getCurrentUser() {
     } = await supabase.auth.getUser();
 
     if (error) {
+      clearAuthCache();
       clearRoleClass();
 
       if (error.name !== "AuthSessionMissingError") {
@@ -194,6 +254,8 @@ export async function getCurrentUser() {
 
       return null;
     }
+
+    cacheUser(user);
 
     if (!user) {
       clearRoleClass();
@@ -204,6 +266,7 @@ export async function getCurrentUser() {
 
     return user;
   } catch (error) {
+    clearAuthCache();
     clearRoleClass();
 
     console.error("Erreur inattendue récupération utilisateur :", error);
@@ -219,39 +282,7 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
     return null;
   }
 
-  try {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("id, display_name, role, active, created_at")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error("Erreur récupération profil :", error);
-
-      return null;
-    }
-
-    if (!data) {
-      return null;
-    }
-
-    if (
-      data.role !== "user" &&
-      data.role !== "contributor" &&
-      data.role !== "admin"
-    ) {
-      console.error("Rôle utilisateur invalide :", data.role);
-
-      return null;
-    }
-
-    return data as UserProfile;
-  } catch (error) {
-    console.error("Erreur inattendue récupération profil :", error);
-
-    return null;
-  }
+  return loadProfile(user.id);
 }
 
 /**
@@ -269,13 +300,16 @@ export async function signIn(email: string, password: string) {
     });
 
     if (result.data.user) {
+      cacheUser(result.data.user);
       await syncRoleClass(result.data.user.id);
     } else {
+      clearAuthCache();
       clearRoleClass();
     }
 
     return result;
   } catch (error) {
+    clearAuthCache();
     clearRoleClass();
 
     console.error("Erreur inattendue lors de la connexion :", error);
@@ -294,10 +328,12 @@ export async function signOut() {
   try {
     const result = await supabase.auth.signOut();
 
+    clearAuthCache();
     clearRoleClass();
 
     return result;
   } catch (error) {
+    clearAuthCache();
     clearRoleClass();
 
     console.error("Erreur inattendue lors de la déconnexion :", error);
@@ -354,12 +390,6 @@ export async function addCombat(
     return null;
   }
 
-  /*
-   * La sécurité réelle est assurée par Supabase RLS.
-   *
-   * Cette vérification côté application permet simplement
-   * d'éviter de proposer l'action à un utilisateur non autorisé.
-   */
   const profile = await getCurrentProfile();
 
   if (
@@ -371,7 +401,6 @@ export async function addCombat(
   }
 
   const enemyHeroes = normalizeHeroArray(input.enemy_heroes);
-
   const myHeroes = normalizeHeroArray(input.my_heroes);
 
   if (enemyHeroes.length === 0 || myHeroes.length === 0) {
