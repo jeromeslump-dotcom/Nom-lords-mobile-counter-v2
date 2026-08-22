@@ -27,7 +27,7 @@ export const HEROES: Hero[] = [
     type: "Ranged",
     cls: "STR",
     img: "https://static.wikia.nocookie.net/lordsmobile/images/b/b8/Boommeister_medal.png/revision/latest/scale-to-width-down/200?cb=20200103200943",
-    stats: { hp: 28000, atk: 1300, matk: 0, def: 440, mdef: 220 },
+    stats: { hp: 26901, atk: 2279, matk: 238, def: 286, mdef: 160 },
   },
   {
     id: "black_crow",
@@ -224,7 +224,7 @@ export const HEROES: Hero[] = [
     alias: "Jonas",
     type: "Siege Engine",
     cls: "INT",
-    img: "https://static.wikia.nocookie.net/lordsmobile/images/7/7d/Dark_Follower_medal.png/revision/latest/scale-to-width-down/200",
+    img: "https://static.wikia.nocookie.net/lordsmobile/images/8/8a/Dark_Follower_medal.png/revision/latest/scale-to-width-down/200?cb=20200111033506",
     stats: { hp: 13500, atk: 0, matk: 2800, def: 130, mdef: 470 },
   },
   {
@@ -278,8 +278,8 @@ export const HEROES: Hero[] = [
     alias: "Rolanda",
     type: "Infantry",
     cls: "STR",
-    img: "https://static.wikia.nocookie.net/lordsmobile/images/6/69/Flower_Maiden_medal.png/revision/latest/scale-to-width-down/200",
-    stats: { hp: 30000, atk: 1200, matk: 0, def: 450, mdef: 300 },
+    img: "https://static.wikia.nocookie.net/lordsmobile/images/6/61/Flower_Maiden_medal.png/revision/latest/scale-to-width-down/200?cb=20240119040702",
+    stats: { hp: 37310, atk: 1472, matk: 335, def: 326, mdef: 352 },
   },
   {
     id: "grim_wolf",
@@ -513,7 +513,7 @@ export const HEROES: Hero[] = [
     type: "Ranged",
     cls: "INT",
     img: "https://static.wikia.nocookie.net/lordsmobile/images/d/d9/Prima_Donna_medal.png/revision/latest/scale-to-width-down/200?cb=20200103214949",
-    stats: { hp: 14025, atk: 0, matk: 2408, def: 142, mdef: 512 },
+    stats: { hp: 10447, atk: 388, matk: 2203, def: 113, mdef: 329 },
   },
   {
     id: "watchman",
@@ -522,7 +522,7 @@ export const HEROES: Hero[] = [
     type: "Infantry",
     cls: "STR",
     img: "https://static.wikia.nocookie.net/lordsmobile/images/0/0c/Watcher_medal.png/revision/latest/scale-to-width-down/200?cb=20200103204745",
-    stats: { hp: 37172, atk: 930, matk: 0, def: 494, mdef: 555 },
+    stats: { hp: 37172, atk: 930, matk: 494, def: 555, mdef: 505 },
   },
   {
     id: "elementalist",
@@ -539,7 +539,7 @@ export const HEROES: Hero[] = [
     alias: "Gravios",
     type: "Cavalry",
     cls: "AGI",
-    img: "https://static.wikia.nocookie.net/lordsmobile/images/2/28/Chaos_Dragon_medal.png/revision/latest/scale-to-width-down/200",
+    img: "https://static.wikia.nocookie.net/lordsmobile/images/e/ea/Chaos_Dragon_medal.png/revision/latest/scale-to-width-down/200?cb=20200103204755",
     stats: { hp: 19616, atk: 2935, matk: 358, def: 212, mdef: 202 },
   },
   {
@@ -548,7 +548,7 @@ export const HEROES: Hero[] = [
     alias: "Seiya",
     type: "Infantry",
     cls: "STR",
-    img: "https://static.wikia.nocookie.net/lordsmobile/images/7/7e/Pegasus_medal.png/revision/latest/scale-to-width-down/200",
+    img: "https://static.wikia.nocookie.net/lordsmobile/images/f/f6/Pegasus_medal.png/revision/latest/scale-to-width-down/200?cb=20210330033221",
     stats: { hp: 30355, atk: 1966, matk: 277, def: 282, mdef: 149 },
   },
   {
