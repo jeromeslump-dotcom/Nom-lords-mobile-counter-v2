@@ -40,18 +40,18 @@ export interface RecommendationConfig {
   /**
    * Poids de l'analyse 4 + 1.
    *
-   * Permettra d'intégrer les résultats de matchupAnalysis.ts.
+   * Intègre les résultats de matchupAnalysis.ts dans le score final.
    *
-   * 0 = désactivé.
+   * Valeur actuelle : 1
    */
   matchup: number;
 
   /**
    * Poids de l'historique des équipes complètes.
    *
-   * Permettra d'intégrer les résultats de teamHistory.ts.
+   * Intègre les résultats de teamHistory.ts dans le score final.
    *
-   * 0 = désactivé.
+   * Valeur actuelle : 1
    */
   teamHistory: number;
 
@@ -77,11 +77,9 @@ export interface RecommendationConfig {
 /**
  * Configuration actuelle du moteur.
  *
- * IMPORTANT :
- * Les valeurs historiques restent inchangées ici.
- *
- * Les nouvelles analyses sont volontairement désactivées avec un poids
- * de 0 tant qu'elles ne sont pas branchées et validées.
+ * Les analyses historiques sont désormais actives :
+ * - matchup = analyse 4 + 1 ;
+ * - teamHistory = historique des équipes complètes.
  */
 export const RECOMMENDATION_CONFIG: RecommendationConfig = {
   counter: 5,
@@ -89,7 +87,7 @@ export const RECOMMENDATION_CONFIG: RecommendationConfig = {
   synergy: 2,
   role: 1,
 
-  matchup: 0,
+  matchup: 1,
   teamHistory: 1,
 
   priorRate: 0.419,
