@@ -154,11 +154,12 @@ export function analyzeFourHeroMatchups(
 
     for (const combat of combats) {
       /*
-       * On ne considère que les combats actifs.
+       * Seuls les combats explicitement actifs sont pris en compte.
        */
-      if (combat.status === "removed") {
+      if (combat.status !== "active") {
         continue;
       }
+
       /*
        * Une composition doit être complète.
        */
