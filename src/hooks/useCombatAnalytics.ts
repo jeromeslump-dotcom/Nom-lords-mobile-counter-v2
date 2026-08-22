@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 
 import {
   calculateHeroUsage,
@@ -205,63 +205,6 @@ export function useCombatAnalytics({
 
     return calculateWinRate(combats, picks, teamIds);
   }, [combats, picks, full, showResult, editedTeam, team]);
-
-  /* ---------------------------------------------------------
-   * DEBUG HISTORIQUE
-   * --------------------------------------------------------- */
-
-  useEffect(() => {
-    if (!full || !showResult) {
-      return;
-    }
-
-    console.log("========== HISTORICAL DEBUG ==========");
-
-    console.log("ENEMIES:", picks);
-
-    console.log(
-      "TEAM recommandée:",
-      team.map((hero) => hero.id)
-    );
-
-    console.log("EDITED TEAM:", editedTeam);
-
-    console.log("COMBATS:", combats.length);
-
-    /*
-     * On affiche quelques combats pour vérifier
-     * que les données Supabase arrivent réellement
-     * jusqu'à ce hook.
-     */
-    if (combats.length > 0) {
-      console.log("PREMIER COMBAT:", combats[0]);
-
-      console.log(
-        "COMBATS POUR CET ENNEMI:",
-        combats.filter((combat) => {
-          const a = [...combat.enemy_heroes].sort().join(",");
-
-          const b = [...picks].sort().join(",");
-
-          return a === b;
-        })
-      );
-    }
-
-    console.log("BEST HISTORICAL TEAM:", bestWinTeam);
-
-    if (bestWinTeam) {
-      console.log("BEST HISTORICAL IDS:", bestWinTeam.ids);
-
-      console.log("BEST HISTORICAL RATE:", bestWinTeam.rate);
-
-      console.log("BEST HISTORICAL COUNT:", bestWinTeam.count);
-    } else {
-      console.log("BEST HISTORICAL TEAM = NULL");
-    }
-
-    console.log("======================================");
-  }, [full, showResult, picks, team, editedTeam, combats, bestWinTeam]);
 
   /* ---------------------------------------------------------
    * RETURN
