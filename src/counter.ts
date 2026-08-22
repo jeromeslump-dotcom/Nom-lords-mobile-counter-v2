@@ -4,6 +4,9 @@ import type { Combat } from "./storage";
 import { RECOMMENDATION_CONFIG } from "./utils/recommendation/recommendationConfig";
 import { calculateRecommendationScore } from "./utils/recommendation/recommendationScore";
 import { getBestFourHeroMatchupCandidate } from "./utils/recommendation/matchupAnalysis";
+import {
+  analyzeHistoricalTeams,
+} from "./utils/recommendation/teamHistory";
 
 export interface CounterTarget {
   id: string;
@@ -353,53 +356,45 @@ function teamHistoryScore(
   enemyIds: string[],
   combats: Combat[]
 ): number {
-  if (combats.length === 0) {
+  if (combats.length === 0 || team.length !== TEAM_SIZE) {
     return 0;
   }
 
-  const enemySet = new Set(enemyIds);
+  const historicalTeams = analyzeHistoricalTeams(
+    combats,
+    enemyIds,
+    0.8
+  );
 
-  const teamIds = new Set(team.map((h) => h.id));
-
-  let weighted = 0;
-  let totalWeight = 0;
-
-  for (const combat of combats) {
-    const enemyOverlap = combat.enemy_heroes.filter((id) =>
-      enemySet.has(id)
-    ).length;
-
-    if (enemyOverlap < 2) {
-      continue;
-    }
-
-    const myOverlap = combat.my_heroes.filter((id) => teamIds.has(id)).length;
-
-    if (myOverlap < 2) {
-      continue;
-    }
-
-    const enemyWeight = enemyOverlap / enemyIds.length;
-    const teamWeight = myOverlap / TEAM_SIZE;
-
-    const weight = enemyWeight * teamWeight;
-
-    totalWeight += weight;
-
-    if (combat.won) {
-      weighted += weight;
-    }
-  }
-
-  if (totalWeight === 0) {
+  if (historicalTeams.length === 0) {
     return 0;
   }
 
-  const observed = weighted / totalWeight;
+  const teamKey = team
+    .map((hero) => hero.id)
+    .sort()
+    .join("|");
 
-  const rate = smoothedRate(observed * totalWeight, totalWeight);
+  const historicalTeam = historicalTeams.find(
+    (candidate) =>
+      candidate.ids
+        .slice()
+        .sort()
+        .join("|") === teamKey
+  );
 
-  return (rate - PRIOR_RATE) * 20;
+  if (!historicalTeam) {
+    return 0;
+  }
+
+  const rate = historicalTeam.winRate / 100;
+
+  const confidence = Math.min(
+    2.5,
+    Math.sqrt(historicalTeam.games)
+  );
+
+  return (rate - PRIOR_RATE) * 55 * confidence;
 }
 
 /* -----------------------------------------------------------
@@ -619,7 +614,11 @@ function analyzeTeam(
         synergyScore: synergy,
         roleScore: role,
         matchupScore: matchup,
-        teamHistoryScore: 0,
+        teamHistoryScore: teamHistoryScore(
+  team,
+  enemyIds,
+  combats
+),
       },
       {
         counter: RECOMMENDATION_CONFIG.counter,

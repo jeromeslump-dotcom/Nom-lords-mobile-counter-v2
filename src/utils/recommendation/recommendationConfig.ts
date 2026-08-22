@@ -91,7 +91,7 @@ export const RECOMMENDATION_CONFIG: RecommendationConfig = {
   role: 1,
 
   matchup: 0,
-  teamHistory: 0,
+  teamHistory: 1,
 
   priorRate: 0.419,
   priorGames: 3,
