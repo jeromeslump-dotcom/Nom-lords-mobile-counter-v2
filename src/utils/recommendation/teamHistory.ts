@@ -59,7 +59,7 @@ export function calculateEnemySimilarity(
  * Par défaut :
  * - 5/5 héros identiques = correspondance parfaite
  * - 4/5 = très similaire
- * - 3/5 = similaire
+ * - 3/5 ou moins = ignoré
  *
  * Le minimum de similarité peut être ajusté.
  */
