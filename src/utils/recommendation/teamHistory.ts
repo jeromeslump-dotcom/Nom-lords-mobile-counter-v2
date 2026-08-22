@@ -1,6 +1,7 @@
 import type { Combat } from "../../storage";
 import { HEROES } from "../../heroes";
 import { RECOMMENDATION_CONFIG } from "./recommendationConfig";
+import { normalizeTeam, teamKey } from "../teamKey";
 
 export interface HistoricalTeam {
   ids: string[];
@@ -10,24 +11,6 @@ export interface HistoricalTeam {
   losses: number;
   winRate: number;
   reliableWinRate: number;
-}
-
-/**
- * Normalise une équipe afin que son ordre ne compte.
- *
- * Exemple :
- * [tracker, blackCrow, roseKnight]
- * et
- * [roseKnight, tracker, blackCrow]
- *
- * représentent la même équipe historique.
- */
-function normalizeTeam(ids: string[]): string[] {
-  return [...new Set(ids)].sort((a, b) => a.localeCompare(b));
-}
-
-function teamKey(ids: string[]): string {
-  return normalizeTeam(ids).join("|");
 }
 
 function reliableWinRate(wins: number, games: number): number {
@@ -41,14 +24,6 @@ function reliableWinRate(wins: number, games: number): number {
   );
 }
 
-/**
- * Calcule la similarité entre deux compositions ennemies.
- *
- * 5 héros identiques = 100 %
- * 4 héros identiques = 80 %
- * 3 héros identiques = 60 %
- * etc.
- */
 export function calculateEnemySimilarity(
   enemyA: string[],
   enemyB: string[]
@@ -58,23 +33,11 @@ export function calculateEnemySimilarity(
   }
 
   const setB = new Set(enemyB);
-
   const commonHeroes = enemyA.filter((heroId) => setB.has(heroId)).length;
 
   return commonHeroes / 5;
 }
 
-/**
- * Recherche les équipes complètes ayant déjà combattu une composition
- * ennemie identique ou similaire.
- *
- * Par défaut :
- * - 5/5 héros identiques = correspondance parfaite
- * - 4/5 = très similaire
- * - 3/5 ou moins = ignoré
- *
- * Le minimum de similarité peut être ajusté.
- */
 export function analyzeHistoricalTeams(
   combats: Combat[],
   enemyTeam: string[],
@@ -114,16 +77,10 @@ export function analyzeHistoricalTeams(
       continue;
     }
 
-    const key = ids.join("|");
-
-    const current = teams.get(key) ?? {
-      ids,
-      games: 0,
-      wins: 0,
-    };
+    const key = teamKey(ids);
+    const current = teams.get(key) ?? { ids, games: 0, wins: 0 };
 
     current.games += 1;
-
     if (combat.won) {
       current.wins += 1;
     }
@@ -136,7 +93,6 @@ export function analyzeHistoricalTeams(
   for (const team of teams.values()) {
     const wins = team.wins;
     const losses = team.games - wins;
-
     const names = team.ids.map((heroId) => {
       const hero = HEROES.find((item) => item.id === heroId);
       return hero?.name ?? heroId;
@@ -164,13 +120,6 @@ export function analyzeHistoricalTeams(
   return results;
 }
 
-/**
- * Retourne directement la meilleure équipe historique.
- *
- * Le classement utilise un taux de victoire lissé avec le prior
- * global du moteur afin qu'un petit échantillon ne domine pas
- * automatiquement un historique beaucoup plus fourni.
- */
 export function getBestHistoricalTeam(
   combats: Combat[],
   enemyTeam: string[],
@@ -182,4 +131,4 @@ export function getBestHistoricalTeam(
   return teams.find((team) => team.games >= minimumGames) ?? null;
 }
 
-export { teamKey };
+export { normalizeTeam, teamKey };
