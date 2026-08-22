@@ -37,6 +37,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+/* =========================================================
+   NORMALISATION
+   ========================================================= */
+
 function normalizeHeroArray(value: unknown): string[] {
   if (Array.isArray(value)) {
     return value.filter(
@@ -47,6 +51,7 @@ function normalizeHeroArray(value: unknown): string[] {
   if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
+
       if (Array.isArray(parsed)) {
         return parsed.filter(
           (id): id is string => typeof id === "string" && id.trim().length > 0
@@ -61,7 +66,9 @@ function normalizeHeroArray(value: unknown): string[] {
 }
 
 function normalizeCombat(value: unknown): Combat | null {
-  if (!value || typeof value !== "object") return null;
+  if (!value || typeof value !== "object") {
+    return null;
+  }
 
   const row = value as Record<string, unknown>;
 
@@ -89,35 +96,42 @@ function normalizeCombat(value: unknown): Combat | null {
 }
 
 function normalizeCombats(data: unknown): Combat[] {
-  if (!Array.isArray(data)) return [];
+  if (!Array.isArray(data)) {
+    return [];
+  }
+
   return data.flatMap((row) => {
     const combat = normalizeCombat(row);
-    if (!combat) {
-      console.warn(
-        "Combat Supabase ignoré car ses données sont invalides :",
-        row
-      );
-      return [];
-    }
-    return [combat];
+
+    return combat ? [combat] : [];
   });
 }
 
+/* =========================================================
+   ROLE / AFFICHAGE
+   ========================================================= */
+
 function clearRoleClass(): void {
-  if (typeof document === "undefined") return;
+  if (typeof document === "undefined") {
+    return;
+  }
 
   document.body.classList.remove(
     "lmac-role-user",
     "lmac-role-contributor",
     "lmac-role-admin"
   );
+
   document.body.style.removeProperty("--lmac-display-name");
 }
 
 function setDisplayName(displayName: string | null): void {
-  if (typeof document === "undefined") return;
+  if (typeof document === "undefined") {
+    return;
+  }
 
   const safeName = (displayName ?? "").trim();
+
   if (safeName) {
     document.body.style.setProperty(
       "--lmac-display-name",
@@ -129,7 +143,9 @@ function setDisplayName(displayName: string | null): void {
 }
 
 async function syncRoleClass(userId: string): Promise<void> {
-  if (typeof document === "undefined") return;
+  if (typeof document === "undefined") {
+    return;
+  }
 
   try {
     const { data, error } = await supabase
@@ -140,7 +156,9 @@ async function syncRoleClass(userId: string): Promise<void> {
 
     clearRoleClass();
 
-    if (error || !data || data.active !== true) return;
+    if (error || !data || data.active !== true) {
+      return;
+    }
 
     setDisplayName(data.display_name);
 
@@ -156,18 +174,24 @@ async function syncRoleClass(userId: string): Promise<void> {
   }
 }
 
+/* =========================================================
+   AUTHENTIFICATION
+   ========================================================= */
+
 export async function getCurrentUser() {
   try {
     const {
       data: { user },
       error,
     } = await supabase.auth.getUser();
+
     if (error) {
       clearRoleClass();
-      // Une absence de session est normale pour un visiteur.
+
       if (error.name !== "AuthSessionMissingError") {
         console.error("Erreur récupération utilisateur :", error);
       }
+
       return null;
     }
 
@@ -177,17 +201,23 @@ export async function getCurrentUser() {
     }
 
     await syncRoleClass(user.id);
+
     return user;
   } catch (error) {
     clearRoleClass();
+
     console.error("Erreur inattendue récupération utilisateur :", error);
+
     return null;
   }
 }
 
 export async function getCurrentProfile(): Promise<UserProfile | null> {
   const user = await getCurrentUser();
-  if (!user) return null;
+
+  if (!user) {
+    return null;
+  }
 
   try {
     const { data, error } = await supabase
@@ -198,10 +228,13 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
 
     if (error) {
       console.error("Erreur récupération profil :", error);
+
       return null;
     }
 
-    if (!data) return null;
+    if (!data) {
+      return null;
+    }
 
     if (
       data.role !== "user" &&
@@ -209,16 +242,25 @@ export async function getCurrentProfile(): Promise<UserProfile | null> {
       data.role !== "admin"
     ) {
       console.error("Rôle utilisateur invalide :", data.role);
+
       return null;
     }
 
     return data as UserProfile;
   } catch (error) {
     console.error("Erreur inattendue récupération profil :", error);
+
     return null;
   }
 }
 
+/**
+ * Connexion email / mot de passe.
+ *
+ * IMPORTANT :
+ * Cette fonction doit rester exportée car useAuth.ts
+ * l'importe directement.
+ */
 export async function signIn(email: string, password: string) {
   try {
     const result = await supabase.auth.signInWithPassword({
@@ -235,9 +277,14 @@ export async function signIn(email: string, password: string) {
     return result;
   } catch (error) {
     clearRoleClass();
+
     console.error("Erreur inattendue lors de la connexion :", error);
+
     return {
-      data: { user: null, session: null },
+      data: {
+        user: null,
+        session: null,
+      },
       error: error instanceof Error ? error : new Error("Erreur de connexion"),
     };
   }
@@ -246,11 +293,15 @@ export async function signIn(email: string, password: string) {
 export async function signOut() {
   try {
     const result = await supabase.auth.signOut();
+
     clearRoleClass();
+
     return result;
   } catch (error) {
     clearRoleClass();
+
     console.error("Erreur inattendue lors de la déconnexion :", error);
+
     return {
       error:
         error instanceof Error ? error : new Error("Erreur de déconnexion"),
@@ -258,9 +309,16 @@ export async function signOut() {
   }
 }
 
+/* =========================================================
+   COMBATS
+   ========================================================= */
+
 export async function loadCombats(): Promise<Combat[]> {
   const user = await getCurrentUser();
-  if (!user) return [];
+
+  if (!user) {
+    return [];
+  }
 
   try {
     const { data, error } = await supabase
@@ -269,16 +327,20 @@ export async function loadCombats(): Promise<Combat[]> {
         "id, user_id, created_by, status, enemy_heroes, my_heroes, won, created_at"
       )
       .eq("status", "active")
-      .order("created_at", { ascending: false });
+      .order("created_at", {
+        ascending: false,
+      });
 
     if (error) {
       console.error("Erreur lors du chargement des combats :", error);
+
       return [];
     }
 
     return normalizeCombats(data);
   } catch (error) {
     console.error("Erreur inattendue lors du chargement des combats :", error);
+
     return [];
   }
 }
@@ -287,13 +349,19 @@ export async function addCombat(
   input: Omit<Combat, "id" | "user_id" | "created_by" | "status" | "created_at">
 ): Promise<Combat | null> {
   const user = await getCurrentUser();
+
   if (!user) {
     return null;
   }
 
-  // La règle métier est volontairement doublée côté application.
-  // La vraie sécurité reste assurée par la RLS Supabase.
+  /*
+   * La sécurité réelle est assurée par Supabase RLS.
+   *
+   * Cette vérification côté application permet simplement
+   * d'éviter de proposer l'action à un utilisateur non autorisé.
+   */
   const profile = await getCurrentProfile();
+
   if (
     !profile ||
     !profile.active ||
@@ -303,15 +371,18 @@ export async function addCombat(
   }
 
   const enemyHeroes = normalizeHeroArray(input.enemy_heroes);
+
   const myHeroes = normalizeHeroArray(input.my_heroes);
 
   if (enemyHeroes.length === 0 || myHeroes.length === 0) {
     console.error("Impossible d'enregistrer un combat sans héros.");
+
     return null;
   }
 
   if (typeof input.won !== "boolean") {
     console.error("Résultat du combat invalide.");
+
     return null;
   }
 
@@ -333,6 +404,7 @@ export async function addCombat(
 
     if (error) {
       console.error("Erreur lors de l'enregistrement du combat :", error);
+
       return null;
     }
 
@@ -342,15 +414,20 @@ export async function addCombat(
       "Erreur inattendue lors de l'enregistrement du combat :",
       error
     );
+
     return null;
   }
 }
 
 export async function removeCombat(id: string): Promise<boolean> {
   const user = await getCurrentUser();
-  if (!user || !id || typeof id !== "string") return false;
+
+  if (!user || !id || typeof id !== "string") {
+    return false;
+  }
 
   const profile = await getCurrentProfile();
+
   if (!profile || !profile.active || profile.role !== "admin") {
     return false;
   }
@@ -360,6 +437,7 @@ export async function removeCombat(id: string): Promise<boolean> {
 
     if (error) {
       console.error("Erreur lors de la suppression du combat :", error);
+
       return false;
     }
 
@@ -369,13 +447,21 @@ export async function removeCombat(id: string): Promise<boolean> {
       "Erreur inattendue lors de la suppression du combat :",
       error
     );
+
     return false;
   }
 }
 
+/* =========================================================
+   PRÉFÉRENCES HÉROS
+   ========================================================= */
+
 export async function loadHeroPreferences(): Promise<string[]> {
   const user = await getCurrentUser();
-  if (!user) return [];
+
+  if (!user) {
+    return [];
+  }
 
   try {
     const { data, error } = await supabase
@@ -386,6 +472,7 @@ export async function loadHeroPreferences(): Promise<string[]> {
 
     if (error) {
       console.error("Erreur lors du chargement des préférences héros :", error);
+
       return [];
     }
 
@@ -395,6 +482,7 @@ export async function loadHeroPreferences(): Promise<string[]> {
       "Erreur inattendue lors du chargement des préférences héros :",
       error
     );
+
     return [];
   }
 }
@@ -403,23 +491,30 @@ export async function saveHeroPreferences(
   disabledHeroes: string[]
 ): Promise<boolean> {
   const user = await getCurrentUser();
-  if (!user) return false;
+
+  if (!user) {
+    return false;
+  }
 
   const cleanedHeroes = [...new Set(normalizeHeroArray(disabledHeroes))];
 
   try {
-    const { error } = await supabase
-      .from("hero_settings")
-      .upsert(
-        { user_id: user.id, excluded_hero_ids: cleanedHeroes },
-        { onConflict: "user_id" }
-      );
+    const { error } = await supabase.from("hero_settings").upsert(
+      {
+        user_id: user.id,
+        excluded_hero_ids: cleanedHeroes,
+      },
+      {
+        onConflict: "user_id",
+      }
+    );
 
     if (error) {
       console.error(
         "Erreur lors de la sauvegarde des préférences héros :",
         error
       );
+
       return false;
     }
 
@@ -429,6 +524,7 @@ export async function saveHeroPreferences(
       "Erreur inattendue lors de la sauvegarde des préférences héros :",
       error
     );
+
     return false;
   }
 }

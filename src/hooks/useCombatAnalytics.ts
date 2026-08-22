@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 import {
   calculateHeroUsage,
@@ -36,9 +36,18 @@ export function useCombatAnalytics({
   showResult,
 }: UseCombatAnalyticsOptions) {
   const pickSet = useMemo(() => new Set(picks), [picks]);
+
   const full = picks.length === MAX_PICKS;
 
+  /* ---------------------------------------------------------
+   * UTILISATION DES HÉROS
+   * --------------------------------------------------------- */
+
   const usage = useMemo(() => calculateHeroUsage(combats), [combats]);
+
+  /* ---------------------------------------------------------
+   * FILTRE / CLASSEMENT DES HÉROS
+   * --------------------------------------------------------- */
 
   const filtered = useMemo(
     () =>
@@ -52,20 +61,28 @@ export function useCombatAnalytics({
     [enabledHeroIds, activeClass, query, sortBy, usage]
   );
 
-const team = useMemo(() => {
-  if (!full) {
-    return [];
-  }
+  /* ---------------------------------------------------------
+   * ÉQUIPE RECOMMANDÉE
+   * --------------------------------------------------------- */
 
-  try {
-    const result = recommendTeam(picks, combats);
+  const team = useMemo(() => {
+    if (!full) {
+      return [];
+    }
 
-    return result;
-  } catch (error) {
-    console.error("RECOMMEND ERROR", error);
-    return [];
-  }
-}, [picks, full, combats]);
+    try {
+      const result = recommendTeam(picks, combats);
+
+      return result;
+    } catch (error) {
+      console.error("RECOMMEND ERROR", error);
+      return [];
+    }
+  }, [picks, full, combats]);
+
+  /* ---------------------------------------------------------
+   * HÉROS DE L'ÉQUIPE MODIFIÉE
+   * --------------------------------------------------------- */
 
   const editedHeroes = useMemo(
     () =>
@@ -75,6 +92,10 @@ const team = useMemo(() => {
     [editedTeam]
   );
 
+  /* ---------------------------------------------------------
+   * HÉROS ENNEMIS
+   * --------------------------------------------------------- */
+
   const enemyHeroes = useMemo(
     () =>
       picks
@@ -83,15 +104,27 @@ const team = useMemo(() => {
     [picks]
   );
 
+  /* ---------------------------------------------------------
+   * STATS ENNEMIS
+   * --------------------------------------------------------- */
+
   const enemyStats = useMemo(
     () => calculateTeamStats(enemyHeroes),
     [enemyHeroes]
   );
 
+  /* ---------------------------------------------------------
+   * STATS ÉQUIPE
+   * --------------------------------------------------------- */
+
   const teamStats = useMemo(
     () => calculateTeamStats(editedHeroes),
     [editedHeroes]
   );
+
+  /* ---------------------------------------------------------
+   * COMPARAISON DES STATS
+   * --------------------------------------------------------- */
 
   const statComparisons = useMemo(
     () => ({
@@ -112,34 +145,36 @@ const team = useMemo(() => {
     [enemyStats, teamStats]
   );
 
-const report = useMemo(() => {
-  if (!full || !showResult) {
-    return [];
-  }
+  /* ---------------------------------------------------------
+   * RAPPORT DE COUVERTURE
+   * --------------------------------------------------------- */
 
-  const currentTeam =
-    editedTeam.length === MAX_PICKS
-      ? editedHeroes
-      : team;
+  const report = useMemo(() => {
+    if (!full || !showResult) {
+      return [];
+    }
 
-  if (currentTeam.length !== MAX_PICKS) {
-    return [];
-  }
+    const currentTeam = editedTeam.length === MAX_PICKS ? editedHeroes : team;
 
-  return coverageReport(currentTeam, picks);
-}, [
-  full,
-  showResult,
-  editedTeam,
-  editedHeroes,
-  team,
-  picks,
-]);
+    if (currentTeam.length !== MAX_PICKS) {
+      return [];
+    }
+
+    return coverageReport(currentTeam, picks);
+  }, [full, showResult, editedTeam, editedHeroes, team, picks]);
+
+  /* ---------------------------------------------------------
+   * COUVERTURE TOTALE
+   * --------------------------------------------------------- */
 
   const totalCoverage = report.reduce(
     (acc, result) => acc + result.targets.length,
     0
   );
+
+  /* ---------------------------------------------------------
+   * MEILLEURE ÉQUIPE HISTORIQUE
+   * --------------------------------------------------------- */
 
   const bestWinTeam = useMemo(() => {
     if (!full || !showResult || combats.length === 0) {
@@ -154,6 +189,10 @@ const report = useMemo(() => {
     return findBestHistoricalTeam(combats, picks, currentTeamIds);
   }, [combats, picks, full, showResult, editedTeam, team]);
 
+  /* ---------------------------------------------------------
+   * TAUX DE VICTOIRE
+   * --------------------------------------------------------- */
+
   const winRate = useMemo(() => {
     if (!full || !showResult) {
       return null;
@@ -166,6 +205,67 @@ const report = useMemo(() => {
 
     return calculateWinRate(combats, picks, teamIds);
   }, [combats, picks, full, showResult, editedTeam, team]);
+
+  /* ---------------------------------------------------------
+   * DEBUG HISTORIQUE
+   * --------------------------------------------------------- */
+
+  useEffect(() => {
+    if (!full || !showResult) {
+      return;
+    }
+
+    console.log("========== HISTORICAL DEBUG ==========");
+
+    console.log("ENEMIES:", picks);
+
+    console.log(
+      "TEAM recommandée:",
+      team.map((hero) => hero.id)
+    );
+
+    console.log("EDITED TEAM:", editedTeam);
+
+    console.log("COMBATS:", combats.length);
+
+    /*
+     * On affiche quelques combats pour vérifier
+     * que les données Supabase arrivent réellement
+     * jusqu'à ce hook.
+     */
+    if (combats.length > 0) {
+      console.log("PREMIER COMBAT:", combats[0]);
+
+      console.log(
+        "COMBATS POUR CET ENNEMI:",
+        combats.filter((combat) => {
+          const a = [...combat.enemy_heroes].sort().join(",");
+
+          const b = [...picks].sort().join(",");
+
+          return a === b;
+        })
+      );
+    }
+
+    console.log("BEST HISTORICAL TEAM:", bestWinTeam);
+
+    if (bestWinTeam) {
+      console.log("BEST HISTORICAL IDS:", bestWinTeam.ids);
+
+      console.log("BEST HISTORICAL RATE:", bestWinTeam.rate);
+
+      console.log("BEST HISTORICAL COUNT:", bestWinTeam.count);
+    } else {
+      console.log("BEST HISTORICAL TEAM = NULL");
+    }
+
+    console.log("======================================");
+  }, [full, showResult, picks, team, editedTeam, combats, bestWinTeam]);
+
+  /* ---------------------------------------------------------
+   * RETURN
+   * --------------------------------------------------------- */
 
   return {
     pickSet,

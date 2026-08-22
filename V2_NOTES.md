@@ -8,6 +8,7 @@ V2 is independent of Bolt and Base44.
 - `src/counter.ts` contains the V2 recommendation engine
 
 The V2 engine evaluates complete 5-hero teams using:
+
 - type counters
 - class counters
 - historical results

@@ -4,9 +4,7 @@ import type { Combat } from "./storage";
 import { RECOMMENDATION_CONFIG } from "./utils/recommendation/recommendationConfig";
 import { calculateRecommendationScore } from "./utils/recommendation/recommendationScore";
 import { getHeroFourHeroMatchupScore } from "./utils/recommendation/matchupAnalysis";
-import {
-  analyzeHistoricalTeams,
-} from "./utils/recommendation/teamHistory";
+import { analyzeHistoricalTeams } from "./utils/recommendation/teamHistory";
 
 export interface CounterTarget {
   id: string;
@@ -360,11 +358,7 @@ function teamHistoryScore(
     return 0;
   }
 
-  const historicalTeams = analyzeHistoricalTeams(
-    combats,
-    enemyIds,
-    0.8
-  );
+  const historicalTeams = analyzeHistoricalTeams(combats, enemyIds, 0.8);
 
   if (historicalTeams.length === 0) {
     return 0;
@@ -376,11 +370,7 @@ function teamHistoryScore(
     .join("|");
 
   const historicalTeam = historicalTeams.find(
-    (candidate) =>
-      candidate.ids
-        .slice()
-        .sort()
-        .join("|") === teamKey
+    (candidate) => candidate.ids.slice().sort().join("|") === teamKey
   );
 
   if (!historicalTeam) {
@@ -389,10 +379,7 @@ function teamHistoryScore(
 
   const rate = historicalTeam.winRate / 100;
 
-  const confidence = Math.min(
-    2.5,
-    Math.sqrt(historicalTeam.games)
-  );
+  const confidence = Math.min(2.5, Math.sqrt(historicalTeam.games));
 
   return (rate - PRIOR_RATE) * 55 * confidence;
 }
@@ -561,12 +548,7 @@ function matchupTeamScore(
   let score = 0;
 
   for (const hero of team) {
-    const matchup = getHeroFourHeroMatchupScore(
-      hero.id,
-      combats,
-      enemyIds,
-      2
-    );
+    const matchup = getHeroFourHeroMatchupScore(hero.id, combats, enemyIds, 2);
 
     if (!matchup) {
       continue;
@@ -611,11 +593,7 @@ function analyzeTeam(
         synergyScore: synergy,
         roleScore: role,
         matchupScore: matchup,
-        teamHistoryScore: teamHistoryScore(
-  team,
-  enemyIds,
-  combats
-),
+        teamHistoryScore: teamHistoryScore(team, enemyIds, combats),
       },
       {
         counter: RECOMMENDATION_CONFIG.counter,
@@ -853,7 +831,7 @@ export function balancedTeam(
   }
 
   const activeCombats = getActiveCombats(combats);
-  
+
   const enemySet = new Set(enemyIds);
 
   const pool = HEROES.filter((h) => !enemySet.has(h.id));

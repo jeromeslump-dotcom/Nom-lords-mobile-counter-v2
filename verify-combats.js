@@ -1,4 +1,3 @@
-
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -42,9 +41,7 @@ while ((match = idRegex.exec(heroesSource)) !== null) {
 }
 
 if (heroIds.size === 0) {
-  throw new Error(
-    "Impossible de trouver les IDs des héros dans src/heroes.ts"
-  );
+  throw new Error("Impossible de trouver les IDs des héros dans src/heroes.ts");
 }
 
 // ============================================================
@@ -150,9 +147,7 @@ function parseCSVLine(line) {
 
 const csv = fs.readFileSync(CSV_FILE, "utf8");
 
-const lines = csv
-  .split(/\r?\n/)
-  .filter((line) => line.trim() !== "");
+const lines = csv.split(/\r?\n/).filter((line) => line.trim() !== "");
 
 if (lines.length < 2) {
   throw new Error("Le CSV ne contient aucune donnée.");
@@ -180,17 +175,11 @@ for (let i = 1; i < lines.length; i++) {
 // VERIFICATION DES COLONNES
 // ============================================================
 
-const requiredColumns = [
-  "result",
-  "team_hero_ids",
-  "enemy_hero_ids",
-];
+const requiredColumns = ["result", "team_hero_ids", "enemy_hero_ids"];
 
 for (const column of requiredColumns) {
   if (!headers.includes(column)) {
-    throw new Error(
-      `Colonne obligatoire absente du CSV : ${column}`
-    );
+    throw new Error(`Colonne obligatoire absente du CSV : ${column}`);
   }
 }
 
@@ -222,10 +211,7 @@ const problematicCombats = [];
 function addUnknown(heroId) {
   if (!heroId) return;
 
-  unknownHeroes.set(
-    heroId,
-    (unknownHeroes.get(heroId) || 0) + 1
-  );
+  unknownHeroes.set(heroId, (unknownHeroes.get(heroId) || 0) + 1);
 }
 
 function addConverted(original, resolved) {
@@ -235,10 +221,7 @@ function addConverted(original, resolved) {
 
   const key = `${original} -> ${resolved}`;
 
-  convertedHeroes.set(
-    key,
-    (convertedHeroes.get(key) || 0) + 1
-  );
+  convertedHeroes.set(key, (convertedHeroes.get(key) || 0) + 1);
 }
 
 function hasDuplicates(array) {
@@ -403,13 +386,9 @@ console.log("              VÉRIFICATION DES COMBATS");
 console.log("============================================================");
 console.log("");
 
-console.log(
-  `Héros dans heroes.ts       : ${heroIds.size}`
-);
+console.log(`Héros dans heroes.ts       : ${heroIds.size}`);
 
-console.log(
-  `Combats analysés           : ${rows.length}`
-);
+console.log(`Combats analysés           : ${rows.length}`);
 
 console.log("");
 
@@ -417,25 +396,15 @@ console.log("------------------------------------------------------------");
 console.log("RÉSULTATS");
 console.log("------------------------------------------------------------");
 
-console.log(
-  `Victoires                  : ${victories}`
-);
+console.log(`Victoires                  : ${victories}`);
 
-console.log(
-  `Défaites                   : ${defeats}`
-);
+console.log(`Défaites                   : ${defeats}`);
 
-console.log(
-  `Combats OK                 : ${combatsOK}`
-);
+console.log(`Combats OK                 : ${combatsOK}`);
 
-console.log(
-  `Combats problématiques     : ${combatsProblematiques}`
-);
+console.log(`Combats problématiques     : ${combatsProblematiques}`);
 
-console.log(
-  `Héros réellement inconnus  : ${unknownHeroes.size}`
-);
+console.log(`Héros réellement inconnus  : ${unknownHeroes.size}`);
 
 console.log("");
 
@@ -444,14 +413,10 @@ console.log("");
 // ============================================================
 
 if (victories + defeats === rows.length) {
-  console.log(
-    "OK : victoires + défaites = nombre total de combats."
-  );
+  console.log("OK : victoires + défaites = nombre total de combats.");
 } else {
   console.log(
-    `ATTENTION : victoires + défaites = ${
-      victories + defeats
-    } / ${rows.length}`
+    `ATTENTION : victoires + défaites = ${victories + defeats} / ${rows.length}`
   );
 }
 
@@ -465,25 +430,15 @@ console.log("------------------------------------------------------------");
 console.log("CONTRÔLES DES COMBATS");
 console.log("------------------------------------------------------------");
 
-console.log(
-  `Résultats invalides        : ${badResult}`
-);
+console.log(`Résultats invalides        : ${badResult}`);
 
-console.log(
-  `Équipes joueur ≠ 5 héros   : ${badTeamSize}`
-);
+console.log(`Équipes joueur ≠ 5 héros   : ${badTeamSize}`);
 
-console.log(
-  `Équipes ennemies ≠ 5 héros : ${badEnemySize}`
-);
+console.log(`Équipes ennemies ≠ 5 héros : ${badEnemySize}`);
 
-console.log(
-  `Doublons équipe joueur     : ${duplicateTeam}`
-);
+console.log(`Doublons équipe joueur     : ${duplicateTeam}`);
 
-console.log(
-  `Doublons équipe ennemie    : ${duplicateEnemy}`
-);
+console.log(`Doublons équipe ennemie    : ${duplicateEnemy}`);
 
 console.log("");
 
@@ -497,13 +452,12 @@ if (convertedHeroes.size > 0) {
   console.log("------------------------------------------------------------");
   console.log("");
 
-  const sortedConversions = [...convertedHeroes.entries()]
-    .sort((a, b) => b[1] - a[1]);
+  const sortedConversions = [...convertedHeroes.entries()].sort(
+    (a, b) => b[1] - a[1]
+  );
 
   for (const [conversion, count] of sortedConversions) {
-    console.log(
-      `- ${conversion} : ${count} occurrence(s)`
-    );
+    console.log(`- ${conversion} : ${count} occurrence(s)`);
   }
 
   console.log("");
@@ -519,13 +473,12 @@ if (unknownHeroes.size > 0) {
   console.log("------------------------------------------------------------");
   console.log("");
 
-  const sortedUnknown = [...unknownHeroes.entries()]
-    .sort((a, b) => b[1] - a[1]);
+  const sortedUnknown = [...unknownHeroes.entries()].sort(
+    (a, b) => b[1] - a[1]
+  );
 
   for (const [heroId, count] of sortedUnknown) {
-    console.log(
-      `* ${heroId} : ${count} occurrence(s)`
-    );
+    console.log(`* ${heroId} : ${count} occurrence(s)`);
   }
 
   console.log("");
@@ -545,18 +498,12 @@ if (problematicCombats.length > 0) {
   console.log("");
 
   for (const problem of problematicCombats.slice(0, 30)) {
-    console.log(
-      `Combat #${problem.combat} : ${problem.reason}`
-    );
+    console.log(`Combat #${problem.combat} : ${problem.reason}`);
   }
 
   if (problematicCombats.length > 30) {
     console.log("");
-    console.log(
-      `... et ${
-        problematicCombats.length - 30
-      } autre(s).`
-    );
+    console.log(`... et ${problematicCombats.length - 30} autre(s).`);
   }
 
   console.log("");

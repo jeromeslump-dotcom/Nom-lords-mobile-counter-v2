@@ -1,4 +1,3 @@
-
 import type { Combat } from "../../storage";
 import { HEROES } from "../../heroes";
 
@@ -86,17 +85,11 @@ export function analyzeHistoricalTeams(
       continue;
     }
 
-    if (
-      combat.enemy_heroes.length !== 5 ||
-      combat.my_heroes.length !== 5
-    ) {
+    if (combat.enemy_heroes.length !== 5 || combat.my_heroes.length !== 5) {
       continue;
     }
 
-    const similarity = calculateEnemySimilarity(
-      enemyTeam,
-      combat.enemy_heroes
-    );
+    const similarity = calculateEnemySimilarity(enemyTeam, combat.enemy_heroes);
 
     if (similarity < minimumSimilarity) {
       continue;
@@ -168,14 +161,7 @@ export function getBestHistoricalTeam(
   minimumSimilarity = 0.8,
   minimumGames = 1
 ): HistoricalTeam | null {
-  const teams = analyzeHistoricalTeams(
-    combats,
-    enemyTeam,
-    minimumSimilarity
-  );
+  const teams = analyzeHistoricalTeams(combats, enemyTeam, minimumSimilarity);
 
-  return (
-    teams.find((team) => team.games >= minimumGames) ?? null
-  );
+  return teams.find((team) => team.games >= minimumGames) ?? null;
 }
-

@@ -24,9 +24,11 @@ export default function LoginModal({
       <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#11151c] shadow-2xl p-6">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-xl font-bold text-white">🔒 Administration</h2>
+            <h2 className="text-xl font-bold text-white">
+              🔒 Connexion requise
+            </h2>
             <p className="text-xs text-white/40 mt-1">
-              Connexion réservée à l'administrateur
+              Connexion requise pour accéder à cette section
             </p>
           </div>
 

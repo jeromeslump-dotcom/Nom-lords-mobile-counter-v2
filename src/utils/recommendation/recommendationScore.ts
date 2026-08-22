@@ -1,4 +1,3 @@
-
 export interface RecommendationScoreInput {
   counterScore: number;
 
@@ -54,42 +53,36 @@ export function calculateRecommendationScore(
     : 0;
 
   const historyScore = Number.isFinite(input.historyScore)
-    ? input.historyScore ?? 0
+    ? (input.historyScore ?? 0)
     : 0;
 
   const synergyScore = Number.isFinite(input.synergyScore)
-    ? input.synergyScore ?? 0
+    ? (input.synergyScore ?? 0)
     : 0;
 
   const roleScore = Number.isFinite(input.roleScore)
-    ? input.roleScore ?? 0
+    ? (input.roleScore ?? 0)
     : 0;
 
   const matchupScore = Number.isFinite(input.matchupScore)
-    ? input.matchupScore ?? 0
+    ? (input.matchupScore ?? 0)
     : 0;
 
   const teamHistoryScore = Number.isFinite(input.teamHistoryScore)
-    ? input.teamHistoryScore ?? 0
+    ? (input.teamHistoryScore ?? 0)
     : 0;
 
-  const counterContribution =
-    counterScore * weights.counter;
+  const counterContribution = counterScore * weights.counter;
 
-  const historyContribution =
-    historyScore * weights.history;
+  const historyContribution = historyScore * weights.history;
 
-  const synergyContribution =
-    synergyScore * weights.synergy;
+  const synergyContribution = synergyScore * weights.synergy;
 
-  const roleContribution =
-    roleScore * weights.role;
+  const roleContribution = roleScore * weights.role;
 
-  const matchupContribution =
-    matchupScore * weights.matchup;
+  const matchupContribution = matchupScore * weights.matchup;
 
-  const teamHistoryContribution =
-    teamHistoryScore * weights.teamHistory;
+  const teamHistoryContribution = teamHistoryScore * weights.teamHistory;
 
   const total =
     counterContribution +
@@ -117,9 +110,8 @@ export function calculateRecommendationScore(
  * En cas d'égalité, l'ordre original est conservé grâce au sort stable
  * des moteurs JavaScript modernes.
  */
-export function sortRecommendationScores<
-  T extends { score: number },
->(items: T[]): T[] {
+export function sortRecommendationScores<T extends { score: number }>(
+  items: T[]
+): T[] {
   return [...items].sort((a, b) => b.score - a.score);
 }
-

@@ -468,15 +468,12 @@ export default function RecommendedTeam({
             team: teamStats.totalDef,
             comparison: statComparisons.totalDef,
           },
-         ].map((stat) => {
+        ].map((stat) => {
           const positive = stat.comparison.difference >= 0;
           const separator = stat.key === "def";
 
           return (
-            <div
-              key={stat.key}
-              className="flex justify-center"
-            >
+            <div key={stat.key} className="flex justify-center">
               <div
                 className={`grid grid-cols-[90px_58px_55px_78px] sm:grid-cols-[115px_72px_58px_88px] items-center gap-x-3 px-2 py-1.5 rounded-lg ${
                   separator ? "mt-3 pt-3 border-t border-white/10" : ""

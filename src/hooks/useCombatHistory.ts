@@ -16,13 +16,22 @@ export function useCombatHistory({
   editedTeam,
 }: UseCombatHistoryOptions) {
   const [combats, setCombats] = useState<Combat[]>([]);
-
   const [loadingHistory, setLoadingHistory] = useState(true);
-
   const [recording, setRecording] = useState(false);
+
+  const userId = user?.id ?? null;
 
   useEffect(() => {
     let cancelled = false;
+
+    if (!userId) {
+      setCombats([]);
+      setLoadingHistory(false);
+
+      return () => {
+        cancelled = true;
+      };
+    }
 
     async function loadHistory() {
       setLoadingHistory(true);
@@ -30,9 +39,9 @@ export function useCombatHistory({
       try {
         const data = await loadCombats();
 
-        if (!cancelled) {
-          setCombats(Array.isArray(data) ? data : []);
-        }
+        if (cancelled) return;
+
+        setCombats(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Erreur lors du chargement de l'historique :", error);
 
@@ -51,10 +60,10 @@ export function useCombatHistory({
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [userId]);
 
   async function recordCombat(won: boolean) {
-    if (!user || picks.length !== 5 || editedTeam.length !== 5 || recording) {
+    if (!userId || picks.length !== 5 || editedTeam.length !== 5 || recording) {
       return;
     }
 
@@ -78,6 +87,8 @@ export function useCombatHistory({
   }
 
   async function deleteCombat(id: string) {
+    if (!id) return;
+
     const success = await removeCombat(id);
 
     if (success) {

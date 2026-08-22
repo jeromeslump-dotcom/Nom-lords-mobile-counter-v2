@@ -1,4 +1,3 @@
-
 export interface RecommendationConfig {
   /**
    * Poids du moteur de contre théorique.

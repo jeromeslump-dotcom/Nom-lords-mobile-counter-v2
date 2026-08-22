@@ -1,26 +1,46 @@
 import { useEffect, useState } from "react";
 
-import { getCurrentUser, signIn, signOut } from "../storage";
+import { supabase, signIn, signOut } from "../storage";
 
 export function useAuth(onLogout?: () => void) {
   const [user, setUser] = useState<any>(null);
 
   const [loginEmail, setLoginEmail] = useState("");
-
   const [loginPassword, setLoginPassword] = useState("");
-
   const [loginError, setLoginError] = useState("");
-
   const [showLogin, setShowLogin] = useState(false);
-
   const [loggingIn, setLoggingIn] = useState(false);
 
   useEffect(() => {
-    getCurrentUser().then(setUser);
+    let cancelled = false;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return;
+
+      const nextUser = session?.user ?? null;
+
+      setUser((previousUser: any) => {
+        const previousId = previousUser?.id ?? null;
+        const nextId = nextUser?.id ?? null;
+
+        if (previousId === nextId) {
+          return previousUser;
+        }
+
+        return nextUser;
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   async function handleLogin() {
-    if (!loginEmail || !loginPassword) {
+    if (!loginEmail.trim() || !loginPassword) {
       setLoginError("Veuillez saisir votre email et votre mot de passe.");
       return;
     }
@@ -28,25 +48,36 @@ export function useAuth(onLogout?: () => void) {
     setLoggingIn(true);
     setLoginError("");
 
-    const { data, error } = await signIn(loginEmail, loginPassword);
+    try {
+      const { data, error } = await signIn(loginEmail, loginPassword);
 
-    if (error) {
-      setLoginError("Email ou mot de passe incorrect.");
+      if (error || !data.user) {
+        setLoginError("Email ou mot de passe incorrect.");
+        return;
+      }
+
+      setLoginEmail("");
+      setLoginPassword("");
+      setShowLogin(false);
+    } catch (error) {
+      console.error("Erreur lors de la connexion :", error);
+
+      setLoginError("Impossible de se connecter. Veuillez réessayer.");
+    } finally {
       setLoggingIn(false);
-      return;
     }
-
-    setUser(data.user);
-    setLoginEmail("");
-    setLoginPassword("");
-    setShowLogin(false);
-    setLoggingIn(false);
   }
 
   async function handleLogout() {
-    await signOut();
-    setUser(null);
-    onLogout?.();
+    try {
+      await signOut();
+
+      setUser(null);
+
+      onLogout?.();
+    } catch (error) {
+      console.error("Erreur lors de la déconnexion :", error);
+    }
   }
 
   return {

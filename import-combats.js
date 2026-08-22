@@ -1,4 +1,3 @@
-
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -63,10 +62,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   );
 }
 
-const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_ANON_KEY
-);
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // ============================================================
 // IDENTIFIANTS HÉROS
@@ -104,7 +100,7 @@ const HERO_ID_MAP = {
   "sand-sage": "sand_sage",
   "ethereal-guide": "ethereal_guide",
   "vengeful-centaur": "vengeful_centaur",
-  "shapeshifter-cav": "shape_shifter"
+  "shapeshifter-cav": "shape_shifter",
 };
 
 function convertHeroId(id) {
@@ -178,9 +174,7 @@ if (!fs.existsSync(CSV_FILE)) {
 
 const csvContent = fs.readFileSync(CSV_FILE, "utf8");
 
-const lines = csvContent
-  .split(/\r?\n/)
-  .filter((line) => line.trim() !== "");
+const lines = csvContent.split(/\r?\n/).filter((line) => line.trim() !== "");
 
 if (lines.length < 2) {
   throw new Error("Le fichier CSV ne contient aucun combat.");
@@ -253,9 +247,7 @@ for (let i = 1; i < lines.length; i++) {
   } else {
     invalidResults++;
 
-    console.warn(
-      `Ligne ${i + 1} ignorée : résultat invalide (${result})`
-    );
+    console.warn(`Ligne ${i + 1} ignorée : résultat invalide (${result})`);
 
     continue;
   }
@@ -276,19 +268,19 @@ for (let i = 1; i < lines.length; i++) {
     continue;
   }
 
-const createdDate =
-  createdDateIndex !== -1
-    ? String(columns[createdDateIndex] || "")
-        .trim()
-        .replace(/,(\d{3})$/, ".$1")
-    : null;
+  const createdDate =
+    createdDateIndex !== -1
+      ? String(columns[createdDateIndex] || "")
+          .trim()
+          .replace(/,(\d{3})$/, ".$1")
+      : null;
 
   combats.push({
     csv_id: csvId,
     won,
     my_heroes: myHeroes,
     enemy_heroes: enemyHeroes,
-    created_at: createdDate || null
+    created_at: createdDate || null,
   });
 }
 
@@ -302,13 +294,9 @@ console.log("                    RÉSULTATS");
 console.log("============================================================");
 console.log("");
 
-console.log(
-  `Combats présents dans le CSV : ${lines.length - 1}`
-);
+console.log(`Combats présents dans le CSV : ${lines.length - 1}`);
 
-console.log(
-  `Combats valides              : ${combats.length}`
-);
+console.log(`Combats valides              : ${combats.length}`);
 
 console.log(`Victoires                    : ${victories}`);
 console.log(`Défaites                     : ${defeats}`);
@@ -345,13 +333,9 @@ if (existingError) {
   );
 }
 
-const existingCombats = Array.isArray(existingRows)
-  ? existingRows
-  : [];
+const existingCombats = Array.isArray(existingRows) ? existingRows : [];
 
-console.log(
-  `Combats actuellement en base : ${existingCombats.length}`
-);
+console.log(`Combats actuellement en base : ${existingCombats.length}`);
 
 console.log("");
 
@@ -398,14 +382,12 @@ const existingSignatures = new Set();
 for (const combat of existingCombats) {
   existingSignatures.add(
     combatSignature({
-      my_heroes: Array.isArray(combat.my_heroes)
-        ? combat.my_heroes
-        : [],
+      my_heroes: Array.isArray(combat.my_heroes) ? combat.my_heroes : [],
       enemy_heroes: Array.isArray(combat.enemy_heroes)
         ? combat.enemy_heroes
         : [],
       won: combat.won,
-      created_at: combat.created_at
+      created_at: combat.created_at,
     })
   );
 }
@@ -429,9 +411,7 @@ for (const combat of combats) {
     enemy_heroes: combat.enemy_heroes,
     my_heroes: combat.my_heroes,
     won: combat.won,
-    ...(combat.created_at
-      ? { created_at: combat.created_at }
-      : {})
+    ...(combat.created_at ? { created_at: combat.created_at } : {}),
   });
 
   // Empêche également les doublons à l'intérieur
@@ -488,13 +468,9 @@ for (let i = 0; i < newCombats.length; i += BATCH_SIZE) {
   const start = i + 1;
   const end = i + batch.length;
 
-  console.log(
-    `Import des combats ${start} à ${end} / ${newCombats.length}`
-  );
+  console.log(`Import des combats ${start} à ${end} / ${newCombats.length}`);
 
-  const { error } = await supabase
-    .from("combats")
-    .insert(batch);
+  const { error } = await supabase.from("combats").insert(batch);
 
   if (error) {
     throw new Error(
@@ -513,7 +489,7 @@ const { count: finalCount, error: countError } = await supabase
   .from("combats")
   .select("*", {
     count: "exact",
-    head: true
+    head: true,
   });
 
 if (countError) {
