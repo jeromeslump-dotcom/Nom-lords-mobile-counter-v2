@@ -1,4 +1,5 @@
 import type { Combat } from "../storage";
+import { RECOMMENDATION_CONFIG } from "./recommendation/recommendationConfig";
 
 /**
  * Counts how many times each hero appears in recorded combats.
@@ -65,6 +66,26 @@ export interface BestWinTeamResult {
   ids: string[];
   rate: number;
   count: number;
+  reliableRate: number;
+}
+
+/**
+ * Taux de victoire lissé avec un prior global.
+ *
+ * Le taux brut reste affichable dans `rate`, tandis que le taux
+ * lissé `reliableRate` sert au classement. Cela évite qu'un
+ * 100 % sur 1 combat soit considéré comme plus fiable qu'un
+ * 92 % sur 25 combats.
+ */
+function reliableWinRate(wins: number, games: number): number {
+  if (games <= 0) {
+    return RECOMMENDATION_CONFIG.priorRate;
+  }
+
+  return (
+    (wins + RECOMMENDATION_CONFIG.priorRate * RECOMMENDATION_CONFIG.priorGames) /
+    (games + RECOMMENDATION_CONFIG.priorGames)
+  );
 }
 
 export function findBestHistoricalTeam(
@@ -77,6 +98,10 @@ export function findBestHistoricalTeam(
   const currentKey = [...currentTeamIds].sort().join(",");
 
   const relevant = combats.filter((combat) => {
+    if (combat.status !== "active") {
+      return false;
+    }
+
     const combatEnemyKey = [...combat.enemy_heroes].sort().join(",");
 
     return combatEnemyKey === enemyKey;
@@ -128,23 +153,30 @@ export function findBestHistoricalTeam(
       continue;
     }
 
-    const rate = Math.round((entry.wins / entry.total) * 100);
+    const rawRate = entry.wins / entry.total;
+    const reliableRate = reliableWinRate(entry.wins, entry.total);
 
     /*
      * Classement :
      *
-     * 1. meilleur taux de victoire
-     * 2. en cas d'égalité, plus de combats
+     * 1. meilleur taux fiable (lissé)
+     * 2. plus de victoires
+     * 3. plus de combats
+     *
+     * Le taux brut reste disponible pour l'affichage/statistiques.
      */
     if (
       !best ||
-      rate > best.rate ||
-      (rate === best.rate && entry.total > best.count)
+      reliableRate > best.reliableRate ||
+      (reliableRate === best.reliableRate && entry.wins > 0 &&
+        entry.wins > Math.round((best.rate / 100) * best.count)) ||
+      (reliableRate === best.reliableRate && entry.total > best.count)
     ) {
       best = {
         ids: key.split(","),
-        rate,
+        rate: Math.round(rawRate * 100),
         count: entry.total,
+        reliableRate,
       };
     }
   }
