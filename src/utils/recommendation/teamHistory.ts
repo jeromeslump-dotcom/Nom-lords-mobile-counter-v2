@@ -13,6 +13,22 @@ export interface HistoricalTeam {
   reliableWinRate: number;
 }
 
+/*
+ * Cache par référence du tableau de combats.
+ *
+ * Pendant un recommendTeam(), le même tableau de combats est
+ * analysé de nombreuses fois pour la même composition ennemie.
+ * On conserve donc le résultat déjà calculé pour éviter de
+ * reconstruire les mêmes statistiques à chaque équipe candidate.
+ *
+ * WeakMap permet au cache de disparaître automatiquement lorsque
+ * le tableau de combats n'est plus utilisé.
+ */
+const historicalTeamsCache = new WeakMap<
+  Combat[],
+  Map<string, HistoricalTeam[]>
+>();
+
 function reliableWinRate(wins: number, games: number): number {
   if (games <= 0) {
     return RECOMMENDATION_CONFIG.priorRate;
@@ -38,10 +54,10 @@ export function calculateEnemySimilarity(
   return commonHeroes / 5;
 }
 
-export function analyzeHistoricalTeams(
+function computeHistoricalTeams(
   combats: Combat[],
   enemyTeam: string[],
-  minimumSimilarity = 0.8
+  minimumSimilarity: number
 ): HistoricalTeam[] {
   if (enemyTeam.length !== 5) {
     return [];
@@ -116,6 +132,36 @@ export function analyzeHistoricalTeams(
       b.games - a.games ||
       a.names.join(", ").localeCompare(b.names.join(", "), "fr")
   );
+
+  return results;
+}
+
+export function analyzeHistoricalTeams(
+  combats: Combat[],
+  enemyTeam: string[],
+  minimumSimilarity = 0.8
+): HistoricalTeam[] {
+  if (enemyTeam.length !== 5) {
+    return [];
+  }
+
+  const cacheKey = `${teamKey(enemyTeam)}|${minimumSimilarity}`;
+  let cacheForCombats = historicalTeamsCache.get(combats);
+
+  if (!cacheForCombats) {
+    cacheForCombats = new Map();
+    historicalTeamsCache.set(combats, cacheForCombats);
+  }
+
+  const cached = cacheForCombats.get(cacheKey);
+
+  if (cached) {
+    return cached;
+  }
+
+  const results = computeHistoricalTeams(combats, enemyTeam, minimumSimilarity);
+
+  cacheForCombats.set(cacheKey, results);
 
   return results;
 }
