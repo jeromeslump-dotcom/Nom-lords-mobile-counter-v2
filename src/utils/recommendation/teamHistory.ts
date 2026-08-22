@@ -1,5 +1,6 @@
 import type { Combat } from "../../storage";
 import { HEROES } from "../../heroes";
+import { RECOMMENDATION_CONFIG } from "./recommendationConfig";
 
 export interface HistoricalTeam {
   ids: string[];
@@ -8,10 +9,11 @@ export interface HistoricalTeam {
   wins: number;
   losses: number;
   winRate: number;
+  reliableWinRate: number;
 }
 
 /**
- * Normalise une équipe afin que son ordre ne compte pas.
+ * Normalise une équipe afin que son ordre ne compte.
  *
  * Exemple :
  * [tracker, blackCrow, roseKnight]
@@ -26,6 +28,17 @@ function normalizeTeam(ids: string[]): string[] {
 
 function teamKey(ids: string[]): string {
   return normalizeTeam(ids).join("|");
+}
+
+function reliableWinRate(wins: number, games: number): number {
+  if (games <= 0) {
+    return RECOMMENDATION_CONFIG.priorRate;
+  }
+
+  return (
+    (wins + RECOMMENDATION_CONFIG.priorRate * RECOMMENDATION_CONFIG.priorGames) /
+    (games + RECOMMENDATION_CONFIG.priorGames)
+  );
 }
 
 /**
@@ -136,12 +149,14 @@ export function analyzeHistoricalTeams(
       wins,
       losses,
       winRate: (wins / team.games) * 100,
+      reliableWinRate: reliableWinRate(wins, team.games) * 100,
     });
   }
 
   results.sort(
     (a, b) =>
-      b.winRate - a.winRate ||
+      b.reliableWinRate - a.reliableWinRate ||
+      b.wins - a.wins ||
       b.games - a.games ||
       a.names.join(", ").localeCompare(b.names.join(", "), "fr")
   );
@@ -152,8 +167,9 @@ export function analyzeHistoricalTeams(
 /**
  * Retourne directement la meilleure équipe historique.
  *
- * minimumGames permet d'éviter qu'une équipe ayant gagné un seul combat
- * soit immédiatement considérée comme la meilleure.
+ * Le classement utilise un taux de victoire lissé avec le prior
+ * global du moteur afin qu'un petit échantillon ne domine pas
+ * automatiquement un historique beaucoup plus fourni.
  */
 export function getBestHistoricalTeam(
   combats: Combat[],
@@ -165,3 +181,5 @@ export function getBestHistoricalTeam(
 
   return teams.find((team) => team.games >= minimumGames) ?? null;
 }
+
+export { teamKey };
