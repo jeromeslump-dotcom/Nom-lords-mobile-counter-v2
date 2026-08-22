@@ -74,6 +74,8 @@ export function findBestHistoricalTeam(
 ): BestWinTeamResult | null {
   const enemyKey = [...enemyIds].sort().join(",");
 
+  const currentKey = [...currentTeamIds].sort().join(",");
+
   const relevant = combats.filter((combat) => {
     const combatEnemyKey = [...combat.enemy_heroes].sort().join(",");
 
@@ -100,10 +102,10 @@ export function findBestHistoricalTeam(
       total: 0,
     };
 
-    entry.total++;
+    entry.total += 1;
 
     if (combat.won) {
-      entry.wins++;
+      entry.wins += 1;
     }
 
     teamMap.set(key, entry);
@@ -112,12 +114,28 @@ export function findBestHistoricalTeam(
   let best: BestWinTeamResult | null = null;
 
   for (const [key, entry] of teamMap) {
-    if (entry.total < 2) {
+    /*
+     * Une équipe doit avoir au moins un combat historique.
+     */
+    if (entry.total < 1) {
+      continue;
+    }
+
+    /*
+     * Ne pas proposer l'équipe actuellement recommandée.
+     */
+    if (key === currentKey) {
       continue;
     }
 
     const rate = Math.round((entry.wins / entry.total) * 100);
 
+    /*
+     * Classement :
+     *
+     * 1. meilleur taux de victoire
+     * 2. en cas d'égalité, plus de combats
+     */
     if (
       !best ||
       rate > best.rate ||
@@ -129,18 +147,6 @@ export function findBestHistoricalTeam(
         count: entry.total,
       };
     }
-  }
-
-  if (!best) {
-    return null;
-  }
-
-  const currentKey = [...currentTeamIds].sort().join(",");
-
-  const bestKey = [...best.ids].sort().join(",");
-
-  if (bestKey === currentKey) {
-    return null;
   }
 
   return best;
